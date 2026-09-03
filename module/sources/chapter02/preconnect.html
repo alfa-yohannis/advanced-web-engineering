@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <title>Contoh preconnect dan dns-prefetch</title>
+
+    <!-- Koneksi lengkap: DNS, TCP, dan TLS. Dipakai bila aset pasti diminta. -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Hanya pencarian DNS. Dipakai bila aset belum tentu diminta. -->
+    <link rel="dns-prefetch" href="https://cdn.contoh.ac.id" />
+  </head>
+  <body>
+    <p>Periksa panel Network untuk melihat kapan koneksi dibuka.</p>
+  </body>
+</html>

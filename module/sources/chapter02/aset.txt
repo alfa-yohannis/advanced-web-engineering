@@ -1,0 +1,5 @@
+https://www.pradita.ac.id/assets/front/css/stylenew.css
+https://www.pradita.ac.id/assets/front/css/stylenewcustom.css
+https://www.pradita.ac.id/assets/front/fonts/font-awesome-4.7.0/css/font-awesome.css
+https://www.pradita.ac.id/assets/front/images/new/logo_universitas.png
+https://www.pradita.ac.id/assets/front/images/new/Web-Banner-Juli-2019.jpg

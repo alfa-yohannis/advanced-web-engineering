@@ -19,7 +19,13 @@
 # these rules might exclude image files for figures etc.
 # *.ps
 # *.eps
-# *.pdf
+
+## Compiled output (PDF hasil kompilasi LaTeX)
+*.pdf
+# ...kecuali PDF yang dipakai sebagai gambar/aset, bukan hasil kompilasi:
+!figures/**/*.pdf
+!**/img/**/*.pdf
+!**/images/**/*.pdf
 
 ## Generated if empty string is given at "Please type another file name for output:"
 .pdf
@@ -329,3 +335,112 @@ TSWLatexianTemp*
 # option is specified. Footnotes are the stored in a file with suffix Notes.bib.
 # Uncomment the next line to have this generated file ignored.
 #*Notes.bib
+
+## ---------------------------------------------------------------------------
+## Python
+## ---------------------------------------------------------------------------
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+parts/
+sdist/
+var/
+wheels/
+# CATATAN: "lib/" dan "lib64/" sengaja TIDAK di-ignore. Pola itu tidak ter-anchor,
+# jadi akan menelan folder sumber seperti module/sources/chapterXX/js/lib/.
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Environments
+.env
+.env.*
+!.env.example
+!.env.sample
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Type checkers / linters
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+# Jupyter / IPython
+.ipynb_checkpoints
+profile_default/
+ipython_config.py
+
+# pyenv / pipenv / poetry / pdm
+.python-version
+# Pipfile.lock
+# poetry.lock
+.pdm.toml
+.pdm-python
+
+# Cython debug symbols
+cython_debug/
+
+## ---------------------------------------------------------------------------
+## Node / web (module/sources berisi .js dan .ts)
+## ---------------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+*.tsbuildinfo
+.next/
+.nuxt/
+.svelte-kit/
+.vite/
+.parcel-cache/
+coverage/
+.eslintcache
+# Artefak latihan/rekaman jaringan (chapter02): HAR bisa memuat cookie & token
+*.har
+
+## ---------------------------------------------------------------------------
+## Editors & OS
+## ---------------------------------------------------------------------------
+.vscode/
+.idea/
+*.code-workspace
+.DS_Store
+Thumbs.db

@@ -1,0 +1,1 @@
+dns:%{time_namelookup}s tcp:%{time_connect}s tls:%{time_appconnect}s ttfb:%{time_starttransfer}s total:%{time_total}s versi:HTTP/%{http_version}\n

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <title>Perbandingan script biasa, defer, dan async</title>
+
+    <!-- Menahan parsing HTML sampai berkas selesai diunduh dan dijalankan. -->
+    <script src="/js/analytics.js"></script>
+
+    <!-- Diunduh paralel dengan parsing, dijalankan setelah parsing selesai,
+         dan urutannya mengikuti urutan penulisan. -->
+    <script src="/js/aplikasi.js" defer></script>
+
+    <!-- Diunduh paralel juga, tetapi langsung dijalankan begitu unduhan
+         selesai, sehingga urutannya tidak dapat diandalkan. -->
+    <script src="/js/iklan.js" async></script>
+  </head>
+  <body>
+    <p>Bandingkan urutan permintaan pada panel Network.</p>
+  </body>
+</html>
