@@ -1,0 +1,28 @@
+# Basis data untuk seluruh latihan Bab 3.
+# Jalankan dengan: docker compose up -d
+# Hentikan dengan: docker compose down -v  (-v ikut menghapus datanya)
+
+services:
+  db:
+    image: postgres:16
+    container_name: awe-db
+    environment:
+      POSTGRES_USER: awe
+      POSTGRES_PASSWORD: awe
+      POSTGRES_DB: toko
+    ports:
+      - "5433:5432"
+    # Angka di bawah sengaja kecil agar batas pool terlihat pada Latihan 4.
+    command:
+      - postgres
+      - -c
+      - max_connections=25
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - log_min_duration_statement=200
+    volumes:
+      - data-awe:/var/lib/postgresql/data
+
+volumes:
+  data-awe:

@@ -76,7 +76,7 @@ berbasis Chromium.
   \label{fig:proses-browser}
 \end{figure}
 
-\begin{table}[ht]
+\begin{table}[!htb]
   \centering
   \caption{Proses utama pada browser modern dan tugasnya}
   \label{tab:proses-browser}
@@ -283,7 +283,7 @@ Batas fisikanya hanya sekitar 9 milidetik, dan angka nyatanya 35 milidetik.
 Tabel \ref{tab:rtt} menunjukkan dampaknya. Perhitungannya memakai tiga RTT
 sebelum permintaan terkirim, sesuai Gambar \ref{fig:koneksi}.
 
-\begin{table}[ht]
+\begin{table}[!htb]
   \centering
   \caption{Biaya pembukaan koneksi pada jarak yang berbeda, sebelum server
            mengerjakan apa pun}
@@ -350,7 +350,7 @@ dipasang hanya untuk domain yang pasti dipakai, karena koneksi yang dibuka
 tetapi tidak terpakai justru memboroskan sumber daya. Listing
 \ref{lst:preconnect} menunjukkan penulisannya.
 
-\begin{lstlisting}[language=html, caption={Membuka koneksi ke domain pihak ketiga lebih awal, tersedia di \berkas{module/sources/chapter02/preconnect.html}}, label={lst:preconnect}]
+\begin{lstlisting}[language=html, caption={Membuka koneksi ke domain pihak ketiga lebih awal, tersedia di \berkas{sources/chapter02/preconnect.html}}, label={lst:preconnect}]
 <!-- Koneksi lengkap: DNS, TCP, dan TLS -->
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -360,7 +360,7 @@ tetapi tidak terpakai justru memboroskan sumber daya. Listing
 
 Listing \ref{lst:curl} memperlihatkan biaya tiap tahap secara langsung.
 
-\begin{lstlisting}[language=bash, caption={Mengukur waktu tiap tahap koneksi, format keluarannya di \berkas{module/sources/chapter02/format-curl.txt}}, label={lst:curl}]
+\begin{lstlisting}[language=bash, caption={Mengukur waktu tiap tahap koneksi, format keluarannya di \berkas{sources/chapter02/format-curl.txt}}, label={lst:curl}]
 # Format keluaran disimpan di berkas agar perintahnya pendek dan mudah disalin.
 curl -o /dev/null -s -w @format-curl.txt https://www.pradita.ac.id/
 
@@ -369,7 +369,7 @@ curl -o /dev/null -s -w @format-curl.txt https://www.pradita.ac.id/
 \end{lstlisting}
 
 Isi \texttt{format-curl.txt} beserta skrip pembungkusnya tersedia pada
-\berkas{module/sources/chapter02/}. Skrip \texttt{ukur-koneksi.sh} menjalankan perintah
+\berkas{sources/chapter02/}. Skrip \texttt{ukur-koneksi.sh} menjalankan perintah
 tersebut berulang kali sekaligus menghitung durasi tiap tahap. Perlu diperhatikan,
 angka \texttt{curl} bersifat kumulatif sejak permintaan dimulai, sehingga durasi
 tiap tahap diperoleh dengan pengurangan. Perhatikan pula bahwa
@@ -567,7 +567,7 @@ ketiga versi tersebut.
   \label{fig:http3}
 \end{figure}
 
-\begin{table}[ht]
+\begin{table}[!htb]
   \centering
   \caption{Ringkasan perbedaan tiga versi HTTP}
   \label{tab:http-versi}
@@ -652,7 +652,7 @@ yang tidak habis-habis dapat menahan penggambaran layar. Tabel
 \ref{tab:antrean} merangkum perbedaan perlakuan kedua antrean tersebut, dan
 Listing \ref{lst:urutan} membuktikan urutannya lewat contoh kode.
 
-\begin{table}[ht]
+\begin{table}[!htb]
   \centering
   \caption{Perbedaan perlakuan antrean \textit{macrotask} dan \textit{microtask}}
   \label{tab:antrean}
@@ -692,7 +692,7 @@ penggabungan lapisan di proses GPU, dan itulah sebabnya animasi
 \texttt{transform} serta \texttt{opacity} tetap mulus walaupun \textit{main
 thread} sedang sibuk.
 
-\begin{lstlisting}[language=TypeScript, caption={Urutan eksekusi tugas dan \textit{microtask}, tersedia di \berkas{module/sources/chapter02/urutan-event-loop.js}}, label={lst:urutan}]
+\begin{lstlisting}[language=TypeScript, caption={Urutan eksekusi tugas dan \textit{microtask}, tersedia di \berkas{sources/chapter02/urutan-event-loop.js}}, label={lst:urutan}]
 console.log("1: kode sinkron");
 setTimeout(() => console.log("4: tugas berikutnya"), 0);
 Promise.resolve().then(() => console.log("3: microtask"));
@@ -734,7 +734,7 @@ dari 50 milidetik disebut \textit{long task}, dan itulah sumber utama
 antarmuka yang terasa berat. Listing \ref{lst:longtask} memberi satu
 contohnya.
 
-\begin{lstlisting}[language=TypeScript, caption={Tugas berat yang menahan seluruh antarmuka, tersedia di \berkas{module/sources/chapter02/tugas-berat.ts}}, label={lst:longtask}]
+\begin{lstlisting}[language=TypeScript, caption={Tugas berat yang menahan seluruh antarmuka, tersedia di \berkas{sources/chapter02/tugas-berat.ts}}, label={lst:longtask}]
 function hitungTotal(pesanan: Pesanan[]): number {
   let total = 0;
   // Perulangan panjang ini menahan main thread sampai selesai.
@@ -808,7 +808,7 @@ Dua hal menghambat rangkaian ini:
         HTML sampai berkas selesai diunduh dan dijalankan.
 \end{enumerate}
 
-\begin{lstlisting}[language=html, caption={Script yang menahan \textit{parsing} dan perbaikannya, tersedia di \berkas{module/sources/chapter02/defer-async.html}}, label={lst:defer}]
+\begin{lstlisting}[language=html, caption={Script yang menahan \textit{parsing} dan perbaikannya, tersedia di \berkas{sources/chapter02/defer-async.html}}, label={lst:defer}]
 <!-- Menahan parsing HTML sampai analytics.js selesai dijalankan -->
 <script src="/js/analytics.js"></script>
 
@@ -835,7 +835,7 @@ Pertanyaan berikutnya, siapa yang mengerjakan tahap-tahap tersebut. Jawabannya
 terbagi antara beberapa proses dan utas, mengikuti pembagian pada Seksi 2.2.
 Tabel \ref{tab:penanggung-jawab-render} merangkumnya.
 
-\begin{table}[ht]
+\begin{table}[!htb]
   \centering
   \caption{Penanggung jawab tiap tahap penggambaran halaman}
   \label{tab:penanggung-jawab-render}
@@ -880,7 +880,7 @@ pengguna dan pembaruan tampilan berikutnya. CLS (\textit{Cumulative Layout
 Shift}) mengukur seberapa banyak tata letak bergeser tanpa diminta pengguna.
 Tabel \ref{tab:cwv} merangkum ambang batasnya.
 
-\begin{table}[ht]
+\begin{table}[!htb]
   \centering
   \caption{Core Web Vitals dan ambang batasnya}
   \label{tab:cwv}
@@ -914,7 +914,7 @@ ikut dihitung. Yang diukur adalah jeda sejak pengguna menekan sampai layar
 benar-benar berubah, dan jeda tersebut terdiri atas tiga bagian seperti pada
 Tabel \ref{tab:inp}.
 
-\begin{table}[ht]
+\begin{table}[!htb]
   \centering
   \caption{Tiga bagian penyusun jeda yang diukur INP}
   \label{tab:inp}
@@ -996,7 +996,7 @@ hampir selalu lebih baik daripada kenyataan.
 Semua konsep di atas dapat dilihat langsung memakai DevTools. Tabel
 \ref{tab:devtools} merangkum panel yang paling sering dipakai.
 
-\begin{table}[ht]
+\begin{table}[!htb]
   \centering
   \caption{Panel DevTools dan kegunaannya}
   \label{tab:devtools}
@@ -1065,8 +1065,7 @@ pengukuran selalu didahulukan.
 \section{Latihan}
 
 Seluruh skrip yang dipakai pada latihan ini tersedia di
-\berkas{module/sources/chapter02/}, dihitung relatif terhadap direktori
-\texttt{materi}.
+\berkas{sources/chapter02/}, dihitung relatif terhadap akar repositori.
 
 \subsection*{Latihan 1: Profiling dan Penetapan Baseline Performa}
 
@@ -1093,7 +1092,7 @@ dapat dianggap serangan.
   \item Rekam panel Performance selama pemuatan halaman, lalu catat seluruh
         \textit{long task} beserta durasinya.
   \item Jalankan Lighthouse pada mode Mobile, lalu catat LCP, INP, dan CLS.
-  \item Ukur TTFB memakai \berkas{module/sources/chapter02/ukur-koneksi.sh}
+  \item Ukur TTFB memakai \berkas{sources/chapter02/ukur-koneksi.sh}
         seperti pada Listing \ref{lst:curl}. Ulangi 20 kali dengan jeda
         beberapa detik, lalu hitung nilai p50 dan p95 dari hasilnya.
   \item Ulangi langkah 2 sampai 6 pada satu halaman dalam, yaitu
@@ -1110,12 +1109,12 @@ dapat dianggap serangan.
         dugaan penyebab keterlambatan terbesar beserta bukti yang mendasarinya.
 \end{enumerate}
 
-\begin{lstlisting}[language=bash, caption={Uji beban dengan k6, tersedia di \berkas{module/sources/chapter02/skrip-beban.js}, hanya untuk sistem sendiri atau yang sudah berizin}, label={lst:k6}]
+\begin{lstlisting}[language=bash, caption={Uji beban dengan k6, tersedia di \berkas{sources/chapter02/skrip-beban.js}, hanya untuk sistem sendiri atau yang sudah berizin}, label={lst:k6}]
 k6 run --vus 20 --duration 60s skrip-beban.js
 # Catat http_req_duration untuk p(50) dan p(95).
 \end{lstlisting}
 
-\begin{table}[ht]
+\begin{table}[!htb]
   \centering
   \caption{Lembar isian baseline performa, diisi untuk dua halaman}
   \label{tab:baseline}
@@ -1164,7 +1163,7 @@ bukan oleh kecepatan program di server.
         lambat, dan apa penjelasannya?
 \end{enumerate}
 
-\begin{lstlisting}[language=bash, caption={Skrip pengukur tiap tahap pembukaan koneksi, tersedia di \berkas{module/sources/chapter02/ukur-koneksi.sh}}, label={lst:lat1}]
+\begin{lstlisting}[language=bash, caption={Skrip pengukur tiap tahap pembukaan koneksi, tersedia di \berkas{sources/chapter02/ukur-koneksi.sh}}, label={lst:lat1}]
 #!/usr/bin/env bash
 # Mengukur durasi tiap tahap pembukaan koneksi.
 # Pemakaian: ./ukur-koneksi.sh https://www.pradita.ac.id/ [jumlah_ulangan]
@@ -1184,15 +1183,15 @@ done
 \end{lstlisting}
 
 Kode di atas tidak perlu diketik ulang. Berkasnya tersedia pada
-\berkas{module/sources/chapter02/ukur-koneksi.sh}, dihitung relatif terhadap
-direktori \texttt{materi}. Jalankan dengan perintah berikut.
+\berkas{sources/chapter02/ukur-koneksi.sh}, dihitung relatif terhadap akar
+repositori. Jalankan dengan perintah berikut.
 
 \begin{lstlisting}[language=bash, caption={Menjalankan skrip pengukur koneksi}, label={lst:lat1-jalan}]
-cd module/sources/chapter02
+cd sources/chapter02
 ./ukur-koneksi.sh https://www.pradita.ac.id/ 5
 \end{lstlisting}
 
-\begin{table}[ht]
+\begin{table}[!htb]
   \centering
   \caption{Arti tiap tahap dan cara menghitungnya dari keluaran \texttt{curl}}
   \label{tab:lat1-rumus}
@@ -1213,7 +1212,7 @@ cd module/sources/chapter02
   \end{tabularx}
 \end{table}
 
-\begin{table}[ht]
+\begin{table}[!htb]
   \centering
   \caption{Contoh hasil yang sudah terisi, dalam milidetik}
   \label{tab:lat1-contoh}
@@ -1238,9 +1237,9 @@ perjalanan menuju \textit{origin} baru terasa pada tahap TLS dan tunggu server.
 Angka pada tabel tersebut juga bergantung pada lokasi pengukur, sehingga hasil
 tiap mahasiswa akan berbeda.
 
-\begin{table}[ht]
+\begin{table}[!htb]
   \centering
-  \caption{Lembar isian hasil pengukuran Latihan 1, dalam milidetik}
+  \caption{Lembar isian hasil pengukuran Latihan 2, dalam milidetik}
   \label{tab:lat1-hasil}
   \begin{tabularx}{\textwidth}{Xccccc}
     \hline
@@ -1398,7 +1397,7 @@ curl -sI https://www.pradita.ac.id/assets/front/css/stylenew.css \
 \end{lstlisting}
 
 \begin{lstlisting}[language=bash, caption={Menjalankan skrip pembanding pada aset milik situs kampus}, label={lst:lat2-jalan}]
-cd module/sources/chapter02
+cd sources/chapter02
 ./banding-http.sh https://www.pradita.ac.id/ 5
 
 # Keluarannya:
@@ -1412,9 +1411,9 @@ cd module/sources/chapter02
 #   4. HTTP/2 serentak                       5         1     1.87 detik
 \end{lstlisting}
 
-\begin{table}[ht]
+\begin{table}[!htb]
   \centering
-  \caption{Contoh hasil Latihan 2 yang sudah terisi, lima aset milik
+  \caption{Contoh hasil Latihan 3 yang sudah terisi, lima aset milik
            \texttt{www.pradita.ac.id}}
   \label{tab:lat2-contoh}
   \begin{tabularx}{\textwidth}{Xcccc}
@@ -1477,9 +1476,9 @@ curl -sI https://www.google.com/ | grep -i alt-svc
 \end{lstlisting}
 
 
-\begin{table}[ht]
+\begin{table}[!htb]
   \centering
-  \caption{Lembar isian hasil pengukuran Latihan 2}
+  \caption{Lembar isian hasil pengukuran Latihan 3}
   \label{tab:lat2-hasil}
   \begin{tabularx}{\textwidth}{Xcccc}
     \hline

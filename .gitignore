@@ -444,3 +444,6 @@ coverage/
 *.code-workspace
 .DS_Store
 Thumbs.db
+
+# Virtualenv lokal untuk skrip Python di sources/
+sources/.venv/
