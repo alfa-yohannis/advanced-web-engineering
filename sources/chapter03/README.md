@@ -12,7 +12,7 @@
 | `ukur-query.py` | Menjalankan satu kueri berulang kali, melaporkan p50, p95, dan simpul pemindaiannya |
 | `n-plus-1.py` | Membandingkan pola N+1 dengan kueri yang jumlahnya tetap |
 | `transaksi-konkuren.py` | Memperagakan lost update dan tiga cara mencegahnya |
-| `kolam-koneksi.py` | Mengukur biaya membuka koneksi dan manfaat kolam koneksi |
+| `pool-koneksi.py` | Mengukur biaya membuka koneksi dan manfaat *connection pool* |
 | `migrasi/001_skema_awal.sql` | Migrasi pertama, dijalankan di dalam satu transaksi |
 | `migrasi/002_tambah_kolom_penerbit.sql` | Penambahan kolom dengan pola *expand*, aman bagi versi lama |
 | `migrasi/003_indeks_pesanan.sql` | `CREATE INDEX CONCURRENTLY`, tanpa blok transaksi |
@@ -45,7 +45,7 @@ Selanjutnya, dari direktori bab ini:
 source ../.venv/bin/activate
 python n-plus-1.py 25
 python transaksi-konkuren.py 8 50
-python kolam-koneksi.py 10 50
+python pool-koneksi.py 10 50
 python ukur-query.py kueri/q1.sql 20
 python tiga-lapis-akses.py
 ```

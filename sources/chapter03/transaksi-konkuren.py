@@ -92,7 +92,7 @@ def optimistis(koneksi):
   """Menulis hanya bila versinya belum berubah, lalu mengulang bila kalah.
 
   Tidak ada yang dikunci, sehingga tidak ada yang menunggu. Ongkosnya
-  dibayar oleh pekerja yang kalah balapan, yaitu mengerjakan ulang seluruh
+  dibayar oleh pekerja yang kalah dalam race condition, yaitu mengerjakan ulang
   pembacaan dan penulisannya. Mengembalikan jumlah percobaan yang dipakai.
   """
   percobaan = 0

@@ -1,0 +1,1589 @@
+\documentclass[aspectratio=169, table, 12pt]{beamer}
+
+\usepackage{colortbl}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{tabularx}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc, fit, shapes.geometric}
+
+\makeatletter
+\def\input@path{{../theme/}}
+\makeatother
+\graphicspath{{../theme/}{../../figures/}}
+\usetheme{Pradita}
+
+\definecolor{praditagreen}{RGB}{37, 113, 71}
+
+% Tema membuat garis tabel berwarna putih. Dikembalikan agar tabel terbaca.
+\arrayrulecolor{black}
+\setlength{\arrayrulewidth}{0.5pt}
+
+% Kolom X rata kiri, dipakai pada tabel dengan dua kolom X yang sempit, agar
+% spasi antarkata tidak meregang.
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\lstdefinelanguage{bash}{
+  keywords={},
+  basicstyle=\ttfamily\scriptsize,
+  ndkeywords={cd, docker, python, python3, source},
+  ndkeywordstyle=\color{purple}\bfseries,
+  sensitive=true,
+  commentstyle=\color{gray},
+  numbers=none,
+  breaklines=true,
+  frame=lines,
+  backgroundcolor=\color{lightgray!10},
+  tabsize=2,
+  comment=[l]{\#},
+  showstringspaces=false
+}
+
+% Gaya SQL dan Python disamakan dengan naskah bab, tanpa nomor baris.
+\lstdefinestyle{SqlStyle}{
+  language=SQL,
+  basicstyle=\ttfamily\scriptsize,
+  morekeywords={REAL, TEXT, REFERENCES, EXPLAIN, ANALYZE, JSONB, RETURNING},
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{red},
+  breaklines=true,
+  showstringspaces=false,
+  tabsize=2,
+  numbers=none,
+  frame=lines,
+  backgroundcolor=\color{lightgray!10},
+  comment=[l]{--},
+  morecomment=[s]{/*}{*/}
+}
+
+\lstdefinestyle{PythonStyle}{
+  language=Python,
+  basicstyle=\ttfamily\scriptsize,
+  morekeywords={with, as, yield, async, await, match, case},
+  keywordstyle=\color{blue}\bfseries,
+  emph={psycopg, ConnectionPool, threading, defaultdict, partial},
+  emphstyle=\color{purple}\bfseries,
+  commentstyle=\color{gray}\itshape,
+  stringstyle=\color{red},
+  numbers=none,
+  breaklines=true,
+  frame=lines,
+  backgroundcolor=\color{lightgray!10},
+  tabsize=2,
+  showstringspaces=false
+}
+
+\title{\Huge Data Engineering untuk\\ \vspace{10pt} Aplikasi Web}
+\subtitle{IF140303 - Pengembangan Aplikasi Web}
+\author{\textbf{Alfa Yohannis}}
+
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}[fragile]
+  \frametitle{Isi Pertemuan}
+  \vspace{20pt}
+  \begin{columns}[t]
+    \column{0.5\textwidth}
+    \tableofcontents[sections={1-5}]
+
+    \column{0.5\textwidth}
+    \tableofcontents[sections={6-9}]
+  \end{columns}
+\end{frame}
+
+\begin{frame}{\hfill}
+  \centering
+  \Huge{\textbf{Apa isi waktu \emph{Waiting}\\pada panel Network?}}
+\end{frame}
+
+\section{Tujuan dan Kerangka Bahasan}
+
+\begin{frame}{\hfill}
+  \centering
+  \Huge{\textbf{Tujuan dan Kerangka Bahasan}}
+\end{frame}
+
+\begin{frame}{{\Large Tujuan Pembelajaran}}
+  \vspace{15pt}
+  \begin{itemize}
+    \item Merancang skema relasional beserta batasannya, lalu menjelaskan
+          akibat tiap pilihan tipe data, kunci, dan tingkat abstraksi akses
+          data.
+    \item Membaca rencana eksekusi PostgreSQL, lalu menentukan indeks yang
+          tepat beserta kasus ketika indeks justru tidak dipakai.
+    \item Membuktikan secara terukur bahwa batas transaksi, tingkat isolasi,
+          dan jumlah perjalanan ke basis data menentukan latensi dan
+          kebenaran data.
+  \end{itemize}
+  \vspace{10pt}
+  {\footnotesize Hasil yang benar belum tentu murah ongkosnya.}
+\end{frame}
+
+\begin{frame}{{\Large Biaya yang Tidak Terlihat dari Kode}}
+  \vspace{10pt}
+  \begin{itemize}
+    \item Bab 2 berhenti pada bagian \emph{Waiting}, yaitu waktu sejak
+          permintaan sampai di server hingga byte pertama keluar.
+    \item Pada hampir semua aplikasi web, bagian terbesarnya dihabiskan di
+          basis data.
+    \item Biayanya tidak terlihat dari kode:
+    \begin{itemize}
+      \item satu baris pemanggilan menjadi ratusan perjalanan ke basis data,
+      \item satu kolom tanpa indeks tidak bergejala sampai tabelnya membesar,
+      \item satu transaksi yang kelewat lebar menahan baris permintaan lain.
+    \end{itemize}
+  \end{itemize}
+  \vspace{6pt}
+  {\footnotesize Ketiganya lolos pengujian fungsional, karena hasilnya memang
+  benar. Yang salah hanya ongkosnya.}
+\end{frame}
+
+\section{Ragam Basis Data}
+
+\begin{frame}{\hfill}
+  \centering
+  \Huge{\textbf{Ragam Basis Data\\dan Pemilihannya}}
+\end{frame}
+
+\begin{frame}{{\Large Satu Keterangan, Banyak Susunan}}
+  \vspace{10pt}
+  \begin{itemize}
+    \item Tiap jenis basis data menyusun datanya dengan cara berbeda.
+    \item Cara penyusunan itu menentukan operasi mana yang murah dan mana
+          yang mahal.
+    \item Memaksa satu susunan menjawab seluruh pertanyaan selalu berakhir
+          dengan pekerjaan tambahan.
+  \end{itemize}
+  \vspace{10pt}
+  {\footnotesize Analoginya perpustakaan. Rak menurut nomor panggil
+  memudahkan pencarian satu buku, katalog menurut subjek memudahkan
+  penelusuran tema, dan daftar pinjaman harian memudahkan statistik bulanan.
+  Ketiganya menyimpan keterangan tentang buku yang sama.}
+\end{frame}
+
+\begin{frame}{{\Large Cara Kerja Tiap Jenis}}
+  \vspace{5pt}
+  \centering
+  {\footnotesize
+  \begin{tabularx}{\textwidth}{lX}
+    \hline
+    \textbf{Jenis} & \textbf{Cara kerjanya} \\
+    \hline
+    Relasional & Data dipecah menjadi tabel bernormal, hubungan disusun saat kueri lewat penggabungan \\
+    \hline
+    Dokumen & Satu entitas beserta isinya disimpan utuh sebagai satu dokumen JSON \\
+    \hline
+    Kunci-nilai di memori & Nilai disimpan di memori dan dicari lewat kuncinya, tanpa pemindaian \\
+    \hline
+    Kolomnar & Data disimpan per kolom, bukan per baris, sehingga satu kolom dapat dibaca tanpa menyentuh kolom lain \\
+    \hline
+    Graf & Simpul dan sisi disimpan sebagai penunjuk langsung, sehingga penelusuran hubungan tidak memerlukan penggabungan \\
+    \hline
+    Deret waktu & Baris berstempel waktu ditulis berurutan dan dimampatkan per rentang \\
+    \hline
+    Mesin pencari & Teks dipecah menjadi kata, lalu disimpan sebagai indeks terbalik \\
+    \hline
+  \end{tabularx}}
+\end{frame}
+
+\begin{frame}{{\Large Cocok untuk Apa, dan Apa Ongkosnya}}
+  \vspace{3pt}
+  \centering
+  {\scriptsize
+  \begin{tabularx}{\textwidth}{lYY}
+    \hline
+    \textbf{Jenis} & \textbf{Cocok untuk} & \textbf{Trade-off} \\
+    \hline
+    Relasional & Data yang saling terkait dan menuntut transaksi, misalnya pesanan dan pembayaran & Skema harus dirancang lebih dahulu, dan penggabungan lintas mesin mahal \\
+    \hline
+    Dokumen & Isi yang selalu dibaca sekaligus dan bentuknya berbeda-beda, misalnya katalog produk & Data yang sama tersalin di banyak dokumen, sehingga pembaruannya menyebar \\
+    \hline
+    Kunci-nilai di memori & \textit{Cache}, sesi, penghitung, papan peringkat & Isi memori terbatas dan dapat hilang, sehingga bukan \textit{source of truth} \\
+    \hline
+    Kolomnar & Analitik atas jutaan baris, misalnya laporan dan papan pemantauan & Penulisan satu baris mahal, dan tidak dirancang untuk transaksi \\
+    \hline
+    Graf & Jaringan pertemanan, rekomendasi, penelusuran hak akses berjenjang & Kueri agregat biasa justru lebih lambat, dan penskalaannya rumit \\
+    \hline
+    Deret waktu & Metrik, sensor, dan pemantauan, sebagaimana Bab 9 & Pembaruan dan penghapusan baris lama hampir tidak didukung \\
+    \hline
+    Mesin pencari & Pencarian teks bebas dengan peringkat relevansi & Bukan \textit{source of truth}, dan pembaruannya tertunda beberapa saat \\
+    \hline
+  \end{tabularx}}
+\end{frame}
+
+\begin{frame}{{\Large Dua Contoh Pemilihan}}
+  \vspace{8pt}
+  \begin{enumerate}
+    \item Toko buku daring menyimpan pesanan, pembayaran, dan stok di basis
+          data relasional, karena ketiganya harus berubah bersama dalam satu
+          transaksi. Pencarian judulnya dilayani mesin pencari, dan keranjang
+          belanja sementaranya disimpan di penyimpanan kunci-nilai di memori.
+    \item Papan pemantauan penjualan setahun terakhir dipindahkan ke basis
+          data kolomnar. Kuerinya hanya menyentuh tiga kolom dari puluhan,
+          sehingga sisanya tidak perlu dibaca sama sekali.
+  \end{enumerate}
+  \vspace{6pt}
+  {\footnotesize Tiap penyimpanan tambahan menambah satu \textit{source of truth},
+  satu jalur penyalinan data, satu kemungkinan data tidak sinkron, dan satu
+  sistem lagi yang harus dipantau serta dicadangkan.}
+\end{frame}
+
+\begin{frame}{{\Large Mengapa Relasional Menjadi Acuan}}
+  \vspace{8pt}
+  \begin{itemize}
+    \item Jaminan transaksinya paling kuat, dan hampir seluruh aplikasi web
+          memuat operasi yang menuntut jaminan itu.
+    \item PostgreSQL modern sudah menyediakan kolom \texttt{jsonb}, pencarian
+          teks penuh, serta ekstensi untuk data deret waktu dan vektor.
+    \item Transaksi, indeks, dan rencana eksekusi punya padanan di jenis lain,
+          sehingga pemahamannya dapat dipindahkan.
+  \end{itemize}
+  \vspace{8pt}
+  {\footnotesize Urutan yang disarankan: mulai dari basis data relasional,
+  lalu tambahkan jenis lain hanya setelah pengukuran menunjukkan batasnya
+  tercapai.}
+\end{frame}
+
+\section{Pemodelan Relasional dan SQL}
+
+\begin{frame}{\hfill}
+  \centering
+  \Huge{\textbf{Pemodelan Relasional\\dan SQL}}
+\end{frame}
+
+\begin{frame}{{\Large Tabel, Kunci Primer, dan Kunci Asing}}
+  \vspace{10pt}
+  \begin{itemize}
+    \item Model relasional menyimpan data sebagai tabel. Tiap baris mewakili
+          satu fakta, tiap kolom mewakili satu sifat fakta tersebut.
+    \item Baris dibedakan lewat kunci primer, sedangkan hubungan antartabel
+          dinyatakan lewat kunci asing.
+    \item Bahasa untuk memintanya adalah Structured Query Language (SQL).
+  \end{itemize}
+  \vspace{10pt}
+  {\footnotesize Analoginya arsip akademik kampus. Nomor induk mahasiswa
+  dipakai sebagai penunjuk di kartu rencana studi, sehingga pergantian nama
+  cukup mengubah satu baris di buku induk, bukan ratusan kartu.}
+\end{frame}
+
+\begin{frame}{{\Large Skema Toko Buku Kampus}}
+  \vspace{2pt}
+  {\centering
+  \scalebox{1.0}{
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    tabel/.style={draw, rounded corners, align=left, minimum height=1.05cm,
+                  minimum width=2.7cm, fill=blue!8, font=\scriptsize\bfseries,
+                  inner sep=5pt},
+    panah/.style={-{Stealth[length=1.8mm]}, gray!70, thick}
+  ]
+    \node[tabel, fill=praditagreen!15] (kat) at (-4.6,1.6)
+      {kategori\\{\tiny\mdseries id, nama}};
+    \node[tabel] (buku) at (-4.6,-0.6)
+      {buku\\{\tiny\mdseries id, kategori\_id, judul,}\\{\tiny\mdseries isbn,
+       harga, stok, versi}};
+    \node[tabel, fill=praditagreen!15] (plg) at (1.4,1.6)
+      {pelanggan\\{\tiny\mdseries id, email, nama}};
+    \node[tabel] (psn) at (1.4,-0.6)
+      {pesanan\\{\tiny\mdseries id, pelanggan\_id, status,}\\{\tiny\mdseries
+       total, dibuat\_pada}};
+    \node[tabel, fill=orange!12] (item) at (-1.6,-2.8)
+      {item\_pesanan\\{\tiny\mdseries pesanan\_id, buku\_id,}\\{\tiny\mdseries
+       jumlah, harga\_satuan}};
+    \draw[panah] (buku.north) -- node[right, font=\tiny, gray] {N : 1} (kat.south);
+    \draw[panah] (psn.north)  -- node[right, font=\tiny, gray] {N : 1} (plg.south);
+    \draw[panah] (item.west)  -- node[below left, font=\tiny, gray] {N : 1} (buku.south);
+    \draw[panah] (item.east)  -- node[below right, font=\tiny, gray] {N : 1} (psn.south);
+  \end{tikzpicture}}\par}
+
+  \vspace{4pt}
+  {\footnotesize Tabel \texttt{item\_pesanan} menjadi perantara hubungan
+  banyak ke banyak antara \texttt{pesanan} dan \texttt{buku}.}
+\end{frame}
+
+\begin{frame}[fragile]{{\Large Skema Ditulis Beserta Batasannya}}
+  \vspace{2pt}
+\begin{lstlisting}[style=SqlStyle]
+CREATE TABLE pesanan (
+  id           bigserial PRIMARY KEY,
+  pelanggan_id bigint NOT NULL REFERENCES pelanggan (id),
+  status       status_pesanan NOT NULL DEFAULT 'baru',
+  total        numeric(12, 2) NOT NULL DEFAULT 0,
+  dibuat_pada  timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE item_pesanan (
+  pesanan_id   bigint NOT NULL REFERENCES pesanan (id) ON DELETE CASCADE,
+  buku_id      bigint NOT NULL REFERENCES buku (id),
+  jumlah       integer NOT NULL CHECK (jumlah > 0),
+  harga_satuan numeric(12, 2) NOT NULL,
+  PRIMARY KEY (pesanan_id, buku_id)
+);
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{{\Large Batasan sebagai Penjaga Terakhir}}
+  \vspace{10pt}
+  \begin{itemize}
+    \item Validasi di aplikasi dapat dilewati oleh skrip perbaikan data, oleh
+          layanan lain yang menulis ke basis data yang sama, atau oleh versi
+          aplikasi yang lupa diperbarui.
+    \item Batasan di basis data tidak dapat dilewati siapa pun.
+    \item Kunci primer gabungan pada \texttt{item\_pesanan} sekaligus menjadi
+          aturan bisnis: satu buku hanya boleh muncul sekali dalam satu
+          pesanan.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{{\Large Pilihan Tipe Data dan Akibatnya}}
+  \vspace{5pt}
+  \centering
+  {\scriptsize
+  \begin{tabularx}{\textwidth}{lX}
+    \hline
+    \textbf{Pilihan} & \textbf{Akibatnya} \\
+    \hline
+    \texttt{numeric} untuk uang & Perhitungannya tepat. \texttt{float} menyimpan pecahan biner, sehingga penjumlahan harga dapat meleset beberapa sen. \\
+    \hline
+    \texttt{timestamptz}, bukan \texttt{timestamp} & Waktu disimpan beserta acuan zonanya. Tanpa itu, data dari server di zona berbeda tidak dapat dibandingkan. \\
+    \hline
+    \texttt{text}, bukan \texttt{varchar(n)} & Di PostgreSQL keduanya sama cepat. Batas panjang lebih baik ditulis sebagai \texttt{CHECK}, karena lebih mudah diubah. \\
+    \hline
+    \texttt{bigint}, bukan \texttt{integer}, untuk kunci & Batas \texttt{integer} adalah 2,1 miliar. Mengubah tipe kunci pada tabel besar menuntut penulisan ulang seluruh tabel. \\
+    \hline
+    Tabel referensi, bukan \texttt{enum} & Menambah nilai baru pada \texttt{enum} menuntut perubahan skema, sedangkan menambah baris tidak. \\
+    \hline
+  \end{tabularx}}
+\end{frame}
+
+\begin{frame}{{\Large Dua Kasus Nyata}}
+  \vspace{10pt}
+  \begin{enumerate}
+    \item Kolom harga disimpan sebagai \texttt{float}. Penjumlahan 3 item
+          seharga Rp 33.333,33 menghasilkan Rp 99.999,99 pada satu server dan
+          Rp 100.000,00 pada server lain, dan laporan keuangan pun tidak
+          cocok.
+    \item Kolom waktu disimpan sebagai \texttt{timestamp} tanpa zona. Server
+          aplikasi berjalan pada zona Asia/Jakarta, sedangkan basis data pada
+          UTC. Laporan harian bergeser tujuh jam, dan pesanan yang masuk pukul
+          06.00 tercatat pada tanggal sebelumnya.
+  \end{enumerate}
+\end{frame}
+
+\section{ORM, Query Builder, dan Raw SQL}
+
+\begin{frame}{\hfill}
+  \centering
+  \Huge{\textbf{ORM, Query Builder,\\dan Raw SQL}}
+\end{frame}
+
+\begin{frame}{{\Large Tiga Tingkat Abstraksi}}
+  \vspace{10pt}
+  \begin{itemize}
+    \item \textit{Object-Relational Mapping} (ORM) memetakan tabel menjadi
+          kelas dan baris menjadi objek. SQL dibangkitkan seluruhnya.
+    \item \textit{Query builder} menyusun SQL dari potongan bertipe. Bentuk
+          kuerinya masih terbaca, dan nama kolomnya diperiksa saat kode
+          disusun.
+    \item SQL langsung mengirim teks kueri apa adanya.
+  \end{itemize}
+  \vspace{10pt}
+  {\footnotesize Analoginya berkendara. ORM transmisi otomatis, \textit{query
+  builder} transmisi manual, SQL langsung mengatur sendiri tiap komponennya.
+  Tidak ada yang paling benar, yang ada kecocokan dengan medannya.}
+\end{frame}
+
+\begin{frame}[fragile]{{\Large Lewat ORM}}
+  \vspace{2pt}
+\begin{lstlisting}[style=PythonStyle]
+def lewat_orm(mesin):
+  """Menyusun kueri dari kelas hasil pemetaan, tanpa menulis SQL sama sekali."""
+  perintah = (
+      select(Pesanan.id, Pesanan.total, func.count(ItemPesanan.buku_id))
+      .join(ItemPesanan, ItemPesanan.pesanan_id == Pesanan.id)
+      .where(Pesanan.pelanggan_id == ID_PELANGGAN)
+      .group_by(Pesanan.id)
+      .order_by(Pesanan.dibuat_pada.desc())
+      .limit(BATAS)
+  )
+  with Session(mesin) as sesi:
+    return [tuple(baris) for baris in sesi.execute(perintah).all()]
+\end{lstlisting}
+
+  \vspace{2pt}
+  {\footnotesize Kebutuhannya sepuluh pesanan terakhir milik satu pelanggan
+  beserta jumlah itemnya. SQL tidak ditulis sama sekali.}
+\end{frame}
+
+\begin{frame}[fragile]{{\Large Lewat SQL Langsung}}
+  \vspace{2pt}
+\begin{lstlisting}[style=PythonStyle]
+def lewat_sql_langsung():
+  """Mengirim SQL apa adanya lewat psycopg."""
+  with psycopg.connect(DSN) as koneksi:
+    baris = koneksi.execute(SQL_LANGSUNG, (ID_PELANGGAN, BATAS)).fetchall()
+  return [(b[0], float(b[1]), b[2]) for b in baris]
+\end{lstlisting}
+
+  \vspace{4pt}
+  \begin{itemize}
+    \item Teks kueri dikirim apa adanya lewat \texttt{psycopg}.
+    \item Ketiga cara menghasilkan baris yang identik, dan berkas
+          \texttt{tiga-lapis-akses.py} membuktikannya setiap kali dijalankan.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{{\Large Kekuatan dan Kelemahan}}
+  \vspace{8pt}
+  \centering
+  {\small
+  \begin{tabularx}{\textwidth}{lYY}
+    \hline
+    \textbf{Tingkat} & \textbf{Kekuatan} & \textbf{Kelemahan} \\
+    \hline
+    ORM & Kode singkat, model data terpusat, migrasi terkelola & SQL yang dikirim tidak terlihat, sehingga N+1 dan indeks hilang mudah lolos \\
+    \hline
+    Query builder & Bentuk kueri terbaca, nama kolom diperiksa lebih awal & Kueri rumit menjadi bertele-tele \\
+    \hline
+    SQL langsung & Yang dijalankan persis seperti yang tertulis & Kode berulang, dan perubahan skema tidak ketahuan sampai program berjalan \\
+    \hline
+  \end{tabularx}}
+\end{frame}
+
+\begin{frame}{{\Large Mana yang Dipilih?}}
+  \vspace{8pt}
+  \begin{itemize}
+    \item Ketiganya dipakai dalam satu aplikasi yang sama.
+    \begin{itemize}
+      \item ORM untuk operasi baca dan tulis biasa yang banyak dan seragam.
+      \item \textit{Query builder} untuk kueri yang bentuknya bergantung pada
+            masukan pengguna, misalnya penyaringan dan pengurutan.
+      \item SQL langsung untuk kueri laporan dan kueri yang perlu disetel.
+    \end{itemize}
+    \item Syaratnya, SQL yang benar-benar dikirim harus dapat dilihat:
+          pencatatan kueri saat pengembangan, dan jumlah kueri per
+          \textit{endpoint} saat pengujian.
+  \end{itemize}
+\end{frame}
+
+\section{Transaksi dan Isolation Level}
+
+\begin{frame}{\hfill}
+  \centering
+  \Huge{\textbf{Transaksi, ACID,\\dan Isolation Level}}
+\end{frame}
+
+\begin{frame}{{\Large Empat Sifat Transaksi}}
+  \vspace{8pt}
+  Transaksi adalah sekumpulan perintah yang diperlakukan sebagai satu satuan.
+  Sifatnya diringkas menjadi ACID:
+  \vspace{2pt}
+  \begin{itemize}
+    \item \textbf{\textit{Atomicity}}: seluruhnya jadi atau seluruhnya batal.
+    \item \textbf{\textit{Consistency}}: batasan basis data tetap terpenuhi
+          sesudahnya.
+    \item \textbf{\textit{Isolation}}: transaksi yang berjalan bersamaan tidak
+          saling melihat pekerjaan setengah jadi.
+    \item \textbf{\textit{Durability}}: yang sudah di-\textit{commit} tidak
+          hilang walaupun listrik padam.
+  \end{itemize}
+  \vspace{4pt}
+  {\footnotesize Analoginya pengisian kartu rencana studi. Bila kursi mata
+  kuliah B habis, kursi mata kuliah A tidak boleh ikut terpakai, dan
+  pengisian dibatalkan seluruhnya.}
+\end{frame}
+
+\begin{frame}{{\Large Batas Transaksi}}
+  \vspace{8pt}
+  {\centering
+  \scalebox{1.2}{
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    langkah/.style={draw, rounded corners=2pt, minimum height=0.72cm,
+                    align=center, anchor=west, font=\tiny\bfseries,
+                    inner xsep=2pt},
+    baris/.style={anchor=east, font=\scriptsize\bfseries},
+    ket/.style={anchor=west, font=\tiny, gray},
+    kunci/.style={praditagreen, very thick,
+                  -{Stealth[length=1.4mm]}, {Stealth[length=1.4mm]}-}
+  ]
+    % Lebar tiap kotak: validasi 1,5; UPDATE 1,4; panggil 2,9; INSERT 1,4.
+    \node[baris] at (-0.15,0) {Keliru};
+    \node[langkah, minimum width=1.5cm, fill=blue!8]    at (0,0)   {validasi};
+    \node[langkah, minimum width=1.4cm, fill=orange!25] at (1.5,0) {UPDATE};
+    \node[langkah, minimum width=2.9cm, fill=red!22]    at (2.9,0)
+      {panggil pembayaran};
+    \node[langkah, minimum width=1.4cm, fill=orange!25] at (5.8,0) {INSERT};
+    \draw[kunci] (1.5,-0.5) -- (7.2,-0.5);
+    \node[ket] at (7.35,0) {kunci ditahan};
+    \node[baris] at (-0.15,-1.5) {Benar};
+    \node[langkah, minimum width=1.5cm, fill=blue!8]    at (0,-1.5)   {validasi};
+    \node[langkah, minimum width=2.9cm, fill=blue!8]    at (1.5,-1.5)
+      {panggil pembayaran};
+    \node[langkah, minimum width=1.4cm, fill=orange!25] at (4.4,-1.5) {UPDATE};
+    \node[langkah, minimum width=1.4cm, fill=orange!25] at (5.8,-1.5) {INSERT};
+    \draw[kunci] (4.4,-2.0) -- (7.2,-2.0);
+    \node[ket] at (7.35,-1.5) {kunci singkat};
+  \end{tikzpicture}}\par}
+
+  \vspace{10pt}
+  \begin{itemize}
+    \item Transaksi hanya memuat pekerjaan basis data, dan dibuka selambat
+          mungkin.
+    \item Panggilan HyperText Transfer Protocol (HTTP) yang biasanya 200
+          milidetik dapat menjadi 30 detik, dan selama itu baris tetap
+          terkunci bagi penulis lain.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{{\Large Anomali Transaksi Bersamaan}}
+  \vspace{5pt}
+  \centering
+  {\footnotesize
+  \begin{tabularx}{\textwidth}{lX}
+    \hline
+    \textbf{Anomali} & \textbf{Kejadiannya} \\
+    \hline
+    \textit{Dirty read} & Membaca data yang ditulis transaksi lain yang belum di-\textit{commit}, dan ternyata dibatalkan. \\
+    \hline
+    \textit{Non-repeatable read} & Baris yang sama dibaca dua kali dalam satu transaksi, dan isinya sudah berubah. \\
+    \hline
+    \textit{Phantom read} & Kueri yang sama dijalankan dua kali, dan jumlah barisnya bertambah. \\
+    \hline
+    \textit{Lost update} & Dua transaksi membaca nilai yang sama, menghitung, lalu menulis. Tulisan yang terakhir menimpa yang pertama. \\
+    \hline
+    \textit{Write skew} & Dua transaksi membaca kondisi yang sama, lalu masing-masing menulis baris berbeda, sehingga gabungannya melanggar aturan. \\
+    \hline
+  \end{tabularx}}
+\end{frame}
+
+\begin{frame}{{\Large Tingkat Isolasi pada PostgreSQL}}
+  \vspace{5pt}
+  \centering
+  {\small
+  \begin{tabularx}{\textwidth}{lYY}
+    \hline
+    \textbf{Tingkat} & \textbf{Masih mungkin} & \textbf{Ongkosnya} \\
+    \hline
+    Read Committed (bawaan) & Non-repeatable read, phantom read, lost update & Paling murah, hampir tidak ada transaksi yang gagal \\
+    \hline
+    Repeatable Read & Lost update lewat baca lalu tulis di aplikasi, write skew & Transaksi dapat gagal dengan \textit{serialization failure} dan harus diulang \\
+    \hline
+    Serializable & Tidak ada & Paling mahal, kegagalan yang harus diulang paling sering \\
+    \hline
+  \end{tabularx}}
+\end{frame}
+
+\begin{frame}{{\Large Tiga Catatan dan Satu Konsekuensi}}
+  \vspace{8pt}
+  \begin{itemize}
+    \item PostgreSQL tidak pernah membolehkan \textit{dirty read}, karena
+          \textit{multiversion concurrency control} membuat pembaca melihat
+          potret data yang konsisten.
+    \item Repeatable Read pada PostgreSQL sudah mencegah \textit{phantom
+          read}, lebih ketat daripada yang diwajibkan standar ANSI SQL.
+    \item Serializable memakai \textit{serializable snapshot isolation}:
+          pembaca tidak dikunci, tetapi transaksi dibatalkan bila terdeteksi
+          kemungkinan pelanggaran urutan.
+  \end{itemize}
+  \vspace{6pt}
+  {\footnotesize Begitu isolasi dinaikkan di atas Read Committed, aplikasi
+  \textbf{wajib} menyediakan \textit{retry} otomatis. Tanpa itu, data yang salah
+  hanya ditukar dengan galat yang sampai ke pengguna.}
+\end{frame}
+
+\section{Konkurensi dan Masalah N+1}
+
+\begin{frame}{\hfill}
+  \centering
+  \Huge{\textbf{Konkurensi dan\\Masalah N+1}}
+\end{frame}
+
+\begin{frame}{{\Large Lost Update: Baca, Kurangi, Tulis}}
+  \vspace{5pt}
+  {\centering
+  {\small
+  \begin{tabularx}{\textwidth}{lXXl}
+    \hline
+    \textbf{Waktu} & \textbf{Transaksi A} & \textbf{Transaksi B} & \textbf{Stok} \\
+    \hline
+    t1 & \texttt{SELECT stok} $\rightarrow$ 100 & & 100 \\
+    \hline
+    t2 & & \texttt{SELECT stok} $\rightarrow$ 100 & 100 \\
+    \hline
+    t3 & \texttt{UPDATE stok = 99} & & 99 \\
+    \hline
+    t4 & & \texttt{UPDATE stok = 99} & 99 \\
+    \hline
+  \end{tabularx}}\par}
+
+  \vspace{10pt}
+  {\footnotesize Pola tersebut benar bila hanya ada satu penulis. Dengan dua
+  penulis, dua pembelian terjadi, tetapi stok hanya berkurang satu. Tidak ada
+  galat, tidak ada peringatan, dan pengujian dengan satu pengguna tidak akan
+  pernah menemukannya.}
+\end{frame}
+
+\begin{frame}[fragile]{{\Large Pengaman Atomik}}
+  \vspace{2pt}
+\begin{lstlisting}[style=PythonStyle]
+SQL_BACA_STOK_TERKUNCI = "SELECT stok FROM buku WHERE id = %s FOR UPDATE"
+SQL_TULIS_STOK = "UPDATE buku SET stok = %s WHERE id = %s"
+SQL_KURANGI_ATOMIK = "UPDATE buku SET stok = stok - 1 WHERE id = %s"
+
+
+def atomik(koneksi):
+  """Menyerahkan pembacaan dan pengurangan ke basis data sekaligus."""
+  with koneksi.transaction():
+    koneksi.execute(SQL_KURANGI_ATOMIK, (ID_BUKU,))
+  return 1
+\end{lstlisting}
+
+  \vspace{2pt}
+  {\footnotesize Selama nilai barunya dapat dinyatakan sebagai fungsi dari
+  nilai lamanya, tidak ada nilai yang singgah di aplikasi, sehingga tidak ada
+  jeda yang dapat disisipi.}
+\end{frame}
+
+\begin{frame}[fragile]{{\Large Pengaman Pesimistis dan Optimistis}}
+  \vspace{2pt}
+\begin{lstlisting}[style=PythonStyle]
+def pesimistis(koneksi):
+  """Mengunci baris sampai transaksi selesai, sehingga pekerja lain menunggu."""
+  with koneksi.transaction():
+    baris = koneksi.execute(SQL_BACA_STOK_TERKUNCI, (ID_BUKU,)).fetchone()
+    stok_terbaca = baris[0]
+    koneksi.execute(SQL_TULIS_STOK, (stok_terbaca - 1, ID_BUKU))
+  return 1
+\end{lstlisting}
+
+  \vspace{2pt}
+  {\footnotesize Cara optimistis tidak mengunci. Kolom \texttt{versi} diperiksa
+  saat menulis lewat \texttt{WHERE versi = ...}, dan pekerja yang kalah
+  mengulang.}
+\end{frame}
+
+\begin{frame}{{\Large Hasil: 8 Pekerja, 50 Pengurangan}}
+  \vspace{5pt}
+  {\centering
+  {\small
+  \begin{tabularx}{\textwidth}{lXccc}
+    \hline
+    \textbf{Cara} & \textbf{Pengamannya} & \textbf{Diharapkan} & \textbf{Hasil} & \textbf{Percobaan} \\
+    \hline
+    \texttt{naif}       & Tidak ada                 & 600 & 950 & 400 \\
+    \hline
+    \texttt{atomik}     & \texttt{stok = stok - 1}  & 600 & 600 & 400 \\
+    \hline
+    \texttt{pesimistis} & \texttt{SELECT FOR UPDATE} & 600 & 600 & 400 \\
+    \hline
+    \texttt{optimistis} & \texttt{WHERE versi = ...} & 600 & 600 & 1.782 \\
+    \hline
+  \end{tabularx}}\par}
+
+  \vspace{8pt}
+  \begin{itemize}
+    \item Stok awal 1.000. Dari 400 pengurangan, 350 hilang. Yang tercatat
+          hanya 50, kira-kira hasil kerja satu pekerja saja.
+    \item Cara optimistis benar, tetapi butuh 1.782 percobaan untuk 400
+          pembaruan, sekitar 4,5 kali lipat.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{{\Large Pesimistis atau Optimistis}}
+  \vspace{5pt}
+  {\centering
+  {\small
+  \begin{tabularx}{\textwidth}{lYY}
+    \hline
+     & \textbf{Pesimistis} & \textbf{Optimistis} \\
+    \hline
+    Caranya & Baris dikunci lebih dahulu & Versi diperiksa saat menulis \\
+    \hline
+    Yang menanggung & Pekerja lain menunggu & Pekerja yang kalah mengulang \\
+    \hline
+    Cocok untuk & Benturan sering, transaksi pendek & Benturan jarang, jeda berpikir pengguna panjang \\
+    \hline
+    Bahayanya & \textit{Deadlock} bila urutan penguncian tidak seragam & \textit{Retry} tak berujung saat benturan tinggi \\
+    \hline
+  \end{tabularx}}\par}
+
+  \vspace{8pt}
+  {\footnotesize Pada benturan yang sering, pekerja lebih murah menunggu
+  sebentar daripada mengulang seluruh pekerjaannya. Cara termurah tetap
+  menyerahkan perhitungan kepada basis data lewat \texttt{stok = stok - 1}.}
+\end{frame}
+
+\begin{frame}{{\Large Masalah N+1}}
+  \vspace{5pt}
+  {\centering
+  \scalebox{1.1}{
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    sisi/.style={draw, rounded corners, minimum height=1.5cm, minimum width=1.9cm,
+                 align=center, font=\scriptsize\bfseries},
+    panah/.style={-{Stealth[length=1.6mm]}, thick}
+  ]
+    % Sebaran panah dijaga di dalam tinggi kotak, yaitu setengah dari 1,5 cm.
+    \node[sisi, fill=blue!8] (app1) at (0,0) {Aplikasi};
+    \node[sisi, fill=green!10] (db1) at (4.2,0) {Basis data};
+    \foreach \y in {0.55, 0.33, 0.11, -0.11, -0.33, -0.55} {
+      \draw[panah, gray!70] ([yshift=\y cm]app1.east) -- ([yshift=\y cm]db1.west);
+    }
+    \node[font=\tiny, gray, anchor=north] at (2.1,-0.95) {1 + N perjalanan};
+    \node[sisi, fill=blue!8, minimum height=1cm] (app2) at (0,-2.6) {Aplikasi};
+    \node[sisi, fill=green!10, minimum height=1cm] (db2) at (4.2,-2.6) {Basis data};
+    \draw[panah, praditagreen] ([yshift=0.2cm]app2.east) -- ([yshift=0.2cm]db2.west);
+    \draw[panah, praditagreen] ([yshift=-0.2cm]app2.east) -- ([yshift=-0.2cm]db2.west);
+    \node[font=\tiny, gray, anchor=north] at (2.1,-3.2) {2 perjalanan, berapa pun N};
+  \end{tikzpicture}}\par}
+
+  \vspace{8pt}
+  {\footnotesize Hasilnya benar, tetapi cara memperolehnya boros: satu kueri
+  untuk mengambil daftar, lalu satu kueri tambahan untuk tiap baris pada
+  daftar tersebut.}
+\end{frame}
+
+\begin{frame}[fragile]{{\Large Satu Kueri Tambahan yang Tetap}}
+  \vspace{2pt}
+\begin{lstlisting}[style=PythonStyle]
+SQL_ITEM_BANYAK_PESANAN = """
+    SELECT i.pesanan_id, b.judul, i.jumlah FROM item_pesanan i
+    JOIN buku b ON b.id = i.buku_id
+    WHERE i.pesanan_id = ANY(%s)
+"""
+
+# Seluruh id dikirim sekali sebagai larik, bukan satu per satu.
+semua_id = [pesanan[0] for pesanan in daftar_pesanan]
+kursor.execute(SQL_ITEM_BANYAK_PESANAN, (semua_id,))
+
+item_per_pesanan = defaultdict(list)
+for id_pesanan, judul, jumlah in kursor.fetchall():
+  item_per_pesanan[id_pesanan].append((judul, jumlah))
+\end{lstlisting}
+
+  \vspace{2pt}
+  {\footnotesize Pada 25 pesanan, pola N+1 menjalankan 26 kueri dalam 7,28
+  milidetik, sedangkan cara ini 2 kueri dalam 1,07 milidetik untuk 75 item
+  yang sama persis.}
+\end{frame}
+
+\begin{frame}{{\Large Angka Lokal Meremehkan Masalah}}
+  \vspace{8pt}
+  \begin{itemize}
+    \item Pengukuran tadi memakai basis data di komputer yang sama, sehingga
+          satu perjalanan hampir tidak berbiaya.
+    \item Di produksi, aplikasi dan basis data berada di mesin berbeda dengan
+          RTT sekitar 1 milidetik.
+    \item 26 kueri menanggung tambahan 26 milidetik, 2 kueri hanya 2
+          milidetik. Pada 100 baris, selisihnya 100 milidetik lawan 2
+          milidetik.
+    \item Seluruhnya masuk ke bagian \emph{Waiting} yang diukur pada Bab 2.
+  \end{itemize}
+  \vspace{6pt}
+  {\footnotesize Cara menemukannya bukan membaca kode satu per satu, melainkan
+  menghitung jumlah kueri per \textit{endpoint} saat uji integrasi, lalu
+  menegakkan ambang batasnya di \textit{Continuous Integration}.}
+\end{frame}
+
+\section{Indexing dan Query Plan}
+
+\begin{frame}{\hfill}
+  \centering
+  \Huge{\textbf{Indexing dan\\Pembacaan Query Plan}}
+\end{frame}
+
+\begin{frame}{{\Large Indeks dan Ongkosnya}}
+  \vspace{10pt}
+  \begin{itemize}
+    \item Indeks adalah struktur data tambahan yang memungkinkan basis data
+          menemukan baris tanpa membaca seluruh tabel.
+    \item Tiap indeks memperlambat penulisan dan memakan ruang.
+  \end{itemize}
+  \vspace{10pt}
+  {\footnotesize Analoginya indeks di belakang buku. Halaman yang dituju
+  langsung ketahuan, tetapi indeks harus disusun ulang setiap kali isi buku
+  berubah, dan indeks itu sendiri memakan halaman.}
+\end{frame}
+
+\begin{frame}{{\Large Jenis Indeks}}
+  \vspace{5pt}
+  {\centering
+  {\small
+  \begin{tabularx}{\textwidth}{lX}
+    \hline
+    \textbf{Jenis} & \textbf{Dipakai untuk} \\
+    \hline
+    B-tree kolom tunggal & Kesamaan, rentang, dan pengurutan pada satu kolom. Bawaan PostgreSQL. \\
+    \hline
+    B-tree gabungan & Penyaringan pada beberapa kolom sekaligus. Hanya terpakai bila kolom terdepan ikut disaring. \\
+    \hline
+    Indeks parsial & Sebagian baris saja, lewat klausa \texttt{WHERE}. Lebih kecil dan lebih cepat. \\
+    \hline
+    Indeks ekspresi & Penyaringan atas hasil fungsi, misalnya \texttt{lower(email)}. \\
+    \hline
+    GIN dengan trigram & Pencarian pola di tengah teks, yang tidak dapat dilayani B-tree. \\
+    \hline
+  \end{tabularx}}\par}
+
+  \vspace{8pt}
+  {\footnotesize Indeks \texttt{(pelanggan\_id, dibuat\_pada)} melayani
+  penyaringan atas \texttt{pelanggan\_id} saja atau keduanya, tetapi tidak atas
+  \texttt{dibuat\_pada} saja, persis seperti buku telepon yang terurut menurut
+  nama keluarga lalu nama depan.}
+\end{frame}
+
+\begin{frame}{{\Large Membaca Rencana Eksekusi}}
+  \vspace{8pt}
+  \begin{itemize}
+    \item \texttt{EXPLAIN} memperlihatkan rencana, sedangkan
+          \texttt{EXPLAIN ANALYZE} menjalankannya dan melaporkan waktu
+          nyatanya.
+    \item Tiga hal yang paling penting dibaca:
+    \begin{itemize}
+      \item selisih \texttt{rows} perkiraan dan \texttt{rows} sebenarnya,
+            karena selisih besar berarti statistiknya usang;
+      \item \texttt{Rows Removed by Filter}, karena angka besar adalah tanda
+            indeks yang hilang;
+      \item \texttt{loops}, karena waktu yang tertulis adalah waktu per satu
+            \textit{loop}, bukan totalnya.
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{{\Large Simpul yang Paling Sering Ditemui}}
+  \vspace{3pt}
+  \centering
+  {\footnotesize
+  \begin{tabularx}{\textwidth}{lX}
+    \hline
+    \textbf{Simpul} & \textbf{Artinya} \\
+    \hline
+    Seq Scan & Seluruh tabel dibaca. Wajar untuk tabel kecil, mencurigakan untuk tabel besar dengan penyaring selektif. \\
+    \hline
+    Index Scan & Indeks ditelusuri, lalu barisnya diambil dari tabel. \\
+    \hline
+    Index Only Scan & Seluruh kolom yang diminta ada di indeks, sehingga tabelnya tidak perlu disentuh. \\
+    \hline
+    Bitmap Index Scan & Indeks dipakai untuk menandai halaman yang perlu dibaca, lalu halaman itu dibaca berurutan. Cocok untuk jumlah baris menengah. \\
+    \hline
+    Nested Loop & Untuk tiap baris sisi luar, sisi dalam dicari. Cepat bila sisi luarnya sedikit. \\
+    \hline
+    Hash Join & Sisi yang lebih kecil dibangun menjadi tabel hash. Cocok untuk penggabungan besar. \\
+    \hline
+    Sort & Pengurutan tersendiri. Dapat dihilangkan bila indeksnya sudah berurutan sesuai \texttt{ORDER BY}. \\
+    \hline
+  \end{tabularx}}
+\end{frame}
+
+\begin{frame}[fragile]{{\Large Rencana Q1 Sebelum Indeks}}
+  \vspace{2pt}
+\begin{lstlisting}[style=SqlStyle, basicstyle=\ttfamily\fontsize{7}{8.5}\selectfont]
+Limit  (cost=5179.73..5180.66 rows=8) (actual time=4.994..6.414 rows=10 loops=1)
+  ->  Gather Merge  (actual time=4.993..6.412 rows=10 loops=1)
+        Workers Launched: 2
+        ->  Sort  (actual time=3.568..3.569 rows=3 loops=3)
+              Sort Key: dibuat_pada DESC
+              ->  Parallel Seq Scan on pesanan  (actual time=1.175..3.531 rows=3 loops=3)
+                    Filter: (pelanggan_id = 12345)
+                    Rows Removed by Filter: 66663
+Execution Time: 6.450 ms
+\end{lstlisting}
+
+  \vspace{2pt}
+  \begin{itemize}
+    \item Tabel \texttt{pesanan} berisi 200.000 baris dibaca seluruhnya, dan
+          66.663 baris per pekerja dibuang hanya untuk memperoleh 10 baris.
+    \item Ada simpul Sort, padahal pengurutannya dapat ditanggung indeks.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{{\Large Indeks yang Menjawab Keduanya}}
+  \vspace{2pt}
+\begin{lstlisting}[style=SqlStyle]
+-- Kolom penyaring lebih dahulu, kolom pengurut sesudahnya, arahnya
+-- disamakan dengan ORDER BY agar pengurutan tidak perlu dikerjakan lagi.
+CREATE INDEX idx_pesanan_pelanggan_waktu
+  ON pesanan (pelanggan_id, dibuat_pada DESC);
+
+-- Indeks parsial. Baris berstatus 'batal' tidak pernah ikut dihitung,
+-- sehingga tidak perlu ikut disimpan di dalam indeks.
+CREATE INDEX idx_pesanan_waktu_aktif
+  ON pesanan (dibuat_pada)
+  WHERE status <> 'batal';
+\end{lstlisting}
+
+  \vspace{2pt}
+  {\footnotesize Sesudahnya, Seq Scan berganti menjadi Bitmap Index Scan, dan
+  waktu eksekusi Q1 turun dari 6,450 milidetik menjadi 0,106 milidetik.}
+\end{frame}
+
+\begin{frame}{{\Large Sebelum dan Sesudah Indeks}}
+  \vspace{5pt}
+  {\centering
+  {\small
+  \begin{tabularx}{\textwidth}{lXrrl}
+    \hline
+    \textbf{Kueri} & \textbf{Isinya} & \textbf{Sebelum} & \textbf{Sesudah} & \textbf{Perubahan rencana} \\
+    \hline
+    Q1 & Riwayat pesanan satu pelanggan & 5,602 & 0,016 & Seq $\rightarrow$ Bitmap Index \\
+    \hline
+    Q2 & Buku terlaris 30 hari & 88,459 & 80,433 & Sebagian saja \\
+    \hline
+    Q3 & Pencarian pola di tengah judul & 30,839 & 0,714 & Seq $\rightarrow$ GIN trigram \\
+    \hline
+    Q4 & Hitung pesanan berstatus baru & 6,617 & 7,201 & Tetap Seq Scan \\
+    \hline
+  \end{tabularx}}\par}
+
+  \vspace{8pt}
+  {\footnotesize Waktu eksekusi p50 dalam milidetik, diukur memakai
+  \texttt{ukur-query.py} dengan 20 ulangan. Baris Q2 dan Q4 sengaja
+  dibiarkan apa adanya, karena keduanya justru yang paling banyak
+  mengajarkan.}
+\end{frame}
+
+\begin{frame}{{\Large Dua Baris yang Paling Mengajarkan}}
+  \vspace{8pt}
+  \begin{itemize}
+    \item \textbf{Q4} tidak membaik, dan selisihnya masih dalam batas derau.
+          Penyaring \texttt{status = 'baru'} mengembalikan sekitar seperempat
+          isi tabel, sehingga membaca berurutan lebih murah daripada melompat
+          lewat indeks. Pilihan perencana benar.
+    \item \textbf{Q2} hanya membaik sekitar sembilan persen. Biaya terbesarnya
+          ada pada pembacaan seluruh 600.000 baris \texttt{item\_pesanan}
+          untuk digabungkan. Batu sandungannya berpindah.
+  \end{itemize}
+  \vspace{6pt}
+  {\footnotesize Indeks berguna ketika penyaringnya selektif, bukan sekadar
+  ketika kolomnya sering dipakai.}
+\end{frame}
+
+\begin{frame}{{\Large Taksiran Perencana Bisa Meleset}}
+  \vspace{8pt}
+  \begin{itemize}
+    \item Dengan \texttt{SET enable\_hashjoin = off}, perencana beralih ke
+          Nested Loop yang memakai kunci primer \texttt{item\_pesanan}.
+    \item Waktu Q2 justru turun menjadi 65,9 milidetik dari 78,8 milidetik.
+    \item Perencana memilih berdasarkan taksiran biaya, dan taksiran itu
+          sendiri dapat meleset.
+  \end{itemize}
+  \vspace{6pt}
+  {\footnotesize Mematikan Hash Join adalah alat diagnosis, bukan perbaikan
+  yang dibawa ke produksi. Perbaikan yang benar menyegarkan statistik,
+  menaikkan target statistik kolomnya, atau menulis ulang kuerinya.}
+\end{frame}
+
+\section{Connection Pooling}
+
+\begin{frame}{\hfill}
+  \centering
+  \Huge{\textbf{Connection Pooling}}
+\end{frame}
+
+\begin{frame}{{\Large Membuka Koneksi Itu Mahal}}
+  \vspace{10pt}
+  \begin{itemize}
+    \item Tiap koneksi PostgreSQL dilayani satu proses tersendiri di sisi
+          server, lengkap dengan memorinya.
+    \item Membuka koneksi berarti membangun soket, melakukan
+          \textit{handshake} autentikasi, dan menyiapkan proses baru.
+    \item Biayanya jauh lebih besar daripada menjalankan satu kueri
+          sederhana.
+  \end{itemize}
+  \vspace{10pt}
+  {\footnotesize Analoginya loket layanan kemahasiswaan. Membuka loket baru
+  menuntut petugas, meja, dan komputer sendiri. \textit{Connection pool} adalah
+  sejumlah loket yang dibuka sekali di awal, lalu dipakai bergantian.}
+\end{frame}
+
+\begin{frame}{{\Large Susunan Connection Pool}}
+  \vspace{10pt}
+  {\centering
+  \scalebox{1.2}{
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    kotak/.style={draw, rounded corners, minimum height=0.7cm, minimum width=1.7cm,
+                  align=center, font=\scriptsize\bfseries},
+    panah/.style={-{Stealth[length=1.6mm]}, gray!70}
+  ]
+    \foreach \i/\y in {1/1.2, 2/0.4, 3/-0.4, 4/-1.2} {
+      \node[kotak, fill=blue!8] (w\i) at (0,\y) {Pekerja \i};
+    }
+    \node[kotak, fill=orange!12, minimum height=2.9cm, minimum width=2.1cm,
+          align=center] (pool) at (3.2,0) {\textit{Pool}\\{\tiny\mdseries maksimum 10}};
+    \node[kotak, fill=green!10, minimum height=2.9cm, minimum width=2.2cm,
+          align=center] (db) at (6.6,0)
+      {PostgreSQL\\{\tiny\mdseries max\_connections}\\{\tiny\mdseries = 25}};
+    \foreach \i in {1,2,3,4} \draw[panah] (w\i.east) -- (pool.west);
+    \draw[panah] (pool.east) -- (db.west);
+  \end{tikzpicture}}\par}
+
+  \vspace{10pt}
+  {\footnotesize \textit{Pool} membatasi jumlah koneksi yang benar-benar dibuka,
+  sedangkan pekerja yang melebihi batas ikut mengantre.}
+\end{frame}
+
+\begin{frame}{{\Large Hasil: 10 Pekerja, 50 Kueri Sepele}}
+  \vspace{5pt}
+  {\centering
+  {\small
+  \begin{tabularx}{\textwidth}{lXrr}
+    \hline
+    \textbf{Cara} & \textbf{Keterangan} & \textbf{Total} & \textbf{Per kueri} \\
+    \hline
+    Koneksi baru tiap kueri & 500 koneksi dibuka dan ditutup & 843,4 ms & 1,687 ms \\
+    \hline
+    Satu koneksi per pekerja & 10 koneksi, dipakai ulang & 45,4 ms & 0,091 ms \\
+    \hline
+    \textit{Pool}, maksimum 10 & 10 koneksi, dipinjam bergantian & 85,6 ms & 0,171 ms \\
+    \hline
+  \end{tabularx}}\par}
+
+  \vspace{8pt}
+  {\footnotesize Selisih baris pertama dan kedua sekitar delapan belas kali
+  lipat. Seluruhnya biaya membuka koneksi, karena kuerinya hanya
+  \texttt{SELECT 1}.}
+\end{frame}
+
+\begin{frame}{{\Large Mengapa Pool Sedikit Lebih Lambat}}
+  \vspace{8pt}
+  \begin{itemize}
+    \item \textit{Pool} menambah pekerjaan meminjam dan mengembalikan koneksi,
+          lengkap dengan penguncian antarutas.
+    \item Ongkos itu terbayar begitu jumlah pekerja melampaui jumlah koneksi
+          yang boleh dibuka.
+    \item 40 pekerja tanpa \textit{pool} menabrak \texttt{max\_connections} yang
+          disetel 25, dan 10 di antaranya gagal dengan galat \emph{too many
+          clients already}.
+    \item 40 pekerja yang sama lewat \textit{pool} berisi 10 koneksi seluruhnya
+          berhasil dalam 43,9 milidetik.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{{\Large Dua Kaidah Penyetelan}}
+  \vspace{8pt}
+  \begin{enumerate}
+    \item Ukuran \textit{pool} ditentukan kemampuan basis data, bukan jumlah pekerja
+          aplikasi. Jumlah seluruh \textit{pool} dari seluruh instans harus lebih
+          kecil daripada \texttt{max\_connections}, dengan sisa untuk
+          administrasi.
+    \item \textit{Pool} yang terlalu besar tidak mempercepat apa pun. Setelah
+          prosesor dan cakram jenuh, koneksi tambahan hanya memperpanjang
+          antrean.
+  \end{enumerate}
+  \vspace{6pt}
+  {\footnotesize Lingkungan \textit{serverless} membawa \textit{pool} per instans,
+  sehingga jumlah koneksinya meledak. Untuk itu dipakai PgBouncer dalam mode
+  transaksi, dengan konsekuensi \textit{prepared statement} lintas transaksi
+  dan tabel sementara tidak lagi dapat diandalkan.}
+\end{frame}
+
+\section{Migrasi Berversi}
+
+\begin{frame}{\hfill}
+  \centering
+  \Huge{\textbf{Migrasi sebagai\\Artefak Berversi}}
+\end{frame}
+
+\begin{frame}{{\Large Tiga Aturan Migrasi}}
+  \vspace{8pt}
+  Perubahan skema ditulis sebagai berkas bernomor di repositori, diperiksa
+  lewat \textit{code review}, dan dijalankan oleh \textit{pipeline} yang sama
+  untuk seluruh lingkungan.
+  \vspace{2pt}
+  \begin{enumerate}
+    \item Migrasi yang sudah dijalankan tidak pernah diubah lagi. Perubahan
+          berikutnya ditulis sebagai berkas baru.
+    \item Tiap migrasi dapat dijalankan pada basis data kosong maupun yang
+          sudah berisi.
+    \item Migrasi dijalankan sebelum versi aplikasi baru dinyalakan, sehingga
+          versi lama dan skema baru sempat berjalan bersamaan.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{{\Large Pola Expand-Contract}}
+  \vspace{10pt}
+  {\centering
+  \scalebox{1.15}{
+  \begin{tikzpicture}[
+    node distance=0.4cm and 0.45cm,
+    tahap/.style={draw, rounded corners, minimum height=1.05cm, minimum width=2.15cm,
+                  align=center, font=\scriptsize\bfseries},
+    panah/.style={-{Stealth[length=2mm]}, thick}
+  ]
+    \node[tahap, fill=blue!8] (a)
+      {1. Expand\\{\tiny\mdseries kolom baru}\\{\tiny\mdseries ditambah, boleh kosong}};
+    \node[tahap, fill=blue!8, right=of a] (b)
+      {2. Isi\\{\tiny\mdseries data lama}\\{\tiny\mdseries disalin bertahap}};
+    \node[tahap, fill=orange!12, right=of b] (c)
+      {3. Alihkan\\{\tiny\mdseries aplikasi memakai}\\{\tiny\mdseries kolom baru}};
+    \node[tahap, fill=green!10, right=of c] (d)
+      {4. Contract\\{\tiny\mdseries kolom lama}\\{\tiny\mdseries dihapus}};
+    \draw[panah] (a) -- (b);
+    \draw[panah] (b) -- (c);
+    \draw[panah] (c) -- (d);
+  \end{tikzpicture}}\par}
+
+  \vspace{10pt}
+  {\footnotesize Perubahan yang merusak, misalnya mengganti nama sebuah
+  kolom, dipecah menjadi beberapa langkah. Tiap langkah aman dijalankan
+  sementara versi lama aplikasi masih berjalan.}
+\end{frame}
+
+\begin{frame}{{\Large Perintah yang Mengunci Tabel}}
+  \vspace{5pt}
+  {\centering
+  {\footnotesize
+  \begin{tabularx}{\textwidth}{lX}
+    \hline
+    \textbf{Perintah} & \textbf{Risikonya} \\
+    \hline
+    \texttt{ADD COLUMN} tanpa \texttt{NOT NULL} & Aman. Kuncinya hanya sesaat. \\
+    \hline
+    \texttt{ADD COLUMN} dengan nilai bawaan & Aman sejak PostgreSQL 11, karena tabelnya tidak ditulis ulang. \\
+    \hline
+    \texttt{CREATE INDEX} & Berbahaya. Seluruh penulisan tertahan sampai indeks selesai dibangun. \\
+    \hline
+    \texttt{CREATE INDEX CONCURRENTLY} & Aman, tetapi lebih lama, tidak boleh di dalam transaksi, dan dapat menyisakan indeks tak sah bila gagal. \\
+    \hline
+    \texttt{ALTER COLUMN TYPE} & Berbahaya. Umumnya menulis ulang seluruh tabel. \\
+    \hline
+    \texttt{ADD CONSTRAINT} langsung & Berbahaya. Seluruh baris diperiksa sambil tabel terkunci. \\
+    \hline
+  \end{tabularx}}\par}
+
+  \vspace{8pt}
+  {\footnotesize Pada tabel berisi puluhan juta baris, kunci yang
+  menghentikan pembacaan dan penulisan berarti layanan berhenti selama
+  beberapa menit.}
+\end{frame}
+
+\begin{frame}[fragile]{{\Large Migrasi Indeks yang Aman}}
+  \vspace{2pt}
+\begin{lstlisting}[style=SqlStyle]
+-- Tanpa BEGIN. CREATE INDEX CONCURRENTLY tidak boleh di dalam transaksi.
+SET lock_timeout = '5s';
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pesanan_pelanggan_waktu
+  ON pesanan (pelanggan_id, dibuat_pada DESC);
+
+-- Memeriksa indeks yang tertinggal dalam keadaan tidak sah:
+-- SELECT indexrelid::regclass FROM pg_index WHERE NOT indisvalid;
+\end{lstlisting}
+
+  \vspace{2pt}
+  \begin{itemize}
+    \item Ditulis tanpa \texttt{BEGIN}, karena \texttt{CREATE INDEX
+          CONCURRENTLY} tidak boleh berada di dalam blok transaksi.
+    \item \texttt{lock\_timeout} membuat migrasi menyerah lebih dahulu,
+          alih-alih mengantre di belakang transaksi panjang sambil menahan
+          seluruh permintaan sesudahnya.
+  \end{itemize}
+\end{frame}
+
+\section{Penyiapan Latihan}
+
+\begin{frame}{\hfill}
+  \centering
+  \Huge{\textbf{Penyiapan Latihan}}
+\end{frame}
+
+\begin{frame}[fragile]{{\Large Basis Data dan Data Uji}}
+  \vspace{2pt}
+\begin{lstlisting}[language=bash, basicstyle=\ttfamily\fontsize{7}{8.5}\selectfont]
+cd sources/chapter03
+docker compose up -d
+docker compose exec -T db psql "postgresql://awe:awe@localhost/toko" < 01-skema.sql
+docker compose exec -T db psql "postgresql://awe:awe@localhost/toko" < 02-data-uji.sql
+
+# Keluarannya:
+#     tabel     | count
+# --------------+--------
+#  kategori     |     20
+#  pelanggan    |  20000
+#  buku         |  50000
+#  pesanan      | 200000
+#  item_pesanan | 600000
+\end{lstlisting}
+
+  \vspace{2pt}
+  {\footnotesize Basis data dijalankan sebagai container, sehingga tidak ada
+  sistem milik pihak lain yang tersentuh. Uji beban pada bab ini pun
+  dijalankan pada basis data sendiri.}
+\end{frame}
+
+\begin{frame}[fragile]{{\Large Venv dan Urutan Kerja}}
+  \vspace{2pt}
+\begin{lstlisting}[language=bash]
+cd sources
+python3 -m venv .venv
+.venv/bin/pip install "psycopg[binary,pool]" sqlalchemy
+\end{lstlisting}
+
+  \vspace{4pt}
+  \begin{itemize}
+    \item Seluruh skrip Python memakai venv bersama di
+          \texttt{sources/.venv}, dibuat sekali saja.
+    \item Rencana eksekusi sebelum perbaikan direkam lebih dahulu, karena
+          begitu indeks terpasang rencana itu tidak dapat diperoleh kembali.
+    \item Seusai latihan, \texttt{docker compose down -v} menghentikan
+          container sekaligus menghapus volume datanya.
+  \end{itemize}
+\end{frame}
+
+\section{Latihan 1: Baseline Kueri}
+
+\begin{frame}{\hfill}
+  \centering
+  \Huge{\textbf{Latihan 1\\Menetapkan Baseline Kueri}}
+\end{frame}
+
+\begin{frame}{{\Large Langkah Kerja}}
+  \vspace{5pt}
+  \begin{enumerate}
+    \item Jalankan penyiapan, lalu pastikan jumlah barisnya sesuai.
+    \item Jalankan \texttt{03-query-baseline.sql}, lalu simpan seluruh
+          keluarannya ke berkas.
+    \item Untuk tiap kueri, catat simpul pemindaian teratas,
+          \texttt{Rows Removed by Filter}, dan \texttt{Execution Time}.
+    \item Ukur sebarannya memakai \texttt{ukur-query.py}, lalu catat p50 dan
+          p95.
+    \item Isi lembar isian, lalu jawab tiga pertanyaan analisis.
+  \end{enumerate}
+  \vspace{4pt}
+  {\footnotesize Yang diukur adalah waktu eksekusi dan bentuk rencananya,
+  sebelum satu indeks pun ditambahkan.}
+\end{frame}
+
+\begin{frame}[fragile]{{\Large Mengukur Sebaran Waktu Eksekusi}}
+  \vspace{3pt}
+\begin{lstlisting}[language=bash]
+cd sources/chapter03
+source ../.venv/bin/activate
+python ukur-query.py kueri/q1.sql 20
+
+# Keluarannya:
+# Berkas       : kueri/q1.sql
+# Ulangan      : 20, jalankan pertama dibuang
+# p50          :    5.602 ms
+# p95          :    5.905 ms
+# Pemindaian   : Seq Scan pesanan
+\end{lstlisting}
+
+  \vspace{3pt}
+  {\footnotesize Jalankan pertama sengaja dibuang oleh skrip, karena
+  menanggung pengisian \textit{cache}.}
+\end{frame}
+
+\begin{frame}{{\Large Contoh Hasil Latihan 1}}
+  \vspace{5pt}
+  {\centering
+  {\small
+  \begin{tabularx}{\textwidth}{lXrrl}
+    \hline
+    \textbf{Kueri} & \textbf{Dibuang penyaring} & \textbf{p50} & \textbf{p95} & \textbf{Pemindaian} \\
+    \hline
+    Q1 & 66.663 per pekerja & 5,602 & 5,905 & Seq Scan pesanan \\
+    \hline
+    Q2 & 62.194 per pekerja & 88,459 & 92,818 & Seq Scan tiga tabel \\
+    \hline
+    Q3 & 49.989 & 30,839 & 31,959 & Seq Scan buku \\
+    \hline
+    Q4 & 55.567 per pekerja & 6,617 & 7,212 & Seq Scan pesanan \\
+    \hline
+  \end{tabularx}}\par}
+
+  \vspace{8pt}
+  {\footnotesize Waktu dalam milidetik.}
+\end{frame}
+
+\begin{frame}{{\Large Lembar Isian Latihan 1}}
+  \vspace{5pt}
+  {\centering
+  {\small
+  \begin{tabularx}{\textwidth}{lXrrl}
+    \hline
+    \textbf{Kueri} & \textbf{Dibuang penyaring} & \textbf{p50} & \textbf{p95} & \textbf{Pemindaian} \\
+    \hline
+    Q1 & \dots & \dots & \dots & \dots \\
+    \hline
+    Q2 & \dots & \dots & \dots & \dots \\
+    \hline
+    Q3 & \dots & \dots & \dots & \dots \\
+    \hline
+    Q4 & \dots & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}}\par}
+
+  \vspace{8pt}
+  {\footnotesize Pertanyaan: kueri mana yang membuang baris terbanyak
+  dibanding baris yang dikembalikannya, kueri mana yang punya simpul Sort dan
+  mengapa, serta mengapa p95 selalu lebih besar daripada p50 padahal kueri
+  dan datanya sama persis?}
+\end{frame}
+
+\section{Latihan 2: Memilih Indeks}
+
+\begin{frame}{\hfill}
+  \centering
+  \Huge{\textbf{Latihan 2\\Memilih Indeks}}
+\end{frame}
+
+\begin{frame}{{\Large Langkah Kerja}}
+  \vspace{5pt}
+  \begin{enumerate}
+    \item Tulis dugaan untuk tiap kueri: apakah indeks akan terpakai, dan
+          berapa perkiraan perbaikannya.
+    \item Jalankan \texttt{04-indeks.sql}, lalu catat ukuran tiap indeks.
+    \item Ulangi pengukuran Latihan 1 dengan cara dan ulangan yang sama
+          persis.
+    \item Isi lembar isian, lalu bandingkan dengan dugaan.
+    \item Jalankan ulang Q2 dengan \texttt{SET enable\_hashjoin = off}, lalu
+          catat waktunya.
+  \end{enumerate}
+  \vspace{4pt}
+  {\footnotesize Dugaan ditulis lebih dahulu agar tidak menyesuaikan diri
+  dengan hasilnya. Penyetelan \texttt{enable\_hashjoin} adalah alat
+  diagnosis, bukan perbaikan.}
+\end{frame}
+
+\begin{frame}{{\Large Contoh Hasil Latihan 2}}
+  \vspace{5pt}
+  {\centering
+  {\small
+  \begin{tabularx}{\textwidth}{lrrrX}
+    \hline
+    \textbf{Kueri} & \textbf{Sebelum} & \textbf{Sesudah} & \textbf{Rasio} & \textbf{Pemindaian sesudahnya} \\
+    \hline
+    Q1 & 5,602 & 0,016 & 350$\times$ & Bitmap Index Scan \\
+    \hline
+    Q2 & 88,459 & 80,433 & 1,1$\times$ & Sebagian indeks, sebagian Seq Scan \\
+    \hline
+    Q3 & 30,839 & 0,714 & 43$\times$ & Bitmap Index Scan trigram \\
+    \hline
+    Q4 & 6,617 & 7,201 & 0,9$\times$ & Tetap Seq Scan \\
+    \hline
+  \end{tabularx}}\par}
+
+  \vspace{8pt}
+  {\footnotesize Waktu p50 dalam milidetik.}
+\end{frame}
+
+\begin{frame}{{\Large Kejanggalan yang Sengaja Dibiarkan}}
+  \vspace{10pt}
+  \begin{itemize}
+    \item Rasio Q4 berada di bawah satu, tetapi selisih sekecil itu masih
+          dalam batas derau.
+    \item Yang disimpulkan bukan bahwa indeks memperlambatnya, melainkan
+          bahwa indeksnya memang tidak dipakai sama sekali.
+    \item Angkanya bergantung pada perangkat keras dan versi PostgreSQL,
+          sehingga hasil tiap mahasiswa akan berbeda.
+    \item Yang dilaporkan adalah pola perbandingannya beserta penjelasannya,
+          bukan angka persisnya.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{{\Large Lembar Isian Latihan 2}}
+  \vspace{5pt}
+  {\centering
+  {\small
+  \begin{tabularx}{\textwidth}{lrrrX}
+    \hline
+    \textbf{Kueri} & \textbf{Sebelum} & \textbf{Sesudah} & \textbf{Rasio} & \textbf{Pemindaian sesudahnya} \\
+    \hline
+    Q1 & \dots & \dots & \dots & \dots \\
+    \hline
+    Q2 & \dots & \dots & \dots & \dots \\
+    \hline
+    Q3 & \dots & \dots & \dots & \dots \\
+    \hline
+    Q4 & \dots & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}}\par}
+
+  \vspace{8pt}
+  {\footnotesize Pertanyaan: mengapa Q4 tidak membaik walaupun kolom
+  \texttt{status} sering dipakai sebagai penyaring, mengapa Q2 hanya membaik
+  sedikit padahal indeksnya terpakai, dan apa artinya bila rencana dengan
+  \texttt{enable\_hashjoin = off} lebih cepat daripada pilihan perencana?}
+\end{frame}
+
+\section{Latihan 3: Masalah N+1}
+
+\begin{frame}{\hfill}
+  \centering
+  \Huge{\textbf{Latihan 3\\Menghilangkan Masalah N+1}}
+\end{frame}
+
+\begin{frame}[fragile]{{\Large Menjalankan Perbandingan}}
+  \vspace{2pt}
+\begin{lstlisting}[language=bash]
+cd sources/chapter03
+source ../.venv/bin/activate
+python n-plus-1.py 25
+
+# Keluarannya:
+# Pelanggan 12059 punya 25 pesanan, diambil 25.
+#
+#   Cara                          Kueri       Item       Waktu
+#   N+1                        26 kueri    75 item     7.28 ms
+#   Dua kueri tetap             2 kueri    75 item     1.07 ms
+#
+# Hasil kedua cara identik: True
+\end{lstlisting}
+
+  \vspace{2pt}
+  {\footnotesize Jalankan untuk 5, 25, dan seluruh pesanan milik pelanggan
+  tersibuk. Baris terakhir membuktikan kedua cara mengembalikan data yang
+  sama persis, karena perbaikan yang mengubah hasil bukan perbaikan.}
+\end{frame}
+
+\begin{frame}{{\Large Contoh Hasil dan Lembar Isian}}
+  \vspace{3pt}
+  \centering
+  {\small \textbf{Contoh terisi}\\[3pt]
+  \begin{tabularx}{\textwidth}{Xcccc}
+    \hline
+    \textbf{Jumlah pesanan} & \textbf{Kueri N+1} & \textbf{Waktu N+1} & \textbf{Kueri tetap} & \textbf{Waktu tetap} \\
+    \hline
+    25 & 26 & 7,28 ms & 2 & 1,07 ms \\
+    \hline
+    25, ditambah RTT 1 ms & 26 & 33,28 ms & 2 & 3,07 ms \\
+    \hline
+  \end{tabularx}}
+
+  \vspace{6pt}
+  {\small \textbf{Lembar isian}\\[3pt]
+  \begin{tabularx}{\textwidth}{Xcccc}
+    \hline
+    \textbf{Jumlah pesanan} & \textbf{Kueri N+1} & \textbf{Waktu N+1} & \textbf{Kueri tetap} & \textbf{Waktu tetap} \\
+    \hline
+    5 & \dots & \dots & \dots & \dots \\
+    \hline
+    25 & \dots & \dots & \dots & \dots \\
+    \hline
+    25, ditambah RTT 1 ms & \dots & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}}
+\end{frame}
+
+\begin{frame}{{\Large Pertanyaan Analisis Latihan 3}}
+  \vspace{10pt}
+  \begin{itemize}
+    \item Waktu produksi dihitung dengan menambahkan 1 milidetik untuk tiap
+          kueri, sesuai RTT antara aplikasi dan basis data.
+    \item Berapa kali lipat selisihnya pada pengukuran lokal, dan berapa kali
+          lipat setelah RTT diperhitungkan?
+    \item Mengapa jumlah kueri cara kedua tetap dua, berapa pun jumlah
+          pesanannya?
+  \end{itemize}
+\end{frame}
+
+\section{Latihan 4: Lost Update}
+
+\begin{frame}{\hfill}
+  \centering
+  \Huge{\textbf{Latihan 4\\Membuktikan Lost Update}}
+\end{frame}
+
+\begin{frame}[fragile]{{\Large Menjalankan Peragaan}}
+  \vspace{2pt}
+\begin{lstlisting}[language=bash]
+cd sources/chapter03
+source ../.venv/bin/activate
+python transaksi-konkuren.py 8 50
+
+# Keluarannya:
+#   Cara        Diharapkan     Hasil   Hilang   Percobaan
+#   naif               600       950      350         400
+#   atomik             600       600        0         400
+#   pesimistis         600       600        0         400
+#   optimistis         600       600        0        1782
+\end{lstlisting}
+
+  \vspace{2pt}
+  \begin{itemize}
+    \item Jalankan dengan 8 pekerja dan 50 pengurangan, lalu ulangi dengan 2
+          dan 16 pekerja.
+    \item Perhatikan bagaimana jumlah pembaruan yang hilang dan jumlah
+          percobaan cara \texttt{optimistis} berubah mengikuti jumlah
+          pekerja.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{{\Large Contoh Hasil Latihan 4}}
+  \vspace{5pt}
+  {\centering
+  {\small
+  \begin{tabularx}{\textwidth}{lXccc}
+    \hline
+    \textbf{Cara} & \textbf{Pengamannya} & \textbf{Hasil} & \textbf{Hilang} & \textbf{Percobaan} \\
+    \hline
+    \texttt{naif} & Tidak ada & 950 & 350 & 400 \\
+    \hline
+    \texttt{atomik} & \texttt{stok = stok - 1} & 600 & 0 & 400 \\
+    \hline
+    \texttt{pesimistis} & \texttt{SELECT FOR UPDATE} & 600 & 0 & 400 \\
+    \hline
+    \texttt{optimistis} & \texttt{WHERE versi = ...} & 600 & 0 & 1.782 \\
+    \hline
+  \end{tabularx}}\par}
+
+  \vspace{8pt}
+  {\footnotesize Contoh dengan 8 pekerja.}
+\end{frame}
+
+\begin{frame}{{\Large Lembar Isian Latihan 4}}
+  \vspace{5pt}
+  {\centering
+  {\small
+  \begin{tabularx}{\textwidth}{lccc}
+    \hline
+    \textbf{Cara} & \textbf{2 pekerja, hilang} & \textbf{8 pekerja, hilang} & \textbf{16 pekerja, hilang} \\
+    \hline
+    \texttt{naif} & \dots & \dots & \dots \\
+    \hline
+    \texttt{atomik} & \dots & \dots & \dots \\
+    \hline
+    \texttt{pesimistis} & \dots & \dots & \dots \\
+    \hline
+    \texttt{optimistis} & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}}\par}
+
+  \vspace{8pt}
+  {\footnotesize Pertanyaan: mengapa cara \texttt{naif} tidak pernah gagal
+  padahal datanya salah, pada jumlah pekerja berapa cara \texttt{optimistis}
+  mulai lebih mahal daripada \texttt{pesimistis}, dan mengapa cara
+  \texttt{atomik} tidak membutuhkan \textit{retry} sama sekali?}
+\end{frame}
+
+\section{Ringkasan}
+
+\begin{frame}{\hfill}
+  \centering
+  \Huge{\textbf{Ringkasan}}
+\end{frame}
+
+\begin{frame}{{\Large Ringkasan}}
+  \vspace{8pt}
+  \begin{itemize}
+    \item Batasan di dalam skema adalah penjaga terakhir, dan tipe data yang
+          keliru baru terasa ketika laporan tidak cocok atau tanggal bergeser.
+    \item ORM, \textit{query builder}, dan SQL langsung dipakai bersama,
+          asalkan SQL yang benar-benar dikirim tetap terlihat.
+    \item Batas transaksi dibuat sempit. Pola baca lalu tulis tanpa pengaman
+          kehilangan 350 dari 400 pembaruan.
+    \item Indeks dipilih dari rencana eksekusi, bukan dari kebiasaan, dan
+          manfaatnya bergantung pada selektivitas penyaring.
+    \item Koneksi dipinjam dari \textit{pool}, dan perubahan skema ditulis sebagai
+          migrasi berversi.
+    \item Yang dibaca bukan lagi panel Network, melainkan rencana eksekusi.
+  \end{itemize}
+\end{frame}
+
+\end{document}

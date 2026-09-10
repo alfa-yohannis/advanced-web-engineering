@@ -25,8 +25,8 @@ menahan baris yang dibutuhkan permintaan lain. Ketiganya lolos dari pengujian
 fungsional, karena hasilnya memang benar. Yang salah hanya ongkosnya.
 
 Pembahasan dimulai dari pemodelan data, lalu naik ke cara aplikasi mengaksesnya,
-lalu masuk ke transaksi dan konkurensi, dan ditutup dengan indeks, kolam
-koneksi, serta migrasi. Referensi utamanya adalah Kleppmann
+lalu masuk ke transaksi dan konkurensi, dan ditutup dengan indeks, \textit{connection
+pool}, serta migrasi. Referensi utamanya adalah Kleppmann
 \cite{kleppmann2017ddia} untuk dasar sistem data, dan dokumentasi resmi
 PostgreSQL \cite{pgdoc-explain, pgdoc-mvcc, pgdoc-indexes} untuk perilaku yang
 diukur pada bab ini.
@@ -60,7 +60,7 @@ pada aplikasi web \cite{kleppmann2017ddia}.
     \hline
     Dokumen & Satu entitas beserta isinya disimpan utuh sebagai satu dokumen JSON & Isi yang selalu dibaca sekaligus dan bentuknya berbeda-beda, misalnya katalog produk & Data yang sama tersalin di banyak dokumen, sehingga pembaruannya menyebar \\
     \hline
-    Kunci-nilai di memori & Nilai disimpan di memori dan dicari lewat kuncinya, tanpa pemindaian & \textit{Cache}, sesi, penghitung, papan peringkat & Isi memori terbatas dan dapat hilang, sehingga bukan sumber kebenaran \\
+    Kunci-nilai di memori & Nilai disimpan di memori dan dicari lewat kuncinya, tanpa pemindaian & \textit{Cache}, sesi, penghitung, papan peringkat & Isi memori terbatas dan dapat hilang, sehingga bukan \textit{source of truth} \\
     \hline
     Kolomnar & Data disimpan per kolom, bukan per baris, sehingga satu kolom dapat dibaca tanpa menyentuh kolom lain & Analitik atas jutaan baris, misalnya laporan dan papan pemantauan & Penulisan satu baris mahal, dan tidak dirancang untuk transaksi \\
     \hline
@@ -68,7 +68,7 @@ pada aplikasi web \cite{kleppmann2017ddia}.
     \hline
     Deret waktu & Baris berstempel waktu ditulis berurutan dan dimampatkan per rentang & Metrik, sensor, dan pemantauan, sebagaimana Bab 9 & Pembaruan dan penghapusan baris lama hampir tidak didukung \\
     \hline
-    Mesin pencari & Teks dipecah menjadi kata, lalu disimpan sebagai indeks terbalik & Pencarian teks bebas dengan peringkat relevansi & Bukan sumber kebenaran, dan pembaruannya tertunda beberapa saat \\
+    Mesin pencari & Teks dipecah menjadi kata, lalu disimpan sebagai indeks terbalik & Pencarian teks bebas dengan peringkat relevansi & Bukan \textit{source of truth}, dan pembaruannya tertunda beberapa saat \\
     \hline
   \end{tabularx}
 \end{table}
@@ -89,8 +89,8 @@ Dua contoh pemilihan pada aplikasi web:
 
 Kedua contoh tersebut memperlihatkan pola yang lazim, yaitu satu aplikasi
 memakai lebih dari satu jenis penyimpanan sesuai kebutuhannya. Pola itu punya
-harga yang sering diremehkan. Tiap penyimpanan tambahan menambah satu sumber
-kebenaran, satu jalur penyalinan data, satu kemungkinan data tidak sinkron, dan
+harga yang sering diremehkan. Tiap penyimpanan tambahan menambah satu \textit{source
+of truth}, satu jalur penyalinan data, satu kemungkinan data tidak sinkron, dan
 satu sistem lagi yang harus dipantau serta dicadangkan. Karena itu urutan yang
 disarankan adalah memulai dari basis data relasional, lalu menambahkan jenis
 lain hanya setelah ada pengukuran yang menunjukkan batasnya tercapai.
@@ -416,7 +416,7 @@ yang tidak mengunci pembaca, tetapi membatalkan transaksi ketika terdeteksi
 kemungkinan pelanggaran urutan.
 
 Konsekuensinya satu, dan sering terlupa. Begitu tingkat isolasi dinaikkan di
-atas Read Committed, aplikasi \textbf{wajib} menyediakan pengulangan otomatis
+atas Read Committed, aplikasi \textbf{wajib} menyediakan \textit{retry} otomatis
 untuk transaksi yang gagal. Tanpa itu, menaikkan isolasi hanya menukar data
 yang salah dengan galat yang sampai ke pengguna.
 
@@ -526,7 +526,7 @@ merangkum pemilihannya.
     \hline
     Cocok untuk & Benturan sering, transaksi pendek & Benturan jarang, jeda berpikir pengguna panjang \\
     \hline
-    Bahayanya & \textit{Deadlock} bila urutan penguncian tidak seragam & Pengulangan tak berujung saat benturan tinggi \\
+    Bahayanya & \textit{Deadlock} bila urutan penguncian tidak seragam & \textit{Retry} tak berujung saat benturan tinggi \\
     \hline
   \end{tabularx}
 \end{table}
@@ -782,10 +782,10 @@ besar daripada menjalankan satu kueri sederhana.
 Analoginya seperti loket layanan kemahasiswaan. Membuka loket baru menuntut
 petugas, meja, dan komputer sendiri. Bila tiap mahasiswa dilayani dengan
 membuka loket baru lalu menutupnya, hampir seluruh waktu habis untuk membuka
-dan menutup loket. Kolam koneksi adalah sejumlah loket yang dibuka sekali di
+dan menutup loket. \textit{Connection pool} adalah sejumlah loket yang dibuka sekali di
 awal, lalu dipakai bergantian.
 
-Gambar \ref{fig:kolam} menunjukkan susunannya, dan Tabel \ref{tab:hasil-kolam}
+Gambar \ref{fig:pool} menunjukkan susunannya, dan Tabel \ref{tab:hasil-pool}
 memuat hasil pengukurannya.
 
 \begin{figure}[!htb]
@@ -800,23 +800,23 @@ memuat hasil pengukurannya.
       \node[kotak, fill=blue!8] (w\i) at (0,\y) {Pekerja \i};
     }
     \node[kotak, fill=orange!12, minimum height=2.9cm, minimum width=2.1cm,
-          align=center] (kolam) at (3.2,0) {Kolam\\{\tiny\mdseries maksimum 10}};
+          align=center] (pool) at (3.2,0) {\textit{Pool}\\{\tiny\mdseries maksimum 10}};
     \node[kotak, fill=green!10, minimum height=2.9cm, minimum width=2.2cm,
           align=center] (db) at (6.6,0)
       {PostgreSQL\\{\tiny\mdseries max\_connections}\\{\tiny\mdseries = 25}};
 
-    \foreach \i in {1,2,3,4} \draw[panah] (w\i.east) -- (kolam.west);
-    \draw[panah] (kolam.east) -- (db.west);
+    \foreach \i in {1,2,3,4} \draw[panah] (w\i.east) -- (pool.west);
+    \draw[panah] (pool.east) -- (db.west);
   \end{tikzpicture}
-  \caption{Kolam koneksi membatasi jumlah koneksi yang benar-benar dibuka,
+  \caption{\textit{Connection pool} membatasi jumlah koneksi yang benar-benar dibuka,
            sedangkan pekerja yang melebihi batas ikut mengantre}
-  \label{fig:kolam}
+  \label{fig:pool}
 \end{figure}
 
 \begin{table}[!htb]
   \centering
   \caption{Hasil pengukuran nyata, 10 pekerja menjalankan 50 kueri sepele}
-  \label{tab:hasil-kolam}
+  \label{tab:hasil-pool}
   \begin{tabularx}{\textwidth}{lXrr}
     \hline
     \textbf{Cara} & \textbf{Keterangan} & \textbf{Total} & \textbf{Per kueri} \\
@@ -825,7 +825,7 @@ memuat hasil pengukurannya.
     \hline
     Satu koneksi per pekerja & 10 koneksi, dipakai ulang & 45,4 ms & 0,091 ms \\
     \hline
-    Kolam, maksimum 10 & 10 koneksi, dipinjam bergantian & 85,6 ms & 0,171 ms \\
+    \textit{Pool}, maksimum 10 & 10 koneksi, dipinjam bergantian & 85,6 ms & 0,171 ms \\
     \hline
   \end{tabularx}
 \end{table}
@@ -834,28 +834,28 @@ Selisihnya sekitar delapan belas kali lipat antara baris pertama dan baris
 kedua. Seluruh selisih itu adalah biaya membuka koneksi, karena kuerinya sendiri
 hanya \texttt{SELECT 1}.
 
-Pertanyaan berikutnya, mengapa kolam sedikit lebih lambat daripada satu koneksi
-tetap per pekerja. Jawabannya, kolam menambah pekerjaan meminjam dan
+Pertanyaan berikutnya, mengapa \textit{pool} sedikit lebih lambat daripada satu koneksi
+tetap per pekerja. Jawabannya, \textit{pool} menambah pekerjaan meminjam dan
 mengembalikan koneksi, lengkap dengan penguncian antarutas. Ongkos itu terbayar
 begitu jumlah pekerja melampaui jumlah koneksi yang boleh dibuka. Pada
-percobaan berikutnya, 40 pekerja tanpa kolam menabrak batas
+percobaan berikutnya, 40 pekerja tanpa \textit{pool} menabrak batas
 \texttt{max\_connections} yang disetel 25, dan 10 di antaranya gagal dengan
 galat \emph{too many clients already}. Empat puluh pekerja yang sama, ketika
-melewati kolam berisi 10 koneksi, seluruhnya berhasil dalam 43,9 milidetik.
+melewati \textit{pool} berisi 10 koneksi, seluruhnya berhasil dalam 43,9 milidetik.
 Kelebihan pekerja mengantre sebentar, bukan ditolak.
 
-Dari sini lahir dua kaidah penyetelan. Pertama, ukuran kolam ditentukan oleh
-kemampuan basis data, bukan oleh jumlah pekerja aplikasi. Jumlah seluruh kolam
+Dari sini lahir dua kaidah penyetelan. Pertama, ukuran \textit{pool} ditentukan oleh
+kemampuan basis data, bukan oleh jumlah pekerja aplikasi. Jumlah seluruh \textit{pool}
 dari seluruh instans aplikasi harus lebih kecil daripada
 \texttt{max\_connections}, dan sisakan beberapa koneksi untuk keperluan
-administrasi. Kedua, kolam yang terlalu besar tidak mempercepat apa pun.
+administrasi. Kedua, \textit{pool} yang terlalu besar tidak mempercepat apa pun.
 Setelah seluruh inti prosesor dan cakram basis data jenuh, menambah koneksi
 hanya memperpanjang antrean di dalam basis data, dan latensi tiap permintaan
 justru naik.
 
 Satu catatan untuk penempatan tanpa server. Lingkungan \textit{serverless}
 menjalankan banyak instans berumur pendek, sehingga tiap instans membawa
-kolamnya sendiri dan jumlah koneksinya meledak. Untuk keadaan itu dipakai
+\textit{pool}-nya sendiri dan jumlah koneksinya meledak. Untuk keadaan itu dipakai
 \textit{pooler} eksternal seperti PgBouncer dalam mode transaksi, dengan satu
 konsekuensi: fitur yang bergantung pada keadaan sesi, misalnya
 \textit{prepared statement} lintas transaksi dan tabel sementara, tidak lagi
@@ -985,7 +985,7 @@ karena batu sandungannya berpindah, dan satu kueri lain tidak diberi indeks
 sama sekali karena Seq Scan memang pilihan yang benar.
 
 Koneksi adalah sumber daya mahal yang jumlahnya terbatas di sisi server,
-sehingga dipinjam dari kolam, bukan dibuka sesuai kebutuhan. Seluruh perubahan
+sehingga dipinjam dari \textit{pool}, bukan dibuka sesuai kebutuhan. Seluruh perubahan
 skema ditulis sebagai berkas migrasi berversi yang aman dijalankan sementara
 versi lama aplikasi masih berjalan. Pesan Bab 2 tetap berlaku di lapisan ini,
 hanya alatnya yang berganti: yang dibaca bukan lagi panel Network, melainkan
@@ -1266,7 +1266,7 @@ untuk banyak pengguna, lalu membandingkan ongkos tiap pengamannya.
         pernah gagal, padahal datanya salah? Kedua, pada jumlah pekerja berapa
         cara \texttt{optimistis} mulai lebih mahal daripada
         \texttt{pesimistis}, dan apa penyebabnya? Ketiga, mengapa cara
-        \texttt{atomik} tidak membutuhkan pengulangan sama sekali?
+        \texttt{atomik} tidak membutuhkan \textit{retry} sama sekali?
 \end{enumerate}
 
 \begin{lstlisting}[language=bash, caption={Memperagakan lost update dan tiga pengamannya, tersedia di \berkas{sources/chapter03/transaksi-konkuren.py}}, label={lst:c3-lat4-jalan}]

@@ -7,6 +7,9 @@ sebagai satu suara.
 ## 1. Bahasa
 
 - Bahasa Indonesia baku, kalimat pendek, satu gagasan per kalimat.
+- Keterbacaan dan kemudahan dipahami didahulukan di atas istilah yang terdengar
+  canggih. Pilih kata yang biasa dipakai sehari-hari, dan jelaskan istilah
+  teknis dengan kalimat sederhana saat pertama muncul.
 - Kalimat aktif. Hindari "dapat dilakukan dengan cara", cukup "dilakukan dengan".
 - Tanpa kata pengisi: "sangat", "sebenarnya", "tentu saja", "cukup jelas bahwa".
 - Tanpa sapaan langsung ke pembaca ("Anda", "kita akan", "mari"). Naskah
@@ -14,6 +17,11 @@ sebagai satu suara.
 - Istilah asing yang belum punya padanan mapan ditulis miring: `\textit{cache}`,
   `\textit{main thread}`, `\textit{frame}`. Istilah yang sudah diserap ditulis
   biasa: server, browser, klien, data.
+- Istilah yang terasa janggal atau tidak lazim bila diterjemahkan tetap ditulis
+  dalam bahasa Inggris dan dicetak miring: `\textit{pool}`, `\textit{circuit
+  breaker}`, `\textit{retry}`, `\textit{race condition}`, `\textit{source of
+  truth}`, bukan kolam, pemutus sirkuit, pengulangan, balapan, atau sumber
+  kebenaran. Nama variabel dan fungsi di kode memakai istilah yang sama.
 - Singkatan dieja penuh saat pertama muncul di bab itu, lalu dipakai singkatnya:
   "HyperText Transfer Protocol (HTTP)". Setiap singkatan baru wajib ditambahkan
   ke tabel **Daftar Singkatan** di `README.md`.
@@ -96,19 +104,32 @@ didahulukan di atas keringkasan.
 - **Tanpa fungsi bersarang.** Seluruh fungsi berada di tingkat modul. Bila
   sebuah fungsi butuh nilai dari pemanggilnya, nilai itu dikirim sebagai
   argumen, bila perlu lewat `functools.partial`, bukan lewat penutupan
-  (*closure*).
+  (*closure*). Aturan ini berlaku untuk semua bahasa, termasuk JavaScript dan
+  TypeScript, dan termasuk `lambda` yang berisi logika.
 - **Setiap modul, kelas, metode, dan fungsi wajib punya komentar yang
-  berguna.** Docstring menjelaskan *mengapa* dan *apa akibatnya*, bukan
-  mengulang nama fungsinya. Docstring modul menyebutkan kegunaan berkas dan
-  cara menjalankannya.
-- **Nama menjelaskan isinya.** Tanpa singkatan satu huruf: `koneksi` bukan
-  `c`, `daftar_utas` bukan `u`, `stok_terbaca` bukan `s`. Nama fungsi berupa
-  kata kerja, nama variabel berupa kata benda.
+  berguna**, termasuk `__init__`. Docstring menjelaskan *mengapa* dan *apa
+  akibatnya*, bukan mengulang nama fungsinya. Docstring modul menyebutkan
+  kegunaan berkas dan cara menjalankannya. Fungsi JavaScript dan TypeScript
+  memakai komentar JSDoc, sedangkan berkas HTML, YAML, dan shell diberi komentar
+  kegunaan di baris pertama.
+- **Nama menjelaskan isinya.** Nama modul, kelas, fungsi, variabel, dan
+  konstanta dipilih agar pembaca baru langsung paham isinya tanpa membaca
+  kodenya. Tanpa singkatan satu huruf: `koneksi` bukan `c`, `daftar_utas`
+  bukan `u`, `stok_terbaca` bukan `s`. Nama fungsi berupa kata kerja, nama
+  kelas dan variabel berupa kata benda, dan konstanta menyebut satuannya,
+  misalnya `BATAS_WAKTU_DETIK`. Istilah yang janggal bila diterjemahkan tetap
+  dipakai dalam bahasa Inggris, misalnya `pool_koneksi` dan `circuit_breaker`.
+- **Kode diperiksa sebelum dikutip.** Skrip Python lolos `pyflakes`, dan
+  berkas TypeScript lolos `tsc --noEmit --strict`.
 - **Angka ajaib diberi nama** sebagai konstanta di puncak modul.
 - Kueri SQL yang panjang diangkat menjadi konstanta bernama di puncak modul,
   sehingga alur fungsinya terbaca tanpa terpotong teks SQL.
 - Baris maksimum 88 karakter, agar potongannya muat di halaman B5 tanpa
-  terpenggal.
+  terpenggal. Baris yang dikutip ke dalam listing naskah maksimum 78 karakter,
+  karena listing bernomor baris di halaman B5 sudah terpenggal di atas itu.
+- Bila nama di kode berubah dan nama itu ikut tercetak pada keluaran program,
+  program dijalankan ulang, lalu keluaran dan angka di naskah serta slide
+  diperbarui dari hasil yang baru.
 - **Tanpa karakter tab.** Indentasi memakai dua spasi, termasuk pada berkas
   `.tex`. Pengaturan `listings` pun memakai `tabsize=2`.
 - Komentar sebaris dipakai untuk menandai baris yang menjadi inti pelajaran,

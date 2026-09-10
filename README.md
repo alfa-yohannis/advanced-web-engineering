@@ -303,6 +303,7 @@ Diurutkan dari yang paling mudah dieksekusi sampai yang paling menuntut.
 | E2E | End-to-End |
 | GraphQL | Graph Query Language |
 | gRPC | gRPC Remote Procedure Call, framework RPC dari Google |
+| HTML | HyperText Markup Language |
 | HTTP | HyperText Transfer Protocol |
 | IaC | Infrastructure as Code |
 | INP | Interaction to Next Paint |
@@ -310,6 +311,7 @@ Diurutkan dari yang paling mudah dieksekusi sampai yang paling menuntut.
 | JWT | JSON Web Token |
 | LCP | Largest Contentful Paint |
 | LLM | Large Language Model |
+| LRU | Least Recently Used |
 | OAuth | Open Authorization |
 | OIDC | OpenID Connect |
 | ORM | Object-Relational Mapping |
@@ -318,7 +320,9 @@ Diurutkan dari yang paling mudah dieksekusi sampai yang paling menuntut.
 | QPS | Query Per Second |
 | RBAC | Role-Based Access Control |
 | REST | Representational State Transfer |
+| RFC | Request for Comments |
 | RPC | Remote Procedure Call |
+| RTT | Round-Trip Time |
 | SLI / SLO | Service Level Indicator / Service Level Objective |
 | SPA | Single-Page Application |
 | SQL | Structured Query Language |

@@ -1,0 +1,47 @@
+# Basis data dan cache untuk seluruh latihan Bab 4.
+# Jalankan dengan: docker compose up -d
+# Hentikan dengan: docker compose down -v  (-v ikut menghapus datanya)
+#
+# Port sengaja berbeda dari Bab 3 (5433), agar container kedua bab dapat
+# menyala bersamaan tanpa berebut port.
+
+services:
+  db:
+    image: postgres:16
+    container_name: awe4-db
+    environment:
+      POSTGRES_USER: awe
+      POSTGRES_PASSWORD: awe
+      POSTGRES_DB: toko
+    ports:
+      - "5434:5432"
+    command:
+      - postgres
+      - -c
+      - max_connections=100
+      - -c
+      - shared_buffers=256MB
+    volumes:
+      - data-awe4:/var/lib/postgresql/data
+
+  cache:
+    image: redis:7-alpine
+    container_name: awe4-redis
+    ports:
+      - "6380:6379"
+    # Tanpa penyimpanan ke cakram, karena isi cache boleh hilang kapan saja.
+    # Batas memori kecil dan kebijakan allkeys-lru meniru cache sungguhan:
+    # ketika penuh, kunci yang paling lama tidak dipakai dibuang lebih dahulu.
+    command:
+      - redis-server
+      - --save
+      - ""
+      - --appendonly
+      - "no"
+      - --maxmemory
+      - 64mb
+      - --maxmemory-policy
+      - allkeys-lru
+
+volumes:
+  data-awe4:

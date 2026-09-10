@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mengukur biaya membuka koneksi dan manfaat kolam koneksi.
+"""Mengukur biaya membuka koneksi dan manfaat connection pool.
 
 Tiga cara dibandingkan pada beban yang sama persis, yaitu sejumlah kueri
 sepele yang biayanya sendiri hampir nol, sehingga yang terukur benar-benar
@@ -7,14 +7,14 @@ biaya koneksinya.
 
   koneksi-baru  satu koneksi dibuka dan ditutup untuk tiap kueri
   satu-koneksi  satu koneksi dipakai ulang untuk seluruh kueri
-  kolam         kolam koneksi dipakai bersama oleh banyak pekerja
+  pool          connection pool dipakai bersama oleh banyak pekerja
 
 Bagian terakhir menunjukkan apa yang terjadi ketika jumlah pekerja melampaui
 max_connections milik server.
 
 Pemakaian:
     source ../.venv/bin/activate
-    python kolam-koneksi.py [jumlah_pekerja] [kueri_per_pekerja]
+    python pool-koneksi.py [jumlah_pekerja] [kueri_per_pekerja]
 """
 
 import sys
@@ -30,7 +30,7 @@ DSN = "postgresql://awe:awe@localhost:5433/toko"
 # Kueri sengaja sesepele mungkin agar yang terukur adalah biaya koneksinya.
 KUERI = "SELECT 1"
 
-UKURAN_KOLAM = 10
+UKURAN_POOL = 10
 PEKERJA_BERLEBIH = 40
 
 
@@ -48,10 +48,10 @@ def satu_koneksi(ulangan):
       koneksi.execute(KUERI).fetchone()
 
 
-def pakai_kolam(kolam, ulangan):
-  """Meminjam koneksi dari kolam, memakainya, lalu mengembalikannya."""
+def pakai_pool(pool, ulangan):
+  """Meminjam koneksi dari pool, memakainya, lalu mengembalikannya."""
   for _ in range(ulangan):
-    with kolam.connection() as koneksi:
+    with pool.connection() as koneksi:
       koneksi.execute(KUERI).fetchone()
 
 
@@ -102,30 +102,30 @@ def main():
   ukur("koneksi baru tiap kueri", koneksi_baru, jumlah_pekerja, ulangan)
   ukur("satu koneksi per pekerja", satu_koneksi, jumlah_pekerja, ulangan)
 
-  with ConnectionPool(DSN, min_size=2, max_size=UKURAN_KOLAM, timeout=5) as kolam:
-    kolam.wait()
+  with ConnectionPool(DSN, min_size=2, max_size=UKURAN_POOL, timeout=5) as pool:
+    pool.wait()
     ukur(
-        f"kolam, maksimum {UKURAN_KOLAM}",
-        partial(pakai_kolam, kolam),
+        f"pool, maksimum {UKURAN_POOL}",
+        partial(pakai_pool, pool),
         jumlah_pekerja,
         ulangan,
     )
 
   # Server pada docker-compose.yml dibatasi max_connections=25.
-  # Tanpa kolam, pekerja sebanyak ini melampaui batas tersebut.
+  # Tanpa pool, pekerja sebanyak ini melampaui batas tersebut.
   print()
   ukur(
-      f"{PEKERJA_BERLEBIH} pekerja tanpa kolam",
+      f"{PEKERJA_BERLEBIH} pekerja tanpa pool",
       satu_koneksi,
       PEKERJA_BERLEBIH,
       5,
       "batas server 25",
   )
-  with ConnectionPool(DSN, min_size=2, max_size=UKURAN_KOLAM, timeout=10) as kolam:
-    kolam.wait()
+  with ConnectionPool(DSN, min_size=2, max_size=UKURAN_POOL, timeout=10) as pool:
+    pool.wait()
     ukur(
-        f"{PEKERJA_BERLEBIH} pekerja lewat kolam",
-        partial(pakai_kolam, kolam),
+        f"{PEKERJA_BERLEBIH} pekerja lewat pool",
+        partial(pakai_pool, pool),
         PEKERJA_BERLEBIH,
         5,
         "antre, tidak ditolak",
