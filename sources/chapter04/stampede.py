@@ -234,7 +234,7 @@ def main():
   )
   cache = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
   # Pemanasan: satu kueri di awal agar halaman data sudah ada di memori
-  # PostgreSQL, sehingga cara pertama tidak menanggung pembacaan cakram.
+  # PostgreSQL, sehingga cara pertama tidak menanggung pembacaan disk.
   jalankan_kueri_terlaris(pool_koneksi, PenghitungKueri())
 
   print(f"{jumlah_permintaan} permintaan serentak tepat setelah kunci kedaluwarsa\n")

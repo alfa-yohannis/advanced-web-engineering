@@ -1265,34 +1265,48 @@ CREATE INDEX idx_pesanan_waktu_aktif
   \vspace{10pt}
   {\footnotesize Analoginya loket layanan kemahasiswaan. Membuka loket baru
   menuntut petugas, meja, dan komputer sendiri. \textit{Connection pool} adalah
-  sejumlah loket yang dibuka sekali di awal, lalu dipakai bergantian.}
+  sejumlah loket yang dibuka sekali di awal, lalu dipakai bergantian. Satu
+  loket melayani satu mahasiswa pada satu waktu.}
 \end{frame}
 
 \begin{frame}{{\Large Susunan Connection Pool}}
-  \vspace{10pt}
+  \vspace{6pt}
   {\centering
   \scalebox{1.2}{
   \begin{tikzpicture}[
     font=\scriptsize,
     kotak/.style={draw, rounded corners, minimum height=0.7cm, minimum width=1.7cm,
                   align=center, font=\scriptsize\bfseries},
+    koneksi/.style={draw, rounded corners=2pt, fill=white, minimum height=0.5cm,
+                    minimum width=1.6cm, font=\tiny},
     panah/.style={-{Stealth[length=1.6mm]}, gray!70}
   ]
+    \node[draw, rounded corners, fill=orange!12, minimum height=2.9cm,
+          minimum width=2.3cm] (pool) at (3.4,0) {};
+    \node[anchor=north, font=\scriptsize\bfseries] at (pool.north)
+      {\textit{Pool}, 3 koneksi};
+    \foreach \i/\y in {1/0.45, 2/-0.2, 3/-0.85} {
+      \node[koneksi] (k\i) at (3.4,\y) {koneksi \i};
+    }
     \foreach \i/\y in {1/1.2, 2/0.4, 3/-0.4, 4/-1.2} {
       \node[kotak, fill=blue!8] (w\i) at (0,\y) {\textit{Worker} \i};
     }
-    \node[kotak, fill=orange!12, minimum height=2.9cm, minimum width=2.1cm,
-          align=center] (pool) at (3.2,0) {\textit{Pool}\\{\tiny\mdseries maksimum 10}};
     \node[kotak, fill=green!10, minimum height=2.9cm, minimum width=2.2cm,
-          align=center] (db) at (6.6,0)
+          align=center] (db) at (7.0,0)
       {PostgreSQL\\{\tiny\mdseries max\_connections}\\{\tiny\mdseries = 25}};
-    \foreach \i in {1,2,3,4} \draw[panah] (w\i.east) -- (pool.west);
-    \draw[panah] (pool.east) -- (db.west);
+    \foreach \i in {1,2,3} {
+      \draw[panah] (w\i.east) -- (k\i.west);
+      \draw[panah] (k\i.east) -- (k\i.east -| db.west);
+    }
+    \draw[panah, dashed] (w4.east) -- (w4.east -| pool.west)
+      node[midway, below, font=\tiny, gray] {menunggu};
   \end{tikzpicture}}\par}
 
-  \vspace{10pt}
-  {\footnotesize \textit{Pool} membatasi jumlah koneksi yang benar-benar dibuka,
-  sedangkan \textit{worker} yang melebihi batas ikut mengantre.}
+  \vspace{8pt}
+  {\footnotesize Yang dipakai bersama adalah kumpulan koneksinya, bukan satu
+  koneksi. Tiap koneksi dipakai satu \textit{worker} pada satu waktu, lalu
+  dikembalikan ke \textit{pool}. \textit{Worker} yang tidak kebagian menunggu
+  sampai ada koneksi yang dikembalikan.}
 \end{frame}
 
 \begin{frame}{{\Large Hasil: 10 Worker, 50 Kueri Sepele}}
@@ -1340,14 +1354,125 @@ CREATE INDEX idx_pesanan_waktu_aktif
           kecil daripada \texttt{max\_connections}, dengan sisa untuk
           administrasi.
     \item \textit{Pool} yang terlalu besar tidak mempercepat apa pun. Setelah
-          prosesor dan cakram jenuh, koneksi tambahan hanya memperpanjang
+          prosesor dan \textit{disk} jenuh, koneksi tambahan hanya memperpanjang
           antrean.
   \end{enumerate}
+\end{frame}
+
+\begin{frame}{{\Large Serverless: Pool per Instans}}
+  \vspace{8pt}
+  \begin{itemize}
+    \item Server biasa menyala terus. Seluruh \textit{request} meminjam
+          koneksi dari satu \textit{pool} yang sama, misalnya 10 koneksi.
+    \item Di \textit{serverless} tidak ada server yang menyala terus.
+          Tiap \textit{request} yang datang bersamaan dilayani salinan
+          aplikasi terpisah, disebut instans.
+    \item Pada Amazon Web Services (AWS) Lambda, 100 \textit{request}
+          bersamaan dilayani 100 instans.
+    \item Tiap instans membuka \textit{pool}-nya sendiri, dan \textit{pool}
+          itu tidak dapat dipinjamkan ke instans lain.
+  \end{itemize}
   \vspace{6pt}
-  {\footnotesize Lingkungan \textit{serverless} membawa \textit{pool} per instans,
-  sehingga jumlah koneksinya meledak. Untuk itu dipakai PgBouncer dalam mode
-  transaksi, dengan konsekuensi \textit{prepared statement} lintas transaksi
-  dan tabel sementara tidak lagi dapat diandalkan.}
+  {\footnotesize Analoginya, setiap mahasiswa yang datang minta dibukakan
+  loketnya sendiri. Seratus mahasiswa berarti seratus loket, padahal
+  ruangannya terbatas.}
+\end{frame}
+
+\begin{frame}{{\Large Tanpa dan Dengan PgBouncer}}
+  \vspace{2pt}
+  {\centering
+  \scalebox{0.72}{
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    instans/.style={draw, rounded corners=2pt, fill=blue!8, minimum width=1.8cm,
+                    minimum height=0.5cm, font=\scriptsize},
+    besar/.style={draw, rounded corners, minimum width=2.1cm, minimum height=2.2cm,
+                  align=center, font=\scriptsize\bfseries},
+    panah/.style={-{Stealth[length=2mm]}, thick},
+    ket/.style={font=\tiny, gray}
+  ]
+    % Bagian atas: tiap instans langsung ke PostgreSQL dengan pool sendiri.
+    \node[font=\scriptsize\bfseries, anchor=west] at (-0.9,2.75) {Tanpa PgBouncer};
+    \node[instans] (a1) at (0,2.1) {Instans 1};
+    \node[instans] (a2) at (0,1.4) {Instans 2};
+    \node at (0,0.85) {\vdots};
+    \node[instans] (a3) at (0,0.2) {Instans 100};
+    \node[besar, fill=green!10] (pg1) at (6.2,1.15)
+      {PostgreSQL\\{\tiny\mdseries batas 100 koneksi}};
+    \foreach \n in {a1,a2,a3} {
+      \draw[panah, gray!70] (\n.east) -- (\n.east -| pg1.west)
+        node[ket, midway, above] {5 koneksi};
+    }
+    \node[draw, rounded corners=2pt, fill=red!22, font=\tiny, align=center,
+          anchor=west] at (7.35,1.15) {500 diminta,\\sebagian ditolak};
+
+    % Bagian bawah: seluruh instans lewat satu pool bersama.
+    \node[font=\scriptsize\bfseries, anchor=west] at (-0.9,-0.75) {Dengan PgBouncer};
+    \node[instans] (b1) at (0,-1.4) {Instans 1};
+    \node[instans] (b2) at (0,-2.1) {Instans 2};
+    \node at (0,-2.65) {\vdots};
+    \node[instans] (b3) at (0,-3.3) {Instans 100};
+    \node[besar, fill=orange!12] (bouncer) at (3.1,-2.35)
+      {PgBouncer\\{\tiny\mdseries \textit{pool} bersama}};
+    \node[besar, fill=green!10] (pg2) at (6.2,-2.35)
+      {PostgreSQL\\{\tiny\mdseries batas 100 koneksi}};
+    \foreach \n in {b1,b2,b3} {
+      \draw[panah, gray!70] (\n.east) -- (\n.east -| bouncer.west);
+    }
+    \draw[panah, praditagreen] (bouncer.east) -- (pg2.west)
+      node[ket, midway, above] {20 koneksi};
+  \end{tikzpicture}}\par}
+
+  \vspace{4pt}
+  {\footnotesize PgBouncer menjadi \textit{pool} bersama: 100 instans terhubung
+  ke PgBouncer, dan PgBouncer hanya membuka 20 koneksi asli ke PostgreSQL.}
+\end{frame}
+
+\begin{frame}{{\Large PgBouncer dan Modenya}}
+  \vspace{5pt}
+  {\centering
+  {\small
+  \begin{tabularx}{\textwidth}{lYY}
+    \hline
+    \textbf{Mode} & \textbf{Koneksi dipinjamkan selama} & \textbf{Akibatnya} \\
+    \hline
+    \texttt{session} & Klien masih terhubung & Paling aman, tetapi satu klien yang terhubung menahan satu koneksi server \\
+    \hline
+    \texttt{transaction} & Satu transaksi berlangsung & Satu koneksi server melayani banyak klien bergantian, tetapi keadaan sesi tidak terbawa \\
+    \hline
+    \texttt{statement} & Satu kueri berlangsung & Transaksi berisi lebih dari satu kueri tidak diizinkan \\
+    \hline
+  \end{tabularx}}\par}
+
+  \vspace{8pt}
+  {\footnotesize \textit{Serverless} memakai mode \texttt{transaction}.
+  Koneksi asli kembali ke PgBouncer begitu transaksi di-\textit{commit}, lalu
+  langsung dipakai instans lain. Karena transaksi hanya beberapa milidetik,
+  20 koneksi cukup untuk 100 instans yang bergantian.}
+\end{frame}
+
+\begin{frame}{{\Large Jebakan Mode Transaction}}
+  \vspace{5pt}
+  {\centering
+  {\footnotesize
+  \begin{tabularx}{\textwidth}{lYY}
+    \hline
+    \textbf{Waktu} & \textbf{Instans A} & \textbf{Instans B} \\
+    \hline
+    t1 & Transaksi 1 di koneksi 3: \texttt{CREATE TEMP TABLE keranjang}, lalu \textit{commit} & \\
+    \hline
+    t2 & & Meminjam koneksi 3, yang masih menyimpan tabel \texttt{keranjang} milik A \\
+    \hline
+    t3 & Transaksi 2 di koneksi 7: \texttt{SELECT * FROM keranjang} & \\
+    \hline
+    t4 & \textit{Error}: tabel \texttt{keranjang} tidak ditemukan & \\
+    \hline
+  \end{tabularx}}\par}
+
+  \vspace{8pt}
+  {\footnotesize PostgreSQL mengingat tabel sementara, \texttt{SET}, dan
+  \texttt{PREPARE} per koneksi, bukan per transaksi. Aturannya: jangan simpan
+  apa pun di sesi, dan selesaikan semuanya di dalam satu transaksi.}
 \end{frame}
 
 \section{Migrasi Berversi}

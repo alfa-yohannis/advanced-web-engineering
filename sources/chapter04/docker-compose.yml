@@ -29,7 +29,7 @@ services:
     container_name: awe4-redis
     ports:
       - "6380:6379"
-    # Tanpa penyimpanan ke cakram, karena isi cache boleh hilang kapan saja.
+    # Tanpa penyimpanan ke disk, karena isi cache boleh hilang kapan saja.
     # Batas memori kecil dan kebijakan allkeys-lru meniru cache sungguhan:
     # ketika penuh, kunci yang paling lama tidak dipakai dibuang lebih dahulu.
     command:

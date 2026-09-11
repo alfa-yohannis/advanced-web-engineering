@@ -24,10 +24,10 @@ sebagai satu suara.
   truth}`, `\textit{request}`, `\textit{key-value}`, `\textit{compress}`,
   `\textit{range}`, `\textit{dashboard}`, `\textit{social network}`,
   `\textit{constraint}`, `\textit{generate}`, `\textit{error}`,
-  `\textit{worker}`, `\textit{conflict}`, bukan kolam, pemutus sirkuit,
-  pengulangan, balapan, sumber kebenaran, pemanggilan, kunci-nilai,
-  dimampatkan, papan pemantauan, jaringan pertemanan, dibangkitkan, galat,
-  pekerja, benturan, batasan
+  `\textit{worker}`, `\textit{conflict}`, `\textit{disk}`, bukan kolam,
+  pemutus sirkuit, pengulangan, balapan, sumber kebenaran, pemanggilan,
+  kunci-nilai, dimampatkan, papan pemantauan, jaringan pertemanan,
+  dibangkitkan, galat, pekerja, benturan, cakram, batasan
   dalam arti \textit{constraint} basis data, atau rentang dalam arti
   \textit{range} pada kueri dan penyimpanan. Judul slide dan
   judul seksi menulis istilah Inggris tegak, tanpa cetak miring. Imbuhan bahasa Indonesia pada

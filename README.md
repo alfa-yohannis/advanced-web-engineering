@@ -289,6 +289,7 @@ Diurutkan dari yang paling mudah dieksekusi sampai yang paling menuntut.
 | ABAC | Attribute-Based Access Control |
 | ACID | Atomicity, Consistency, Isolation, Durability |
 | API | Application Programming Interface |
+| AWS | Amazon Web Services |
 | BFF | Backend for Frontend |
 | CDN | Content Delivery Network |
 | CI/CD | Continuous Integration / Continuous Delivery |
