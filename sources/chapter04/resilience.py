@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Membandingkan empat cara memanggil layanan lain yang kadang lambat.
 
-Sepuluh pekerja memanggil layanan ongkos kirim bersamaan. Empat cara
+Sepuluh worker memanggil layanan biaya kirim bersamaan. Empat cara
 dibandingkan pada dua skenario, yaitu layanan yang sesekali lambat dan
 layanan yang seluruhnya lambat:
   tanpa_batas_waktu  menunggu selama apa pun sampai layanan menjawab
@@ -28,7 +28,7 @@ import urllib.request
 
 POLA_ALAMAT_LAYANAN = "http://127.0.0.1:8081/ongkir?peluang_lambat={peluang}"
 DAFTAR_SKENARIO = (("sesekali lambat", 0.2), ("seluruhnya lambat", 1.0))
-JUMLAH_PEKERJA = 10
+JUMLAH_WORKER = 10
 PERMINTAAN_PER_SKENARIO_BAWAAN = 100
 
 BATAS_WAKTU_DETIK = 0.3
@@ -55,7 +55,7 @@ def hitung_persentil(daftar_angka, peringkat):
 
 
 class CatatanHasil:
-  """Mengumpulkan hasil seluruh pekerja. Aman dipakai banyak utas sekaligus."""
+  """Mengumpulkan hasil seluruh worker. Aman dipakai banyak utas sekaligus."""
 
   def __init__(self):
     """Menyiapkan daftar lama permintaan dan dua penghitung, semuanya kosong."""
@@ -182,10 +182,10 @@ def circuit_breaker(alamat, catatan_hasil, breaker, pengacak):
   return False
 
 
-def jalankan_pekerja(cara, alamat, antrean_permintaan, catatan_hasil, breaker,
-                     nomor_pekerja):
+def jalankan_worker(cara, alamat, antrean_permintaan, catatan_hasil, breaker,
+                    nomor_worker):
   """Mengambil permintaan dari antrean sampai habis, lalu mencatat hasilnya."""
-  pengacak = random.Random(nomor_pekerja)
+  pengacak = random.Random(nomor_worker)
   while True:
     try:
       antrean_permintaan.get_nowait()
@@ -207,11 +207,11 @@ def jalankan_satu_cara(cara, peluang_lambat, jumlah_permintaan):
     antrean_permintaan.put(nomor_permintaan)
   daftar_utas = [
       threading.Thread(
-          target=jalankan_pekerja,
+          target=jalankan_worker,
           args=(cara, alamat, antrean_permintaan, catatan_hasil, breaker,
-                nomor_pekerja),
+                nomor_worker),
       )
-      for nomor_pekerja in range(JUMLAH_PEKERJA)
+      for nomor_worker in range(JUMLAH_WORKER)
   ]
   waktu_mulai = time.perf_counter()
   for utas in daftar_utas:
@@ -236,7 +236,7 @@ def main():
   for nama_skenario, peluang_lambat in DAFTAR_SKENARIO:
     print(
         f"\nSkenario {nama_skenario} (peluang lambat {peluang_lambat}), "
-        f"{jumlah_permintaan} permintaan, {JUMLAH_PEKERJA} pekerja\n"
+        f"{jumlah_permintaan} permintaan, {JUMLAH_WORKER} worker\n"
     )
     print(
         f"  {'Cara':<18} {'Berhasil':>9} {'p50 (ms)':>9} {'p95 (ms)':>9} "

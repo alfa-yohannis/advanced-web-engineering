@@ -146,7 +146,7 @@ def segarkan_di_latar(pool_koneksi, cache, penghitung_kueri):
 def stale_while_revalidate(pool_koneksi, cache, penghitung_kueri):
   """Nilai basi langsung dipakai, sementara satu utas menyegarkannya.
 
-  Tidak ada klien yang menunggu kueri. Ongkosnya, sebagian klien menerima
+  Tidak ada klien yang menunggu kueri. Biayanya, sebagian klien menerima
   nilai yang sudah lewat masa segarnya.
   """
   nilai_tersimpan = cache.get(KUNCI_TERLARIS)

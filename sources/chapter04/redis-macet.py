@@ -49,13 +49,13 @@ def buat_klien_redis(jumlah_retry):
 
 
 def ukur_satu_get(cache):
-  """Mengirim satu GET, mengembalikan lamanya dalam detik dan nama galatnya."""
+  """Mengirim satu GET, mengembalikan lamanya dalam detik dan nama error-nya."""
   waktu_mulai = time.perf_counter()
   try:
     cache.get(KUNCI_UJI)
     hasil = "berhasil"
-  except redis.RedisError as galat:
-    hasil = type(galat).__name__
+  except redis.RedisError as error:
+    hasil = type(error).__name__
   return time.perf_counter() - waktu_mulai, hasil
 
 
@@ -63,7 +63,7 @@ def main():
   """Mengukur kedua pengaturan berulang kali, lalu mencetak sebarannya."""
   print(f"Satu GET ke Redis yang dibekukan, batas waktu {BATAS_WAKTU_DETIK} detik, "
         f"{JUMLAH_ULANGAN} ulangan\n")
-  print(f"  {'Pengaturan':<18} {'Tercepat':>9} {'Tengah':>9} {'Terlama':>9}  Galat")
+  print(f"  {'Pengaturan':<18} {'Tercepat':>9} {'Tengah':>9} {'Terlama':>9}  Error")
   for nama_pengaturan, jumlah_retry in (("bawaan pustaka", None),
                                         ("tanpa retry", 0)):
     cache = buat_klien_redis(jumlah_retry)

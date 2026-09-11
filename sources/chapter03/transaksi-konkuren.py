@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Memperagakan lost update dan tiga cara mencegahnya.
 
-Sejumlah pekerja mengurangi stok satu buku secara bersamaan. Bila tidak ada
+Sejumlah worker mengurangi stok satu buku secara bersamaan. Bila tidak ada
 pembaruan yang hilang, stok akhir sama dengan stok awal dikurangi jumlah
 pengurangan. Selisihnya adalah pembaruan yang tertimpa.
 
@@ -13,7 +13,7 @@ Empat cara dibandingkan pada beban yang sama persis:
 
 Pemakaian:
     source ../.venv/bin/activate
-    python transaksi-konkuren.py [jumlah_pekerja] [pengurangan_per_pekerja]
+    python transaksi-konkuren.py [jumlah_worker] [pengurangan_per_worker]
 """
 
 import sys
@@ -44,7 +44,7 @@ def kembalikan_stok_awal():
 
 
 def baca_stok_akhir():
-  """Membaca stok setelah seluruh pekerja selesai."""
+  """Membaca stok setelah seluruh worker selesai."""
   with psycopg.connect(DSN) as koneksi:
     baris = koneksi.execute(SQL_BACA_STOK, (ID_BUKU,)).fetchone()
   return baris[0]
@@ -53,7 +53,7 @@ def baca_stok_akhir():
 def naif(koneksi):
   """Mengurangi stok tanpa pengaman apa pun.
 
-  Ada jeda antara membaca stok dan menuliskannya kembali. Pekerja lain
+  Ada jeda antara membaca stok dan menuliskannya kembali. Worker lain
   dapat menulis di dalam jeda tersebut, dan tulisannya akan tertimpa.
   Mengembalikan jumlah percobaan, yang di sini selalu satu.
   """
@@ -67,7 +67,7 @@ def naif(koneksi):
 def atomik(koneksi):
   """Menyerahkan pembacaan dan pengurangan ke basis data sekaligus.
 
-  Tidak ada jeda yang dapat disisipi pekerja lain, karena tidak ada nilai
+  Tidak ada jeda yang dapat disisipi worker lain, karena tidak ada nilai
   yang sempat singgah di aplikasi.
   """
   with koneksi.transaction():
@@ -76,9 +76,9 @@ def atomik(koneksi):
 
 
 def pesimistis(koneksi):
-  """Mengunci baris sampai transaksi selesai, sehingga pekerja lain menunggu.
+  """Mengunci baris sampai transaksi selesai, sehingga worker lain menunggu.
 
-  Benturan dicegah sebelum terjadi. Ongkosnya berupa antrean: pekerja lain
+  Conflict dicegah sebelum terjadi. Biayanya berupa antrean: worker lain
   berhenti di baris SELECT sampai kunci dilepas.
   """
   with koneksi.transaction():
@@ -91,8 +91,8 @@ def pesimistis(koneksi):
 def optimistis(koneksi):
   """Menulis hanya bila versinya belum berubah, lalu mengulang bila kalah.
 
-  Tidak ada yang dikunci, sehingga tidak ada yang menunggu. Ongkosnya
-  dibayar oleh pekerja yang kalah dalam race condition, yaitu mengerjakan ulang
+  Tidak ada yang dikunci, sehingga tidak ada yang menunggu. Biayanya
+  dibayar oleh worker yang kalah dalam race condition, yaitu mengerjakan ulang
   pembacaan dan penulisannya. Mengembalikan jumlah percobaan yang dipakai.
   """
   percobaan = 0
@@ -105,35 +105,35 @@ def optimistis(koneksi):
           SQL_TULIS_BILA_VERSI_SAMA,
           (stok_terbaca - 1, ID_BUKU, versi_terbaca),
       )
-    # rowcount nol berarti versinya sudah diubah pekerja lain.
+    # rowcount nol berarti versinya sudah diubah worker lain.
     if hasil.rowcount == 1:
       return percobaan
 
 
-def kerja_satu_pekerja(cara, ulangan, jumlah_percobaan, nomor_pekerja):
+def kerja_satu_worker(cara, ulangan, jumlah_percobaan, nomor_worker):
   """Membuka koneksi sendiri, lalu mengurangi stok sebanyak ulangan kali."""
   with psycopg.connect(DSN) as koneksi:
     for _ in range(ulangan):
-      jumlah_percobaan[nomor_pekerja] += cara(koneksi)
+      jumlah_percobaan[nomor_worker] += cara(koneksi)
 
 
-def jalankan(cara, jumlah_pekerja, ulangan):
+def jalankan(cara, jumlah_worker, ulangan):
   """Menjalankan satu cara pada banyak utas, lalu mencetak selisihnya."""
   kembalikan_stok_awal()
-  jumlah_percobaan = [0] * jumlah_pekerja
+  jumlah_percobaan = [0] * jumlah_worker
   daftar_utas = [
       threading.Thread(
-          target=kerja_satu_pekerja,
+          target=kerja_satu_worker,
           args=(cara, ulangan, jumlah_percobaan, nomor),
       )
-      for nomor in range(jumlah_pekerja)
+      for nomor in range(jumlah_worker)
   ]
   for utas in daftar_utas:
     utas.start()
   for utas in daftar_utas:
     utas.join()
 
-  stok_diharapkan = STOK_AWAL - jumlah_pekerja * ulangan
+  stok_diharapkan = STOK_AWAL - jumlah_worker * ulangan
   stok_akhir = baca_stok_akhir()
   hilang = stok_akhir - stok_diharapkan
   print(
@@ -144,10 +144,10 @@ def jalankan(cara, jumlah_pekerja, ulangan):
 
 def main():
   """Membandingkan keempat cara pada beban konkuren yang sama."""
-  jumlah_pekerja = int(sys.argv[1]) if len(sys.argv) > 1 else 8
+  jumlah_worker = int(sys.argv[1]) if len(sys.argv) > 1 else 8
   ulangan = int(sys.argv[2]) if len(sys.argv) > 2 else 50
   print(
-      f"{jumlah_pekerja} pekerja, {ulangan} pengurangan per pekerja, "
+      f"{jumlah_worker} worker, {ulangan} pengurangan per worker, "
       f"stok awal {STOK_AWAL}\n"
   )
   print(
@@ -155,7 +155,7 @@ def main():
       f"{'Hilang':>8} {'Percobaan':>11}"
   )
   for cara in (naif, atomik, pesimistis, optimistis):
-    jalankan(cara, jumlah_pekerja, ulangan)
+    jalankan(cara, jumlah_worker, ulangan)
 
 
 if __name__ == "__main__":

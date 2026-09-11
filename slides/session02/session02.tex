@@ -407,7 +407,7 @@ curl -o /dev/null -s -w @format-curl.txt https://www.pradita.ac.id/
   \begin{itemize}
     \item Data dipecah menjadi \textit{frame} biner, lalu diselang-seling
           dalam satu koneksi. Cara ini disebut \textit{multiplexing}.
-    \item Header dimampatkan memakai HPACK lewat tabel statis dan dinamis.
+    \item Header di-\textit{compress} memakai HPACK lewat tabel statis dan dinamis.
     \item Sisa masalahnya: satu paket hilang menahan seluruh koneksi TCP.
   \end{itemize}
 \end{frame}
@@ -463,7 +463,7 @@ curl -o /dev/null -s -w @format-curl.txt https://www.pradita.ac.id/
     \hline
     Blocking & Di tingkat permintaan & Di tingkat TCP & Hanya aliran terdampak \\
     \hline
-    Header & Dikirim penuh & Dimampatkan HPACK & Dimampatkan QPACK \\
+    Header & Dikirim penuh & Di-\textit{compress} HPACK & Di-\textit{compress} QPACK \\
     \hline
     Pindah jaringan & Koneksi putus & Koneksi putus & Berlanjut lewat \textit{connection ID} \\
     \hline

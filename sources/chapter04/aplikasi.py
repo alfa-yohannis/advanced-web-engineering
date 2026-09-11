@@ -85,7 +85,7 @@ def jalankan_kueri_terlaris(pool_koneksi):
 def baca_dari_cache(cache, kunci):
   """Membaca satu kunci dari Redis, atau None bila kuncinya tidak ada.
 
-  Galat Redis sengaja ditelan. Cache bukan source of truth, sehingga Redis
+  Error Redis sengaja ditelan. Cache bukan source of truth, sehingga Redis
   yang mati hanya membuat aplikasi lebih lambat, bukan ikut mati.
   """
   try:
@@ -95,7 +95,7 @@ def baca_dari_cache(cache, kunci):
 
 
 def simpan_ke_cache(cache, kunci, isi, ttl_detik):
-  """Menyimpan isi ke Redis beserta masa berlakunya. Galatnya ikut ditelan."""
+  """Menyimpan isi ke Redis beserta masa berlakunya. Error-nya ikut ditelan."""
   try:
     cache.set(kunci, isi, ex=ttl_detik)
   except redis.RedisError:

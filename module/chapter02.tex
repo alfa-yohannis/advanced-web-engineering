@@ -440,7 +440,7 @@ walaupun jendela lain tetap berjalan.
 HTTP/2 \cite{rfc9113} memecah data menjadi \textit{frame} biner, lalu \textit{frame}
 dari banyak permintaan
 diselang-seling dalam satu koneksi. Cara ini disebut \textit{multiplexing}.
-Header juga dimampatkan memakai HPACK \cite{rfc7541}. Nama HPACK bukan
+Header juga di-\textit{compress} memakai HPACK \cite{rfc7541}. Nama HPACK bukan
 singkatan berhuruf awal, melainkan berasal dari \textit{header packing}, dan
 judul resmi spesifikasinya adalah \textit{HPACK: Header Compression for
 HTTP/2}. Cara kerjanya memakai dua tabel. Tabel statis berisi header yang lazim
@@ -513,7 +513,7 @@ tiap paket milik aliran yang mana. Paket yang hilang pada aliran B hanya menahan
 aliran B, sedangkan aliran A dan C tetap diserahkan ke browser. Pada Gambar
 \ref{fig:http3}, hal ini terlihat dari kotak X di aliran B yang tidak
 menghentikan barisan kotak A dan C.
-Header dimampatkan memakai QPACK \cite{rfc9204}, yaitu penyesuaian HPACK untuk
+Header di-\textit{compress} memakai QPACK \cite{rfc9204}, yaitu penyesuaian HPACK untuk
 QUIC. Judul resmi spesifikasinya adalah \textit{QPACK: Field Compression for
 HTTP/3}. Penyesuaian itu diperlukan karena aliran QUIC dapat tiba tidak
 berurutan, sedangkan tabel dinamis HPACK menuntut urutan yang pasti. QUIC juga
@@ -583,7 +583,7 @@ ketiga versi tersebut.
     \hline
     Blocking & Di tingkat permintaan & Di tingkat TCP & Hanya pada aliran terdampak \\
     \hline
-    Header & Dikirim penuh & Dimampatkan HPACK & Dimampatkan QPACK \\
+    Header & Dikirim penuh & Di-\textit{compress} HPACK & Di-\textit{compress} QPACK \\
     \hline
     Pindah jaringan & Koneksi putus & Koneksi putus & Berlanjut lewat \textit{connection ID} \\
     \hline
@@ -1453,7 +1453,7 @@ tidak dapat disebut paralel.
 Dua baris terakhir barulah paralel, yaitu lima permintaan dikirim bersamaan.
 Di sinilah perbedaan kedua versi terlihat. HTTP/1.1 mencapai paralelisme dengan
 membuka lima koneksi, sedangkan HTTP/2 mencapainya di dalam satu koneksi lewat
-\textit{multiplexing}. Hasil akhirnya mirip, tetapi ongkosnya berbeda.
+\textit{multiplexing}. Hasil akhirnya mirip, tetapi biayanya berbeda.
 Tiap koneksi tambahan menuntut rangkaian pembukaan sendiri dan memakan memori di
 kedua sisi. Browser bahkan membatasi jumlahnya sekitar enam per host, sehingga
 pada halaman dengan puluhan aset, sisanya harus mengantre.

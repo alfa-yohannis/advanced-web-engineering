@@ -2,7 +2,7 @@
 
 \section*{Tujuan Pembelajaran}
 \begin{itemize}
-  \item Merancang skema relasional beserta batasannya, lalu menjelaskan akibat
+  \item Merancang skema relasional beserta \textit{constraint}-nya, lalu menjelaskan akibat
         tiap pilihan tipe data, kunci, dan tingkat abstraksi akses data.
   \item Membaca rencana eksekusi PostgreSQL, lalu menentukan indeks yang tepat
         beserta kasus ketika indeks justru tidak dipakai.
@@ -18,11 +18,11 @@ pertama keluar. Bab ini membahas isi angka tersebut. Pada hampir semua aplikasi
 web, bagian terbesarnya dihabiskan di basis data.
 
 Yang membuat lapisan ini sulit adalah biayanya tidak terlihat dari kode. Satu
-baris pemanggilan yang tampak sepele dapat berubah menjadi ratusan perjalanan
+\textit{event} yang tampak sepele dapat berubah menjadi ratusan \textit{request}
 ke basis data. Satu kolom yang lupa diberi indeks tidak menimbulkan gejala apa
 pun sampai tabelnya membesar. Satu transaksi yang batasnya kelewat lebar
 menahan baris yang dibutuhkan permintaan lain. Ketiganya lolos dari pengujian
-fungsional, karena hasilnya memang benar. Yang salah hanya ongkosnya.
+fungsional, karena hasilnya memang benar. Yang salah hanya biayanya.
 
 Pembahasan dimulai dari pemodelan data, lalu naik ke cara aplikasi mengaksesnya,
 lalu masuk ke transaksi dan konkurensi, dan ditutup dengan indeks, \textit{connection
@@ -60,15 +60,15 @@ pada aplikasi web \cite{kleppmann2017ddia}.
     \hline
     Dokumen & Satu entitas beserta isinya disimpan utuh sebagai satu dokumen JSON & Isi yang selalu dibaca sekaligus dan bentuknya berbeda-beda, misalnya katalog produk & Data yang sama tersalin di banyak dokumen, sehingga pembaruannya menyebar \\
     \hline
-    Kunci-nilai di memori & Nilai disimpan di memori dan dicari lewat kuncinya, tanpa pemindaian & \textit{Cache}, sesi, penghitung, papan peringkat & Isi memori terbatas dan dapat hilang, sehingga bukan \textit{source of truth} \\
+    \textit{Key-Value} di memori & Nilai disimpan di memori dan dicari lewat kuncinya, tanpa pemindaian & \textit{Cache}, sesi, penghitung, papan peringkat & Isi memori terbatas dan dapat hilang, sehingga bukan \textit{source of truth} \\
     \hline
-    Kolomnar & Data disimpan per kolom, bukan per baris, sehingga satu kolom dapat dibaca tanpa menyentuh kolom lain & Analitik atas jutaan baris, misalnya laporan dan papan pemantauan & Penulisan satu baris mahal, dan tidak dirancang untuk transaksi \\
+    Kolomnar & Data disimpan per kolom, bukan per baris, sehingga satu kolom dapat dibaca tanpa menyentuh kolom lain (berbeda dengan relasional, yang membaca semua kolom) & Analitik atas jutaan baris, misalnya laporan dan \textit{dashboard} & Penulisan satu baris mahal, dan tidak dirancang untuk transaksi \\
     \hline
-    Graf & Simpul dan sisi disimpan sebagai penunjuk langsung, sehingga penelusuran hubungan tidak memerlukan penggabungan & Jaringan pertemanan, rekomendasi, penelusuran hak akses berjenjang & Kueri agregat biasa justru lebih lambat, dan penskalaannya rumit \\
+    Graf & Simpul dan sisi disimpan sebagai penunjuk langsung, sehingga penelusuran hubungan tidak memerlukan penggabungan & \textit{Social network}, rekomendasi, penelusuran hak akses berjenjang & Kueri agregat biasa justru lebih lambat, dan penskalaannya rumit \\
     \hline
-    Deret waktu & Baris berstempel waktu ditulis berurutan dan dimampatkan per rentang & Metrik, sensor, dan pemantauan, sebagaimana Bab 9 & Pembaruan dan penghapusan baris lama hampir tidak didukung \\
+    Deret waktu & Baris berstempel waktu ditulis berurutan dan di-\textit{compress} per \textit{range} & Metrik, sensor, dan pemantauan, sebagaimana Bab 9 & Pembaruan dan penghapusan baris lama hampir tidak didukung \\
     \hline
-    Mesin pencari & Teks dipecah menjadi kata, lalu disimpan sebagai indeks terbalik & Pencarian teks bebas dengan peringkat relevansi & Bukan \textit{source of truth}, dan pembaruannya tertunda beberapa saat \\
+    Mesin pencari & Teks dipecah menjadi kata, lalu disimpan sebagai indeks terbalik, yaitu tiap kata menyimpan daftar dokumen yang memuatnya & Pencarian teks bebas dengan peringkat relevansi & Bukan \textit{source of truth}, dan pembaruannya tertunda beberapa saat \\
     \hline
   \end{tabularx}
 \end{table}
@@ -79,9 +79,9 @@ Dua contoh pemilihan pada aplikasi web:
   \item Toko buku daring menyimpan pesanan, pembayaran, dan stok di basis data
         relasional, karena ketiganya harus berubah bersama dalam satu
         transaksi. Hasil pencarian judulnya dilayani mesin pencari, dan
-        keranjang belanja sementaranya disimpan di penyimpanan kunci-nilai di
+        keranjang belanja sementaranya disimpan di penyimpanan \textit{key-value} di
         memori.
-  \item Papan pemantauan yang menghitung penjualan setahun terakhir dipindahkan
+  \item \textit{Dashboard} yang menghitung penjualan setahun terakhir dipindahkan
         dari basis data relasional ke basis data kolomnar. Kuerinya hanya
         menyentuh tiga kolom dari puluhan, dan penyimpanan per kolom membuat
         sisanya tidak perlu dibaca sama sekali.
@@ -158,9 +158,9 @@ perantara.
 
 Listing \ref{lst:skema} memperlihatkan penulisannya sebagai SQL. Perhatikan
 bahwa yang ditulis bukan hanya nama kolom dan tipenya, melainkan juga
-batasannya.
+\textit{constraint}-nya.
 
-\begin{lstlisting}[style=SqlStyle, caption={Potongan skema beserta batasannya, tersedia di \berkas{sources/chapter03/01-skema.sql}}, label={lst:skema}]
+\begin{lstlisting}[style=SqlStyle, caption={Potongan skema beserta \textit{constraint}-nya, tersedia di \berkas{sources/chapter03/01-skema.sql}}, label={lst:skema}]
 CREATE TABLE pesanan (
   id           bigserial PRIMARY KEY,
   pelanggan_id bigint NOT NULL REFERENCES pelanggan (id),
@@ -178,9 +178,9 @@ CREATE TABLE item_pesanan (
 );
 \end{lstlisting}
 
-Batasan tersebut adalah penjaga terakhir. Validasi di aplikasi dapat dilewati
+\textit{Constraint} tersebut adalah penjaga terakhir. Validasi di aplikasi dapat dilewati
 oleh skrip perbaikan data, oleh layanan lain yang menulis ke basis data yang
-sama, atau oleh versi aplikasi yang lupa diperbarui. Batasan di basis data
+sama, atau oleh versi aplikasi yang lupa diperbarui. \textit{Constraint} di basis data
 tidak dapat dilewati siapa pun. Kunci primer gabungan pada
 \texttt{item\_pesanan} bahkan sekaligus menjadi aturan bisnis, yaitu satu buku
 hanya boleh muncul sekali dalam satu pesanan.
@@ -212,9 +212,13 @@ Pilihan tipe data punya akibat yang sering baru terasa belakangan. Tabel
 Dua contoh kasus nyata:
 
 \begin{enumerate}
-  \item Kolom harga disimpan sebagai \texttt{float}. Penjumlahan 3 item seharga
-        Rp 33.333,33 menghasilkan Rp 99.999,99 pada satu server dan
-        Rp 100.000,00 pada server lain, dan laporan keuangan pun tidak cocok.
+  \item Harga paket Rp 100.000 dibagi rata ke 3 item, lalu tiap bagiannya
+        disimpan di kolom harga bertipe \texttt{float}. Hasil baginya,
+        33.333,333..., tidak habis dibagi. Saat laporan dibuat, data itu
+        dibaca ulang lalu dijumlahkan. Satu server membulatkan tiap item
+        menjadi Rp 33.333,33 lebih dahulu, sehingga totalnya Rp 99.999,99.
+        Server lain menjumlahkan nilai mentahnya dulu lalu membulatkan,
+        sehingga totalnya Rp 100.000,00. Laporan keuangan pun tidak cocok.
   \item Kolom waktu disimpan sebagai \texttt{timestamp} tanpa zona. Server
         aplikasi berjalan pada zona Asia/Jakarta, sedangkan basis data pada UTC.
         Laporan harian bergeser tujuh jam, dan pesanan yang masuk pukul 06.00
@@ -227,10 +231,10 @@ Aplikasi jarang mengirim SQL secara langsung. Umumnya ada lapisan di
 tengahnya, dan lapisan itu tersedia dalam tiga tingkat abstraksi.
 
 \textit{Object-Relational Mapping} (ORM) memetakan tabel menjadi kelas dan
-baris menjadi objek. SQL dibangkitkan seluruhnya. \textit{Query builder}
-menyusun SQL dari potongan bertipe, sehingga bentuk kuerinya masih terbaca,
-tetapi nama kolomnya tetap diperiksa saat kode disusun. SQL langsung mengirim
-teks kueri apa adanya.
+baris menjadi objek. SQL di-\textit{generate} seluruhnya. \textit{Query builder}
+menyusun SQL dari objek tabel dan kolom, bukan dari teks. Bentuk kuerinya masih
+terbaca, dan nama kolom yang salah ketahuan sebelum kueri dikirim. SQL langsung
+mengirim teks kueri apa adanya.
 
 Analoginya seperti berkendara. ORM adalah mobil bertransmisi otomatis, cepat
 dipakai tetapi menyembunyikan apa yang terjadi di mesin. Query builder adalah
@@ -274,7 +278,7 @@ Tabel \ref{tab:abstraksi} merangkum \textit{trade-off} ketiganya.
     \hline
     \textbf{Tingkat} & \textbf{Kekuatan} & \textbf{Kelemahan} \\
     \hline
-    ORM & Kode singkat, model data terpusat, migrasi terkelola & SQL yang dikirim tidak terlihat, sehingga N+1 dan indeks hilang mudah lolos \\
+    ORM & Kode singkat, struktur tabel cukup ditulis sekali di kelas model, perubahan skema dicatat sebagai berkas migrasi & SQL yang dikirim tidak terlihat, sehingga N+1 dan indeks hilang mudah lolos \\
     \hline
     Query builder & Bentuk kueri terbaca, nama kolom diperiksa lebih awal & Kueri rumit menjadi bertele-tele \\
     \hline
@@ -293,7 +297,11 @@ perlu disetel, karena kueri semacam itu justru harus terbaca apa adanya.
 Satu syarat menyertainya. Abstraksi apa pun yang dipakai, SQL yang benar-benar
 dikirim harus dapat dilihat. Pada tahap pengembangan, pencatatan kueri
 dinyalakan. Pada tahap pengujian, jumlah kueri per \textit{endpoint} dihitung.
-Tanpa itu, kemudahan yang ditawarkan ORM dibayar dengan hilangnya pengetahuan
+\textit{Endpoint} adalah satu alamat yang dilayani server aplikasi, yaitu
+metode seperti \texttt{GET} atau \texttt{POST} beserta jalurnya, misalnya
+\texttt{GET /api/pesanan}. Jumlah kueri per \textit{endpoint} berarti banyaknya
+kueri SQL yang dijalankan untuk melayani satu \textit{request} ke alamat itu.
+Tanpa kedua pengamatan itu, kemudahan yang ditawarkan ORM dibayar dengan hilangnya pengetahuan
 tentang biaya, dan persoalan itulah yang dibahas pada Seksi 3.5.
 
 \section{Transaksi, ACID, dan Isolation Level}
@@ -301,15 +309,16 @@ tentang biaya, dan persoalan itulah yang dibahas pada Seksi 3.5.
 Transaksi adalah sekumpulan perintah yang diperlakukan sebagai satu satuan.
 Sifatnya diringkas menjadi ACID, yaitu \textit{Atomicity}, \textit{Consistency},
 \textit{Isolation}, dan \textit{Durability}. Atomicity berarti seluruhnya jadi
-atau seluruhnya batal. Consistency berarti batasan basis data tetap terpenuhi
+atau seluruhnya batal. Consistency berarti \textit{constraint} basis data tetap terpenuhi
 sesudahnya. Isolation berarti transaksi yang berjalan bersamaan tidak saling
 melihat pekerjaan setengah jadi. Durability berarti yang sudah di-\textit{commit}
 tidak hilang walaupun listrik padam.
 
-Analoginya seperti pengisian kartu rencana studi. Mahasiswa mengambil satu
-kursi pada mata kuliah A dan satu kursi pada mata kuliah B. Bila kursi B ternyata
-habis, kursi A tidak boleh ikut terpakai. Pengisian dibatalkan seluruhnya, dan
-kursi A kembali tersedia bagi mahasiswa lain.
+Analoginya seperti transfer uang ke sesama nasabah satu bank. Transfer terdiri
+atas dua langkah: saldo pengirim dikurangi, lalu saldo penerima ditambah. Bila
+langkah kedua gagal, misalnya karena server bank mati di antara kedua langkah,
+langkah pertama ikut dibatalkan. Saldo pengirim kembali seperti semula, sehingga
+uang tidak lenyap di tengah jalan.
 
 Bagian yang paling sering keliru bukan sifatnya, melainkan batasnya. Gambar
 \ref{fig:batas-transaksi} membandingkan dua penempatan batas transaksi pada
@@ -362,27 +371,28 @@ permintaan lain yang menyentuh baris tersebut ikut tertahan.
 Isolation adalah sifat yang paling jarang sempurna, karena isolasi penuh
 berarti transaksi dijalankan satu per satu, dan itu membuang seluruh manfaat
 konkurensi. Karena itu tersedia beberapa tingkat, masing-masing membolehkan
-sekumpulan anomali tertentu. Tabel \ref{tab:anomali} menjelaskan anomalinya,
-dan Tabel \ref{tab:isolasi} menunjukkan tingkat mana membolehkan apa pada
-PostgreSQL \cite{pgdoc-mvcc}.
+sekumpulan anomali tertentu. Tabel \ref{tab:anomali} menjelaskan anomalinya
+beserta contohnya, dengan A dan B sebagai dua transaksi yang berjalan
+bersamaan. Tabel \ref{tab:isolasi} menunjukkan tingkat mana membolehkan apa
+pada PostgreSQL \cite{pgdoc-mvcc}.
 
 \begin{table}[!htb]
   \centering
   \caption{Anomali yang mungkin muncul saat transaksi berjalan bersamaan}
   \label{tab:anomali}
-  \begin{tabularx}{\textwidth}{lX}
+  \begin{tabularx}{\textwidth}{lXX}
     \hline
-    \textbf{Anomali} & \textbf{Kejadiannya} \\
+    \textbf{Anomali} & \textbf{Kejadiannya} & \textbf{Contoh} \\
     \hline
-    \textit{Dirty read} & Membaca data yang ditulis transaksi lain yang belum di-\textit{commit}, dan ternyata dibatalkan. \\
+    \textit{Dirty read} & Membaca data yang ditulis transaksi lain yang belum di-\textit{commit}, dan ternyata dibatalkan. & A mengubah harga buku dari Rp 80.000 menjadi Rp 60.000, tetapi belum di-\textit{commit}. B membaca Rp 60.000 dan memakainya di tagihan. A lalu dibatalkan, sehingga tagihan B memakai harga yang tidak pernah berlaku. \\
     \hline
-    \textit{Non-repeatable read} & Baris yang sama dibaca dua kali dalam satu transaksi, dan isinya sudah berubah. \\
+    \textit{Non-repeatable read} & Baris yang sama dibaca dua kali dalam satu transaksi, dan isinya sudah berubah. & A membaca harga buku Rp 80.000. B mengubahnya menjadi Rp 90.000, lalu melakukan \textit{commit}. A membaca baris yang sama sekali lagi dan mendapat Rp 90.000. \\
     \hline
-    \textit{Phantom read} & Kueri yang sama dijalankan dua kali, dan jumlah barisnya bertambah. \\
+    \textit{Phantom read} & Kueri yang sama dijalankan dua kali, dan jumlah barisnya bertambah. & A menghitung pesanan hari ini dan mendapat 120. B menambah satu pesanan, lalu melakukan \textit{commit}. A menjalankan kueri yang sama dan mendapat 121. \\
     \hline
-    \textit{Lost update} & Dua transaksi membaca nilai yang sama, menghitung, lalu menulis. Tulisan yang terakhir menimpa yang pertama. \\
+    \textit{Lost update} & Dua transaksi membaca nilai yang sama, menghitung, lalu menulis. Tulisan yang terakhir menimpa yang pertama. & Stok buku 100. A dan B sama-sama membaca 100, masing-masing menjual 1 buku, lalu menulis 99. Stok tercatat 99, padahal seharusnya 98. \\
     \hline
-    \textit{Write skew} & Dua transaksi membaca kondisi yang sama, lalu masing-masing menulis baris berbeda, sehingga gabungannya melanggar aturan. \\
+    \textit{Write skew} & Dua transaksi membaca kondisi yang sama, lalu masing-masing menulis baris berbeda, sehingga gabungannya melanggar aturan. & Aturannya, minimal satu admin toko harus aktif, dan saat ini ada dua. A menonaktifkan admin pertama, B menonaktifkan admin kedua. Keduanya sama-sama melihat dua admin aktif, sehingga keduanya lolos. Hasilnya tidak ada admin aktif. \\
     \hline
   \end{tabularx}
 \end{table}
@@ -393,7 +403,7 @@ PostgreSQL \cite{pgdoc-mvcc}.
   \label{tab:isolasi}
   \begin{tabularx}{\textwidth}{lXX}
     \hline
-    \textbf{Tingkat} & \textbf{Masih mungkin} & \textbf{Ongkosnya} \\
+    \textbf{Tingkat} & \textbf{Masih mungkin} & \textbf{Biayanya} \\
     \hline
     Read Committed (bawaan) & Non-repeatable read, phantom read, lost update & Paling murah, hampir tidak ada transaksi yang gagal \\
     \hline
@@ -403,6 +413,19 @@ PostgreSQL \cite{pgdoc-mvcc}.
     \hline
   \end{tabularx}
 \end{table}
+
+Contoh pemakaian tiap tingkat pada toko buku:
+
+\begin{enumerate}
+  \item Read Committed untuk katalog, keranjang, dan pembuatan pesanan.
+        Pengurangan stok tetap memakai \texttt{UPDATE} atomik atau penguncian
+        baris, karena \textit{lost update} masih mungkin terjadi di tingkat ini.
+  \item Repeatable Read untuk laporan penjualan harian yang membaca beberapa
+        tabel, agar seluruh angkanya berasal dari satu potret data yang sama.
+  \item Serializable untuk aturan yang melibatkan banyak baris, misalnya
+        minimal satu admin toko harus aktif, karena hanya tingkat ini yang
+        mencegah \textit{write skew}.
+\end{enumerate}
 
 Tiga catatan penting menyertai tabel tersebut. Pertama, PostgreSQL tidak pernah
 membolehkan \textit{dirty read}, bahkan pada tingkat terendah sekalipun, karena
@@ -418,7 +441,7 @@ kemungkinan pelanggaran urutan.
 Konsekuensinya satu, dan sering terlupa. Begitu tingkat isolasi dinaikkan di
 atas Read Committed, aplikasi \textbf{wajib} menyediakan \textit{retry} otomatis
 untuk transaksi yang gagal. Tanpa itu, menaikkan isolasi hanya menukar data
-yang salah dengan galat yang sampai ke pengguna.
+yang salah dengan \textit{error} yang sampai ke pengguna.
 
 \section{Konkurensi dan Masalah N+1}
 
@@ -450,7 +473,7 @@ menunjukkan apa yang terjadi ketika ada dua.
   \end{tabularx}
 \end{table}
 
-Dua kursi terjual, tetapi stok hanya berkurang satu. Tidak ada galat, tidak ada
+Dua buku terjual, tetapi stok hanya berkurang satu. Tidak ada \textit{error}, tidak ada
 peringatan, dan pengujian dengan satu pengguna tidak akan pernah menemukannya.
 
 Berkas \berkas{sources/chapter03/transaksi-konkuren.py} membuktikannya, sekaligus
@@ -459,8 +482,13 @@ intinya, dan Tabel \ref{tab:hasil-konkuren} memuat hasil pengukurannya.
 
 \begin{lstlisting}[style=PythonStyle, caption={Tiga cara mencegah lost update, tersedia di \berkas{sources/chapter03/transaksi-konkuren.py}}, label={lst:konkuren}]
 SQL_BACA_STOK_TERKUNCI = "SELECT stok FROM buku WHERE id = %s FOR UPDATE"
+SQL_BACA_STOK_VERSI = "SELECT stok, versi FROM buku WHERE id = %s"
 SQL_TULIS_STOK = "UPDATE buku SET stok = %s WHERE id = %s"
 SQL_KURANGI_ATOMIK = "UPDATE buku SET stok = stok - 1 WHERE id = %s"
+SQL_TULIS_BILA_VERSI_SAMA = (
+    "UPDATE buku SET stok = %s, versi = versi + 1 "
+    "WHERE id = %s AND versi = %s"
+)
 
 
 def atomik(koneksi):
@@ -471,17 +499,101 @@ def atomik(koneksi):
 
 
 def pesimistis(koneksi):
-  """Mengunci baris sampai transaksi selesai, sehingga pekerja lain menunggu."""
+  """Mengunci baris sampai transaksi selesai, sehingga worker lain menunggu."""
   with koneksi.transaction():
     baris = koneksi.execute(SQL_BACA_STOK_TERKUNCI, (ID_BUKU,)).fetchone()
     stok_terbaca = baris[0]
     koneksi.execute(SQL_TULIS_STOK, (stok_terbaca - 1, ID_BUKU))
   return 1
+
+
+def optimistis(koneksi):
+  """Menulis hanya bila versinya belum berubah, lalu mengulang bila kalah."""
+  percobaan = 0
+  while True:
+    percobaan += 1
+    with koneksi.transaction():
+      baris = koneksi.execute(SQL_BACA_STOK_VERSI, (ID_BUKU,)).fetchone()
+      stok_terbaca, versi_terbaca = baris
+      hasil = koneksi.execute(
+          SQL_TULIS_BILA_VERSI_SAMA,
+          (stok_terbaca - 1, ID_BUKU, versi_terbaca),
+      )
+    # rowcount nol berarti versinya sudah diubah worker lain.
+    if hasil.rowcount == 1:
+      return percobaan
 \end{lstlisting}
+
+Cara atomik tidak menyisakan jeda sama sekali, karena pengurangan dikerjakan
+basis data dalam satu pernyataan. Dua cara lainnya tetap membaca stok ke
+aplikasi, lalu mengamankan jeda antara membaca dan menulis dengan cara yang
+berbeda.
+
+Cara pesimistis menganggap \textit{conflict} pasti terjadi, sehingga baris
+dikunci sejak dibaca. \texttt{FOR UPDATE} pada \texttt{SELECT} membaca baris
+sekaligus menguncinya sampai transaksi selesai, yaitu saat \textit{commit} atau
+\textit{rollback}. Karena itu pembacaan dan penulisannya harus berada dalam
+satu transaksi. \textit{Worker} lain yang juga meminta kunci baris itu berhenti
+menunggu sampai kunci dilepas, sedangkan \texttt{SELECT} biasa tanpa
+\texttt{FOR UPDATE} tetap dapat membaca. Tabel \ref{tab:pesimistis} memperlihatkan
+urutannya pada dua transaksi yang sama dengan Tabel \ref{tab:lost-update}.
 
 \begin{table}[!htb]
   \centering
-  \caption{Hasil pengukuran nyata, 8 pekerja mengurangi stok 50 kali,
+  \caption{Urutan kejadian pada cara pesimistis, stok awal 100}
+  \label{tab:pesimistis}
+  \begin{tabularx}{\textwidth}{lXXl}
+    \hline
+    \textbf{Waktu} & \textbf{Transaksi A} & \textbf{Transaksi B} & \textbf{Stok} \\
+    \hline
+    t1 & \texttt{SELECT ... FOR UPDATE} $\rightarrow$ 100, baris terkunci & & 100 \\
+    \hline
+    t2 & & \texttt{SELECT ... FOR UPDATE}, menunggu kunci & 100 \\
+    \hline
+    t3 & \texttt{UPDATE stok = 99}, \textit{commit}, kunci dilepas & & 99 \\
+    \hline
+    t4 & & \texttt{SELECT} selesai $\rightarrow$ 99 & 99 \\
+    \hline
+    t5 & & \texttt{UPDATE stok = 98}, \textit{commit} & 98 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Cara optimistis menganggap \textit{conflict} jarang terjadi, sehingga tidak ada yang
+dikunci. Sebagai gantinya, tabel \texttt{buku} punya kolom \texttt{versi} yang
+naik satu setiap kali barisnya ditulis. \textit{Worker} membaca stok beserta versinya,
+lalu menulis dengan syarat \texttt{AND versi = \%s}, yaitu versi yang tadi
+dibacanya. Bila \textit{worker} lain sudah lebih dahulu menulis, versinya sudah naik,
+sehingga \texttt{UPDATE} tidak mengubah satu baris pun. \textit{Worker} itu lalu
+membaca ulang dan mencoba lagi. Tabel \ref{tab:optimistis} memperlihatkan
+urutannya.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Urutan kejadian pada cara optimistis, stok awal 100 dan versi 1}
+  \label{tab:optimistis}
+  \begin{tabularx}{\textwidth}{lXXl}
+    \hline
+    \textbf{Waktu} & \textbf{Transaksi A} & \textbf{Transaksi B} & \textbf{Stok, versi} \\
+    \hline
+    t1 & \texttt{SELECT} $\rightarrow$ 100, versi 1 & & 100, 1 \\
+    \hline
+    t2 & & \texttt{SELECT} $\rightarrow$ 100, versi 1 & 100, 1 \\
+    \hline
+    t3 & \texttt{UPDATE ... AND versi = 1} $\rightarrow$ 1 baris berubah & & 99, 2 \\
+    \hline
+    t4 & & \texttt{UPDATE ... AND versi = 1} $\rightarrow$ 0 baris berubah & 99, 2 \\
+    \hline
+    t5 & & Mengulang: \texttt{SELECT} $\rightarrow$ 99, versi 2 & 99, 2 \\
+    \hline
+    t6 & & \texttt{UPDATE ... AND versi = 2} $\rightarrow$ 1 baris berubah & 98, 3 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Hasil pengukuran nyata, 8 \textit{worker} mengurangi stok 50 kali,
            stok awal 1.000}
   \label{tab:hasil-konkuren}
   \begin{tabularx}{\textwidth}{lXccc}
@@ -499,16 +611,22 @@ def pesimistis(koneksi):
   \end{tabularx}
 \end{table}
 
+Kolom Diharapkan pada Tabel \ref{tab:hasil-konkuren} adalah stok akhir yang
+benar, yaitu stok awal 1.000 dikurangi 8 \textit{worker} $\times$ 50
+pengurangan, atau 600. Kolom Hasil adalah stok akhir yang benar-benar
+tersimpan di basis data. Kolom Percobaan menghitung berapa kali transaksi
+pengurangan dijalankan, termasuk transaksi yang diulang.
+
 Angka pada baris pertama layak diperhatikan. Dari 400 pengurangan, 350 di
 antaranya hilang. Yang tercatat hanya 50, yaitu seperdelapan dari yang
-seharusnya, dan angka itu kira-kira sama dengan hasil kerja satu pekerja saja.
+seharusnya, dan angka itu kira-kira sama dengan hasil kerja satu \textit{worker} saja.
 Semakin tinggi konkurensinya, semakin besar pula bagian yang hilang.
 
-Baris terakhir menunjukkan ongkos penguncian optimistis. Hasil akhirnya benar,
+Baris terakhir menunjukkan biaya penguncian optimistis. Hasil akhirnya benar,
 tetapi butuh 1.782 percobaan untuk 400 pembaruan, yaitu sekitar 4,5 kali lipat.
-Penyebabnya, seluruh pekerja berebut satu baris yang sama. Penguncian
-optimistis memang dirancang untuk benturan yang jarang. Pada benturan yang
-sering, penguncian pesimistis justru lebih murah, karena pekerja menunggu
+Penyebabnya, seluruh \textit{worker} berebut satu baris yang sama. Penguncian
+optimistis memang dirancang untuk \textit{conflict} yang jarang. Pada \textit{conflict} yang
+sering, penguncian pesimistis justru lebih murah, karena \textit{worker} menunggu
 sebentar alih-alih mengulang seluruh pekerjaannya. Tabel \ref{tab:kunci}
 merangkum pemilihannya.
 
@@ -522,11 +640,11 @@ merangkum pemilihannya.
     \hline
     Caranya & Baris dikunci lebih dahulu & Versi diperiksa saat menulis \\
     \hline
-    Yang menanggung & Pekerja lain menunggu & Pekerja yang kalah mengulang \\
+    Yang menanggung & \textit{Worker} lain menunggu & \textit{Worker} yang kalah mengulang \\
     \hline
-    Cocok untuk & Benturan sering, transaksi pendek & Benturan jarang, jeda berpikir pengguna panjang \\
+    Cocok untuk & \textit{Conflict} sering, transaksi pendek & \textit{Conflict} jarang, jeda berpikir pengguna panjang \\
     \hline
-    Bahayanya & \textit{Deadlock} bila urutan penguncian tidak seragam & \textit{Retry} tak berujung saat benturan tinggi \\
+    Bahayanya & \textit{Deadlock} bila urutan penguncian tidak seragam & \textit{Retry} tak berujung saat \textit{conflict} tinggi \\
     \hline
   \end{tabularx}
 \end{table}
@@ -569,25 +687,86 @@ menggambarkannya.
   \label{fig:n-plus-1}
 \end{figure}
 
-Listing \ref{lst:n-plus-1} memperlihatkan perbaikannya. Kuncinya, seluruh
-pengenal dikirim sekali sebagai larik, lalu hasilnya dikelompokkan di sisi
-aplikasi.
+Listing \ref{lst:n-plus-1-pola} memperlihatkan pola itu pada kode. Kueri
+pertama mengambil daftar pesanan. Kueri kedua berada di dalam perulangan,
+sehingga dijalankan sekali untuk tiap pesanan. Daftar berisi 25 pesanan
+berarti 1 + 25 = 26 kueri.
 
-\begin{lstlisting}[style=PythonStyle, caption={Menghilangkan N+1 dengan satu kueri tambahan yang tetap, tersedia di \berkas{sources/chapter03/n-plus-1.py}}, label={lst:n-plus-1}]
+\begin{lstlisting}[style=PythonStyle, caption={Pola N+1: satu kueri untuk tiap pesanan, tersedia di \berkas{sources/chapter03/n-plus-1.py}}, label={lst:n-plus-1-pola}]
+SQL_DAFTAR_PESANAN = """
+    SELECT id, total, dibuat_pada FROM pesanan
+    WHERE pelanggan_id = %s ORDER BY dibuat_pada DESC LIMIT %s
+"""
+
+SQL_ITEM_SATU_PESANAN = """
+    SELECT b.judul, i.jumlah FROM item_pesanan i
+    JOIN buku b ON b.id = i.buku_id
+    WHERE i.pesanan_id = %s
+"""
+
+
+def ambil_dengan_n_plus_1(koneksi, id_pelanggan, batas):
+  """Mengambil daftar pesanan, lalu itemnya satu kueri untuk tiap pesanan.
+
+  Inilah pola N+1: satu kueri untuk daftar, ditambah N kueri untuk isinya.
+  Mengembalikan pasangan (daftar hasil, jumlah kueri yang dijalankan).
+  """
+  with koneksi.cursor() as kursor:
+    kursor.execute(SQL_DAFTAR_PESANAN, (id_pelanggan, batas))
+    daftar_pesanan = kursor.fetchall()
+    jumlah_kueri = 1
+
+    hasil = []
+    for id_pesanan, total, waktu in daftar_pesanan:
+      kursor.execute(SQL_ITEM_SATU_PESANAN, (id_pesanan,))
+      hasil.append((id_pesanan, total, waktu, kursor.fetchall()))
+      jumlah_kueri += 1
+
+  return hasil, jumlah_kueri
+\end{lstlisting}
+
+Listing \ref{lst:n-plus-1} memperlihatkan perbaikannya. Kueri pertama tetap
+sama. Kueri kedua mengambil item milik seluruh pesanan sekaligus, karena
+seluruh pengenal pesanan dikirim sekali sebagai larik lewat
+\texttt{ANY(\%s)}. Hasilnya lalu dikelompokkan per pesanan di sisi aplikasi.
+Jumlahnya selalu dua kueri, berapa pun banyaknya pesanan.
+
+\begin{lstlisting}[style=PythonStyle, caption={Menghilangkan N+1 dengan dua kueri, berapa pun jumlah pesanannya, tersedia di \berkas{sources/chapter03/n-plus-1.py}}, label={lst:n-plus-1}]
 SQL_ITEM_BANYAK_PESANAN = """
     SELECT i.pesanan_id, b.judul, i.jumlah FROM item_pesanan i
     JOIN buku b ON b.id = i.buku_id
     WHERE i.pesanan_id = ANY(%s)
 """
 
-# Seluruh id dikirim sekali sebagai larik, bukan satu per satu.
-semua_id = [pesanan[0] for pesanan in daftar_pesanan]
-kursor.execute(SQL_ITEM_BANYAK_PESANAN, (semua_id,))
 
-item_per_pesanan = defaultdict(list)
-for id_pesanan, judul, jumlah in kursor.fetchall():
-  item_per_pesanan[id_pesanan].append((judul, jumlah))
+def ambil_dengan_dua_kueri(koneksi, id_pelanggan, batas):
+  """Mengambil data yang sama dengan jumlah kueri yang tidak bergantung N.
+
+  Seluruh id pesanan dikirim sekali sebagai larik, lalu hasilnya
+  dikelompokkan di sisi aplikasi. Mengembalikan pasangan yang sama bentuknya
+  dengan ambil_dengan_n_plus_1.
+  """
+  with koneksi.cursor() as kursor:
+    kursor.execute(SQL_DAFTAR_PESANAN, (id_pelanggan, batas))
+    daftar_pesanan = kursor.fetchall()
+
+    semua_id = [pesanan[0] for pesanan in daftar_pesanan]
+    kursor.execute(SQL_ITEM_BANYAK_PESANAN, (semua_id,))
+
+    item_per_pesanan = defaultdict(list)
+    for id_pesanan, judul, jumlah in kursor.fetchall():
+      item_per_pesanan[id_pesanan].append((judul, jumlah))
+
+  hasil = [
+      (id_pesanan, total, waktu, item_per_pesanan[id_pesanan])
+      for id_pesanan, total, waktu in daftar_pesanan
+  ]
+  return hasil, 2
 \end{lstlisting}
+
+Satu kueri \texttt{JOIN} juga dapat mengambil semuanya sekaligus. Bedanya,
+kolom pesanan lalu terulang pada setiap baris item. Dua kueri menjaga tiap
+baris hanya dikirim sekali, dan jumlahnya tetap tidak bergantung pada N.
 
 Hasil pengukurannya pada 25 pesanan: pola N+1 menjalankan 26 kueri dalam 7,28
 milidetik, sedangkan cara kedua menjalankan 2 kueri dalam 1,07 milidetik untuk
@@ -614,7 +793,7 @@ baris tanpa membaca seluruh tabel. Analoginya seperti indeks di belakang buku.
 Tanpa indeks, satu-satunya cara menemukan istilah adalah membalik seluruh
 halaman. Dengan indeks, halaman yang dituju langsung ketahuan.
 
-Analogi tersebut sekaligus menjelaskan ongkosnya. Indeks buku harus disusun
+Analogi tersebut sekaligus menjelaskan biayanya. Indeks buku harus disusun
 ulang setiap kali isi buku berubah, dan indeks itu sendiri memakan halaman.
 Begitu pula di basis data: tiap indeks memperlambat penulisan dan memakan
 ruang. Tabel \ref{tab:jenis-indeks} merangkum jenis yang dipakai pada bab ini
@@ -628,7 +807,7 @@ ruang. Tabel \ref{tab:jenis-indeks} merangkum jenis yang dipakai pada bab ini
     \hline
     \textbf{Jenis} & \textbf{Dipakai untuk} \\
     \hline
-    B-tree kolom tunggal & Kesamaan, rentang, dan pengurutan pada satu kolom. Bawaan PostgreSQL. \\
+    B-tree kolom tunggal & Kesamaan, \textit{range}, dan pengurutan pada satu kolom. Bawaan PostgreSQL. \\
     \hline
     B-tree gabungan & Penyaringan pada beberapa kolom sekaligus. Hanya terpakai bila kolom terdepan ikut disaring. \\
     \hline
@@ -702,7 +881,7 @@ Limit  (cost=5179.73..5180.66 rows=8) (actual time=4.994..6.414 rows=10 loops=1)
 Execution Time: 6.450 ms
 \end{lstlisting}
 
-Dua tanda terbaca di sana. Seluruh tabel dibaca, dan 66.663 baris per pekerja
+Dua tanda terbaca di sana. Seluruh tabel dibaca, dan 66.663 baris per \textit{worker}
 dibuang oleh penyaring hanya untuk memperoleh 10 baris. Selain itu ada simpul
 Sort, padahal pengurutannya dapat ditanggung indeks. Listing \ref{lst:indeks}
 memperlihatkan indeks yang menjawab keduanya sekaligus.
@@ -797,7 +976,7 @@ memuat hasil pengukurannya.
     panah/.style={-{Stealth[length=1.6mm]}, gray!70}
   ]
     \foreach \i/\y in {1/1.2, 2/0.4, 3/-0.4, 4/-1.2} {
-      \node[kotak, fill=blue!8] (w\i) at (0,\y) {Pekerja \i};
+      \node[kotak, fill=blue!8] (w\i) at (0,\y) {\textit{Worker} \i};
     }
     \node[kotak, fill=orange!12, minimum height=2.9cm, minimum width=2.1cm,
           align=center] (pool) at (3.2,0) {\textit{Pool}\\{\tiny\mdseries maksimum 10}};
@@ -809,13 +988,13 @@ memuat hasil pengukurannya.
     \draw[panah] (pool.east) -- (db.west);
   \end{tikzpicture}
   \caption{\textit{Connection pool} membatasi jumlah koneksi yang benar-benar dibuka,
-           sedangkan pekerja yang melebihi batas ikut mengantre}
+           sedangkan \textit{worker} yang melebihi batas ikut mengantre}
   \label{fig:pool}
 \end{figure}
 
 \begin{table}[!htb]
   \centering
-  \caption{Hasil pengukuran nyata, 10 pekerja menjalankan 50 kueri sepele}
+  \caption{Hasil pengukuran nyata, 10 \textit{worker} menjalankan 50 kueri sepele}
   \label{tab:hasil-pool}
   \begin{tabularx}{\textwidth}{lXrr}
     \hline
@@ -823,7 +1002,7 @@ memuat hasil pengukurannya.
     \hline
     Koneksi baru tiap kueri & 500 koneksi dibuka dan ditutup & 843,4 ms & 1,687 ms \\
     \hline
-    Satu koneksi per pekerja & 10 koneksi, dipakai ulang & 45,4 ms & 0,091 ms \\
+    Satu koneksi per \textit{worker} & 10 koneksi, dipakai ulang & 45,4 ms & 0,091 ms \\
     \hline
     \textit{Pool}, maksimum 10 & 10 koneksi, dipinjam bergantian & 85,6 ms & 0,171 ms \\
     \hline
@@ -835,17 +1014,17 @@ kedua. Seluruh selisih itu adalah biaya membuka koneksi, karena kuerinya sendiri
 hanya \texttt{SELECT 1}.
 
 Pertanyaan berikutnya, mengapa \textit{pool} sedikit lebih lambat daripada satu koneksi
-tetap per pekerja. Jawabannya, \textit{pool} menambah pekerjaan meminjam dan
-mengembalikan koneksi, lengkap dengan penguncian antarutas. Ongkos itu terbayar
-begitu jumlah pekerja melampaui jumlah koneksi yang boleh dibuka. Pada
-percobaan berikutnya, 40 pekerja tanpa \textit{pool} menabrak batas
+tetap per \textit{worker}. Jawabannya, \textit{pool} menambah pekerjaan meminjam dan
+mengembalikan koneksi, lengkap dengan penguncian antarutas. Biaya itu terbayar
+begitu jumlah \textit{worker} melampaui jumlah koneksi yang boleh dibuka. Pada
+percobaan berikutnya, 40 \textit{worker} tanpa \textit{pool} menabrak batas
 \texttt{max\_connections} yang disetel 25, dan 10 di antaranya gagal dengan
-galat \emph{too many clients already}. Empat puluh pekerja yang sama, ketika
+\textit{error} \texttt{too many clients already}. Empat puluh \textit{worker} yang sama, ketika
 melewati \textit{pool} berisi 10 koneksi, seluruhnya berhasil dalam 43,9 milidetik.
-Kelebihan pekerja mengantre sebentar, bukan ditolak.
+Kelebihan \textit{worker} mengantre sebentar, bukan ditolak.
 
 Dari sini lahir dua kaidah penyetelan. Pertama, ukuran \textit{pool} ditentukan oleh
-kemampuan basis data, bukan oleh jumlah pekerja aplikasi. Jumlah seluruh \textit{pool}
+kemampuan basis data, bukan oleh jumlah \textit{worker} aplikasi. Jumlah seluruh \textit{pool}
 dari seluruh instans aplikasi harus lebih kecil daripada
 \texttt{max\_connections}, dan sisakan beberapa koneksi untuk keperluan
 administrasi. Kedua, \textit{pool} yang terlalu besar tidak mempercepat apa pun.
@@ -959,7 +1138,7 @@ lebih sepi.
 
 \section{Ringkasan}
 
-Model relasional menyimpan fakta sebagai baris, dan batasan yang ditulis di
+Model relasional menyimpan fakta sebagai baris, dan \textit{constraint} yang ditulis di
 dalam skema adalah penjaga terakhir yang tidak dapat dilewati oleh kode mana
 pun. Pilihan tipe data terlihat sepele saat skema disusun, tetapi kesalahannya
 baru terasa ketika laporan keuangan tidak cocok atau tanggal bergeser tujuh
@@ -1075,13 +1254,13 @@ python ukur-query.py kueri/q1.sql 20
     \hline
     \textbf{Kueri} & \textbf{Dibuang penyaring} & \textbf{p50} & \textbf{p95} & \textbf{Pemindaian} \\
     \hline
-    Q1 & 66.663 per pekerja & 5,602 & 5,905 & Seq Scan pesanan \\
+    Q1 & 66.663 per \textit{worker} & 5,602 & 5,905 & Seq Scan pesanan \\
     \hline
-    Q2 & 62.194 per pekerja & 88,459 & 92,818 & Seq Scan tiga tabel \\
+    Q2 & 62.194 per \textit{worker} & 88,459 & 92,818 & Seq Scan tiga tabel \\
     \hline
     Q3 & 49.989 & 30,839 & 31,959 & Seq Scan buku \\
     \hline
-    Q4 & 55.567 per pekerja & 6,617 & 7,212 & Seq Scan pesanan \\
+    Q4 & 55.567 per \textit{worker} & 6,617 & 7,212 & Seq Scan pesanan \\
     \hline
   \end{tabularx}
 \end{table}
@@ -1251,19 +1430,19 @@ python n-plus-1.py 25
 \subsection*{Latihan 4: Membuktikan Lost Update}
 
 Latihan ini membuktikan bahwa kode yang benar untuk satu pengguna dapat salah
-untuk banyak pengguna, lalu membandingkan ongkos tiap pengamannya.
+untuk banyak pengguna, lalu membandingkan biaya tiap pengamannya.
 
 \begin{enumerate}
-  \item Jalankan perintah pada Listing \ref{lst:c3-lat4-jalan} dengan 8 pekerja
+  \item Jalankan perintah pada Listing \ref{lst:c3-lat4-jalan} dengan 8 \textit{worker}
         dan 50 pengurangan.
   \item Catat selisih antara stok yang diharapkan dan stok yang benar-benar
         tercatat untuk keempat cara, lalu isi Tabel \ref{tab:c3-lat4-hasil}.
         Tabel \ref{tab:c3-lat4-contoh} memperlihatkan contoh yang sudah terisi.
-  \item Ulangi dengan 2 pekerja, lalu dengan 16 pekerja. Perhatikan bagaimana
+  \item Ulangi dengan 2 \textit{worker}, lalu dengan 16 \textit{worker}. Perhatikan bagaimana
         jumlah pembaruan yang hilang dan jumlah percobaan cara
-        \texttt{optimistis} berubah mengikuti jumlah pekerja.
+        \texttt{optimistis} berubah mengikuti jumlah \textit{worker}.
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa cara \texttt{naif} tidak
-        pernah gagal, padahal datanya salah? Kedua, pada jumlah pekerja berapa
+        pernah gagal, padahal datanya salah? Kedua, pada jumlah \textit{worker} berapa
         cara \texttt{optimistis} mulai lebih mahal daripada
         \texttt{pesimistis}, dan apa penyebabnya? Ketiga, mengapa cara
         \texttt{atomik} tidak membutuhkan \textit{retry} sama sekali?
@@ -1284,7 +1463,7 @@ python transaksi-konkuren.py 8 50
 
 \begin{table}[!htb]
   \centering
-  \caption{Contoh hasil Latihan 4 yang sudah terisi, 8 pekerja}
+  \caption{Contoh hasil Latihan 4 yang sudah terisi, 8 \textit{worker}}
   \label{tab:c3-lat4-contoh}
   \begin{tabularx}{\textwidth}{lXccc}
     \hline
@@ -1307,7 +1486,7 @@ python transaksi-konkuren.py 8 50
   \label{tab:c3-lat4-hasil}
   \begin{tabularx}{\textwidth}{lccc}
     \hline
-    \textbf{Cara} & \textbf{2 pekerja, hilang} & \textbf{8 pekerja, hilang} & \textbf{16 pekerja, hilang} \\
+    \textbf{Cara} & \textbf{2 \textit{worker}, hilang} & \textbf{8 \textit{worker}, hilang} & \textbf{16 \textit{worker}, hilang} \\
     \hline
     \texttt{naif} & \dots & \dots & \dots \\
     \hline

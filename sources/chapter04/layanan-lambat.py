@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Layanan ongkos kirim tiruan yang kadang lambat, untuk latihan resilience.
+"""Layanan biaya kirim tiruan yang kadang lambat, untuk latihan resilience.
 
 Tiap permintaan GET /ongkir dijawab setelah 20 milidetik. Sebagian permintaan
 sengaja ditahan 2 detik sebelum dijawab, meniru layanan pihak lain yang
@@ -55,7 +55,7 @@ class ServerOngkir(ThreadingHTTPServer):
     """Mengabaikan koneksi yang ditutup klien di tengah jalan.
 
     Klien yang memakai batas waktu menutup koneksinya sebelum jawaban
-    dikirim. Galat tulis yang muncul sesudahnya bukan kesalahan layanan.
+    dikirim. Error tulis yang muncul sesudahnya bukan kesalahan layanan.
     """
     if not isinstance(sys.exc_info()[1], ConnectionError):
       super().handle_error(request, client_address)
@@ -65,7 +65,7 @@ class PenanganOngkir(BaseHTTPRequestHandler):
   """Menjawab /ongkir, kadang cepat, kadang sengaja lambat."""
 
   def do_GET(self):
-    """Menahan jawaban sesuai hasil undian, lalu mengirim ongkos kirim."""
+    """Menahan jawaban sesuai hasil undian, lalu mengirim biaya kirim."""
     bagian_alamat = urlsplit(self.path)
     if bagian_alamat.path != "/ongkir":
       self.send_error(404)

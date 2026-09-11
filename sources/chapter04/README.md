@@ -11,7 +11,7 @@
 | `stampede.py` | Memperagakan cache stampede dan dua cara meredamnya |
 | `invalidasi.py` | Mengukur lama data basi pada empat cara memperbarui cache |
 | `optimistic-update.ts` | Tombol suka yang diperbarui secara optimistis di browser |
-| `layanan-lambat.py` | Layanan ongkos kirim tiruan yang sebagian jawabannya ditahan 2 detik |
+| `layanan-lambat.py` | Layanan biaya kirim tiruan yang sebagian jawabannya ditahan 2 detik |
 | `resilience.py` | Membandingkan tanpa batas waktu, batas waktu, *retry*, dan *circuit breaker* |
 | `redis-macet.py` | Mengukur lama satu GET ke Redis yang macet, dengan dan tanpa *retry* bawaan redis-py |
 

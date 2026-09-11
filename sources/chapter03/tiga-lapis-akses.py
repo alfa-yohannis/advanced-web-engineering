@@ -5,8 +5,8 @@ Ketiganya menghasilkan baris yang sama. Yang berbeda adalah seberapa jauh
 SQL yang benar-benar dikirim terlihat dari kodenya, dan seberapa banyak kode
 yang harus ditulis sendiri.
 
-  orm            objek dan relasi, SQL dibangkitkan seluruhnya
-  query builder  SQL disusun dari potongan bertipe, masih terbaca sebagai SQL
+  orm            objek dan relasi, SQL di-generate seluruhnya
+  query builder  SQL disusun dari objek tabel dan kolom, masih terbaca sebagai SQL
   sql langsung   SQL ditulis apa adanya
 
 Kebutuhannya: sepuluh pesanan terakhir milik satu pelanggan, beserta jumlah
@@ -34,12 +34,14 @@ URL_SQLALCHEMY = "postgresql+psycopg://awe:awe@localhost:5433/toko"
 ID_PELANGGAN = 12345
 BATAS = 10
 
+# Susunannya sengaja sama dengan lewat_orm dan lewat_query_builder, sehingga
+# tiap klausa SQL dapat dicocokkan dengan metode di kedua fungsi itu.
 SQL_LANGSUNG = """
-    SELECT p.id,
-           p.total,
-           (SELECT count(*) FROM item_pesanan i WHERE i.pesanan_id = p.id)
+    SELECT p.id, p.total, count(i.buku_id)
     FROM pesanan p
+    JOIN item_pesanan i ON i.pesanan_id = p.id
     WHERE p.pelanggan_id = %s
+    GROUP BY p.id
     ORDER BY p.dibuat_pada DESC
     LIMIT %s
 """
@@ -91,10 +93,10 @@ def lewat_orm(mesin):
 
 
 def lewat_query_builder(mesin):
-  """Menyusun SQL dari potongan bertipe, tanpa memetakan tabel ke kelas.
+  """Menyusun SQL dari objek tabel dan kolom, tanpa memetakan tabel ke kelas.
 
   Bentuknya masih terbaca sebagai SQL, sehingga kuerinya dapat diperkirakan
-  dari kodenya, tetapi nama kolom tetap diperiksa saat kode disusun.
+  dari kodenya, dan nama kolom yang salah ketahuan sebelum kueri dikirim.
   """
   pesanan = Pesanan.__table__
   item = ItemPesanan.__table__

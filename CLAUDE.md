@@ -12,6 +12,7 @@ sebagai satu suara.
   teknis dengan kalimat sederhana saat pertama muncul.
 - Kalimat aktif. Hindari "dapat dilakukan dengan cara", cukup "dilakukan dengan".
 - Tanpa kata pengisi: "sangat", "sebenarnya", "tentu saja", "cukup jelas bahwa".
+- Pakai kata yang lazim: "biaya", bukan "ongkos".
 - Tanpa sapaan langsung ke pembaca ("Anda", "kita akan", "mari"). Naskah
   berbicara tentang sistem, bukan kepada orang.
 - Istilah asing yang belum punya padanan mapan ditulis miring: `\textit{cache}`,
@@ -20,8 +21,19 @@ sebagai satu suara.
 - Istilah yang terasa janggal atau tidak lazim bila diterjemahkan tetap ditulis
   dalam bahasa Inggris dan dicetak miring: `\textit{pool}`, `\textit{circuit
   breaker}`, `\textit{retry}`, `\textit{race condition}`, `\textit{source of
-  truth}`, bukan kolam, pemutus sirkuit, pengulangan, balapan, atau sumber
-  kebenaran. Nama variabel dan fungsi di kode memakai istilah yang sama.
+  truth}`, `\textit{request}`, `\textit{key-value}`, `\textit{compress}`,
+  `\textit{range}`, `\textit{dashboard}`, `\textit{social network}`,
+  `\textit{constraint}`, `\textit{generate}`, `\textit{error}`,
+  `\textit{worker}`, `\textit{conflict}`, bukan kolam, pemutus sirkuit,
+  pengulangan, balapan, sumber kebenaran, pemanggilan, kunci-nilai,
+  dimampatkan, papan pemantauan, jaringan pertemanan, dibangkitkan, galat,
+  pekerja, benturan, batasan
+  dalam arti \textit{constraint} basis data, atau rentang dalam arti
+  \textit{range} pada kueri dan penyimpanan. Judul slide dan
+  judul seksi menulis istilah Inggris tegak, tanpa cetak miring. Imbuhan bahasa Indonesia pada
+  istilah Inggris ditulis dengan tanda hubung, misalnya di-`\textit{commit}`
+  dan di-`\textit{compress}`. Nama variabel dan fungsi di kode memakai istilah
+  yang sama.
 - Singkatan dieja penuh saat pertama muncul di bab itu, lalu dipakai singkatnya:
   "HyperText Transfer Protocol (HTTP)". Setiap singkatan baru wajib ditambahkan
   ke tabel **Daftar Singkatan** di `README.md`.

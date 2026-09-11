@@ -234,7 +234,7 @@
     \hline
     \texttt{stale-while-revalidate=N} & Setelah basi, salinan masih boleh dipakai selama N detik sambil diperbarui di belakang layar. \\
     \hline
-    \texttt{stale-if-error=N} & Setelah basi, salinan masih boleh dipakai selama N detik bila server sedang galat. \\
+    \texttt{stale-if-error=N} & Setelah basi, salinan masih boleh dipakai selama N detik bila server sedang \textit{error}. \\
     \hline
   \end{tabularx}}
 \end{frame}
@@ -508,7 +508,7 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
 def baca_dari_cache(cache, kunci):
   """Membaca satu kunci dari Redis, atau None bila kuncinya tidak ada.
 
-  Galat Redis sengaja ditelan. Cache bukan source of truth, sehingga Redis
+  Error Redis sengaja ditelan. Cache bukan source of truth, sehingga Redis
   yang mati hanya membuat aplikasi lebih lambat, bukan ikut mati.
   """
   try:
@@ -579,7 +579,7 @@ def ambil_terlaris_lewat_cache(pool_koneksi, cache):
           \textit{cache} sama sekali.
   \end{itemize}
   \vspace{6pt}
-  {\footnotesize Aplikasi tetap menjawab karena galat Redis ditelan dan setiap
+  {\footnotesize Aplikasi tetap menjawab karena \textit{error} Redis ditelan dan setiap
   perintah Redis dibatasi 50 milidetik, setelah \textit{retry} bawaan pustakanya
   dimatikan.}
 \end{frame}
@@ -588,7 +588,7 @@ def ambil_terlaris_lewat_cache(pool_koneksi, cache):
   \vspace{8pt}
   \begin{enumerate}
     \item Kegagalan \textit{cache} tidak boleh menjatuhkan aplikasi. Setiap
-          galat Redis diteruskan menjadi pembacaan ke basis data.
+          \textit{error} Redis diteruskan menjadi pembacaan ke basis data.
     \item Setiap panggilan ke \textit{cache} membutuhkan batas waktu yang jauh
           lebih kecil daripada kueri yang ingin dihindarinya.
   \end{enumerate}
@@ -662,7 +662,7 @@ def ambil_terlaris_lewat_cache(pool_koneksi, cache):
   \vspace{8pt}
   {\footnotesize Penghapusan pada t4 tidak menghapus apa pun, karena kuncinya
   belum ada. Harga lama yang disimpan pada t5 bertahan sampai TTL habis, dan
-  tidak ada galat yang muncul.}
+  tidak ada \textit{error} yang muncul.}
 \end{frame}
 
 \begin{frame}{{\Large Lama Harga Lama Masih Terbaca}}
@@ -1032,8 +1032,8 @@ async function tekanSuka(
     \item Panggilan ke layanan lain dapat gagal dengan cepat, misalnya koneksi
           ditolak, atau gagal dengan lambat, yaitu tidak dijawab sama sekali.
     \item Kegagalan lambat lebih berbahaya. Setiap permintaan yang menunggu
-          menahan satu pekerja.
-    \item Ketika semua pekerja menunggu, aplikasi berhenti melayani, termasuk
+          menahan satu \textit{worker}.
+    \item Ketika semua \textit{worker} menunggu, aplikasi berhenti melayani, termasuk
           halaman yang tidak memerlukan layanan yang lambat itu.
   \end{itemize}
   \vspace{8pt}
@@ -1045,10 +1045,10 @@ async function tekanSuka(
 \begin{frame}{{\Large Cara Mengukurnya}}
   \vspace{10pt}
   \begin{itemize}
-    \item \texttt{layanan-lambat.py}: layanan ongkos kirim tiruan yang biasanya
+    \item \texttt{layanan-lambat.py}: layanan biaya kirim tiruan yang biasanya
           menjawab dalam 20 milidetik, tetapi sebagian jawabannya ditahan 2
           detik.
-    \item \texttt{resilience.py}: 10 pekerja bersama-sama mengirim 100
+    \item \texttt{resilience.py}: 10 \textit{worker} bersama-sama mengirim 100
           permintaan, dengan empat cara.
     \item Empat caranya: tanpa batas waktu, batas waktu 300 milidetik, batas
           waktu ditambah \textit{retry} sampai tiga percobaan, dan semua itu
@@ -1111,7 +1111,7 @@ async function tekanSuka(
 \begin{frame}{{\Large Membaca Tabel Kedua}}
   \vspace{10pt}
   \begin{itemize}
-    \item Tanpa batas waktu, semuanya berhasil, tetapi 10 pekerja hanya mampu
+    \item Tanpa batas waktu, semuanya berhasil, tetapi 10 \textit{worker} hanya mampu
           menyelesaikan 5 permintaan per detik, sehingga 100 permintaan
           memakan 20 detik.
     \item \textit{Retry} membuat layanan yang sudah kewalahan menerima 300
@@ -1126,7 +1126,7 @@ async function tekanSuka(
   \vspace{10pt}
   \begin{itemize}
     \item Ambang \textit{circuit breaker} adalah lima kegagalan beruntun.
-    \item Kesepuluh pekerja mulai bersamaan, sehingga panggilan pertama mereka
+    \item Kesepuluh \textit{worker} mulai bersamaan, sehingga panggilan pertama mereka
           sudah terkirim sebelum kegagalan kelima tercatat.
     \item Panggilan uji \textit{half-open} tidak pernah terjadi, karena seluruh
           percobaan selesai dalam 0,4 detik, sebelum \textit{cooldown} satu detik
@@ -1224,15 +1224,15 @@ docker compose unpause cache
 # Keluarannya:
 # Satu GET ke Redis yang dibekukan, batas waktu 0.05 detik, 5 ulangan
 #
-#   Pengaturan          Tercepat    Tengah   Terlama  Galat
-#   bawaan pustaka         4.26s     4.44s     4.90s  TimeoutError
+#   Pengaturan          Tercepat    Tengah   Terlama  Error
+#   bawaan pustaka         3.71s     4.96s     5.23s  TimeoutError
 #   tanpa retry            0.05s     0.05s     0.05s  TimeoutError
 \end{lstlisting}
 
   \vspace{2pt}
   {\footnotesize redis-py 8.1 mencoba ulang perintah yang gagal karena batas
   waktu sampai 10 kali, dengan jeda acak yang batas atasnya berlipat dua sampai
-  paling lama satu detik. Batas 50 milidetik menjadi 4,26 sampai 4,90 detik.}
+  paling lama satu detik. Batas 50 milidetik menjadi 3,71 sampai 5,23 detik.}
 \end{frame}
 
 \begin{frame}[fragile]{{\Large Mematikan Retry Bawaan}}
@@ -1257,10 +1257,10 @@ docker compose unpause cache
   \vspace{10pt}
   \begin{enumerate}
     \item Batas waktu mengecil ke arah \textit{downstream}. Bila seluruh permintaan diberi
-          batas 1 detik, panggilan ongkos kirim di dalamnya diberi batas lebih
+          batas 1 detik, panggilan biaya kirim di dalamnya diberi batas lebih
           kecil, misalnya 300 milidetik.
     \item Ketika \textit{circuit breaker} dalam keadaan \textit{open}, aplikasi tetap menjawab sesuatu: tarif
-          terakhir yang tersimpan di \textit{cache}, atau pesan bahwa ongkos
+          terakhir yang tersimpan di \textit{cache}, atau pesan bahwa biaya
           kirim dihitung saat pembayaran.
   \end{enumerate}
   \vspace{8pt}
@@ -1294,7 +1294,7 @@ docker compose up -d
 \end{lstlisting}
 
   \vspace{2pt}
-  {\footnotesize Basis data, Redis, dan layanan ongkos kirim dijalankan di
+  {\footnotesize Basis data, Redis, dan layanan biaya kirim dijalankan di
   komputer sendiri. Permintaan ke sistem luar hanya dua, ke satu aset situs
   kampus, dan keduanya bersifat mengamati.}
 \end{frame}

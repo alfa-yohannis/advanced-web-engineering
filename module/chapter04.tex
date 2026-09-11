@@ -125,7 +125,7 @@ paling sering dipakai \cite{rfc9111, rfc5861, rfc8246}.
     \hline
     \texttt{stale-while-revalidate=N} & Setelah basi, salinan masih boleh dipakai selama N detik sambil diperbarui di belakang layar. \\
     \hline
-    \texttt{stale-if-error=N} & Setelah basi, salinan masih boleh dipakai selama N detik bila server sedang galat. \\
+    \texttt{stale-if-error=N} & Setelah basi, salinan masih boleh dipakai selama N detik bila server sedang \textit{error}. \\
     \hline
   \end{tabularx}
 \end{table}
@@ -323,7 +323,7 @@ mengenali salinan dari alamatnya, ditambah header yang disebut dalam header
 \end{enumerate}
 
 Header \texttt{Vary} juga dapat merusak manfaat CDN tanpa terlihat.
-\texttt{Vary: Accept-Encoding} wajar, karena jenis pemampatan hanya sedikit.
+\texttt{Vary: Accept-Encoding} wajar, karena jenis \textit{compression} hanya sedikit.
 \texttt{Vary: Cookie} membuat tiap pengguna punya salinan sendiri, sehingga CDN
 hampir tidak pernah menemukan salinan yang dapat dipakai ulang.
 
@@ -386,7 +386,7 @@ diikuti satu HIT.
   \label{fig:cache-aside}
 \end{figure}
 
-Listing \ref{lst:cache-aside} memperlihatkan penulisannya. Galat Redis sengaja
+Listing \ref{lst:cache-aside} memperlihatkan penulisannya. \textit{Error} Redis sengaja
 ditelan di dalam \texttt{baca\_dari\_cache}, sehingga Redis yang bermasalah
 diperlakukan sama dengan kunci yang tidak ada.
 
@@ -394,7 +394,7 @@ diperlakukan sama dengan kunci yang tidak ada.
 def baca_dari_cache(cache, kunci):
   """Membaca satu kunci dari Redis, atau None bila kuncinya tidak ada.
 
-  Galat Redis sengaja ditelan. Cache bukan source of truth, sehingga Redis
+  Error Redis sengaja ditelan. Cache bukan source of truth, sehingga Redis
   yang mati hanya membuat aplikasi lebih lambat, bukan ikut mati.
   """
   try:
@@ -450,13 +450,13 @@ Setiap permintaan menunggu 50 milidetik untuk GET, lalu menjalankan kueri, lalu
 menunggu 50 milidetik lagi untuk SET. Hasilnya 184,72 milidetik, lebih dari
 dua kali lipat keadaan tanpa \textit{cache}. \textit{Cache} yang macet lebih
 buruk daripada tidak ada \textit{cache} sama sekali. Aplikasi tetap menjawab
-karena dua hal: galat Redis ditelan, dan setiap perintah Redis dibatasi 50
+karena dua hal: \textit{error} Redis ditelan, dan setiap perintah Redis dibatasi 50
 milidetik. Batas 50 milidetik itu pun baru benar-benar berlaku setelah
 \textit{retry} bawaan pustaka Redis dimatikan, sebagaimana dibahas pada Seksi
 \ref{sec:resilience}.
 
 Aturan ini punya dua konsekuensi praktis. Pertama, kegagalan \textit{cache}
-tidak boleh menjatuhkan aplikasi, sehingga setiap galat Redis diteruskan
+tidak boleh menjatuhkan aplikasi, sehingga setiap \textit{error} Redis diteruskan
 menjadi pembacaan ke basis data. Kedua, setiap panggilan ke \textit{cache}
 membutuhkan batas waktu yang jauh lebih kecil daripada kueri yang ingin
 dihindarinya.
@@ -532,7 +532,7 @@ dan hasil akhirnya bergantung pada urutan langkah keduanya.
 
 Penghapusan pada t4 tidak menghapus apa pun, karena kuncinya memang belum ada.
 Pembaca yang lambat lalu menyimpan harga lama pada t5, dan harga itu bertahan
-sampai TTL habis. Seperti \textit{lost update} pada Bab 3, tidak ada galat yang
+sampai TTL habis. Seperti \textit{lost update} pada Bab 3, tidak ada \textit{error} yang
 muncul.
 
 Berkas \berkas{sources/chapter04/invalidasi.py} memaksa urutan tersebut terjadi,
@@ -763,7 +763,7 @@ biasa.
 \end{figure}
 
 Listing \ref{lst:optimistic-update} memperlihatkan penulisannya di browser.
-Fungsi \texttt{keadaanSesudahKlik} dipisahkan dari pemanggilan jaringan, agar
+Fungsi \texttt{keadaanSesudahKlik} dipisahkan dari \textit{request} jaringan, agar
 perhitungan tampilannya dapat diuji tanpa browser.
 
 \begin{lstlisting}[language=TypeScript, caption={Tombol suka yang diperbarui secara optimistis, tersedia di \berkas{sources/chapter04/optimistic-update.ts}}, label={lst:optimistic-update}]
@@ -883,7 +883,7 @@ sedangkan halaman profil yang dilihat orang lain boleh disimpan CDN.
 Panggilan ke layanan lain dapat gagal dengan cepat, misalnya koneksinya
 ditolak. Panggilan itu juga dapat gagal dengan lambat, yaitu tidak dijawab
 sama sekali. Kegagalan lambat lebih berbahaya. Setiap permintaan yang menunggu
-menahan satu pekerja, dan ketika semua pekerja menunggu, aplikasi berhenti
+menahan satu \textit{worker}, dan ketika semua \textit{worker} menunggu, aplikasi berhenti
 melayani, termasuk untuk halaman yang tidak memerlukan layanan yang lambat itu.
 Nygard \cite{nygard2018releaseit} memakai tiga alat untuk mencegahnya: batas
 waktu (\textit{timeout}), \textit{retry}, dan \textit{circuit breaker}.
@@ -896,10 +896,10 @@ sepanjang pagi telepon tidak diangkat, sambil menempel catatan ``loket tutup''
 untuk teman lain, lalu mencoba sekali lagi setelah satu jam lewat.
 
 Keempat cara diukur memakai dua berkas. Berkas
-\berkas{sources/chapter04/layanan-lambat.py} adalah layanan ongkos kirim tiruan
+\berkas{sources/chapter04/layanan-lambat.py} adalah layanan biaya kirim tiruan
 yang biasanya menjawab dalam 20 milidetik, tetapi sebagian jawabannya sengaja
 ditahan 2 detik. Berkas \berkas{sources/chapter04/resilience.py} menjalankan
-10 pekerja yang bersama-sama mengirim 100 permintaan, dengan empat cara:
+10 \textit{worker} yang bersama-sama mengirim 100 permintaan, dengan empat cara:
 tanpa batas waktu, batas waktu 300 milidetik, batas waktu ditambah \textit{retry}
 sampai tiga percobaan, dan semua itu ditambah \textit{circuit breaker}. Kedua
 berkas hanya
@@ -960,9 +960,9 @@ yaitu keadaan layanan yang sedang kewalahan.
 \end{table}
 
 Baris pertama tampak sempurna karena semuanya berhasil. Kenyataannya, 10
-pekerja yang masing-masing menunggu 2 detik hanya mampu menyelesaikan 5
+\textit{worker} yang masing-masing menunggu 2 detik hanya mampu menyelesaikan 5
 permintaan per detik, sehingga 100 permintaan memakan 20 detik. Pada aplikasi
-sungguhan, kesepuluh pekerja itu juga dibutuhkan halaman lain, dan halaman lain
+sungguhan, kesepuluh \textit{worker} itu juga dibutuhkan halaman lain, dan halaman lain
 itu ikut macet. Baris ketiga memperlihatkan bahaya \textit{retry}. Layanan yang
 sudah kewalahan menerima 300 panggilan, tiga kali lipat bebannya, dan tidak
 satu pun berhasil. Baris keempat memutus lingkaran itu. Layanan hanya menerima
@@ -970,7 +970,7 @@ satu pun berhasil. Baris keempat memutus lingkaran itu. Layanan hanya menerima
 seluruh 100 permintaan selesai dalam 0,4 detik.
 
 Angka 10 panggilan pada baris keempat layak diperiksa, karena ambang
-\textit{circuit breaker} adalah lima kegagalan. Kesepuluh pekerja mulai
+\textit{circuit breaker} adalah lima kegagalan. Kesepuluh \textit{worker} mulai
 bersamaan, sehingga panggilan pertama mereka sudah terkirim sebelum kegagalan
 kelima tercatat. Panggilan uji pada keadaan \textit{half-open} juga tidak pernah
 terjadi, karena seluruh percobaan selesai dalam 0,4 detik, sebelum
@@ -1070,12 +1070,12 @@ docker compose unpause cache
 # Keluarannya:
 # Satu GET ke Redis yang dibekukan, batas waktu 0.05 detik, 5 ulangan
 #
-#   Pengaturan          Tercepat    Tengah   Terlama  Galat
-#   bawaan pustaka         4.26s     4.44s     4.90s  TimeoutError
+#   Pengaturan          Tercepat    Tengah   Terlama  Error
+#   bawaan pustaka         3.71s     4.96s     5.23s  TimeoutError
 #   tanpa retry            0.05s     0.05s     0.05s  TimeoutError
 \end{lstlisting}
 
-Batas waktu 50 milidetik ternyata menjadi 4,26 sampai 4,90 detik, karena
+Batas waktu 50 milidetik ternyata menjadi 3,71 sampai 5,23 detik, karena
 pustakanya diam-diam mencoba ulang. Karena itu \texttt{aplikasi.py} mematikan
 \textit{retry} bawaan untuk klien Redis-nya, seperti pada Listing
 \ref{lst:klien-redis}. Pelajarannya berlaku untuk pustaka apa pun: batas waktu
@@ -1094,12 +1094,12 @@ bawaannya diperiksa.
 
 Dua hal lagi melengkapi ketiga alat tersebut. Pertama, batas waktu harus
 mengecil ke arah \textit{downstream}. Bila server aplikasi memberi batas 1 detik untuk
-seluruh permintaan, panggilan ke layanan ongkos kirim di dalamnya harus diberi
+seluruh permintaan, panggilan ke layanan biaya kirim di dalamnya harus diberi
 batas lebih kecil, misalnya 300 milidetik seperti pada percobaan ini, agar
 masih ada sisa waktu untuk pekerjaan lain. Kedua, ketika \textit{circuit
 breaker} dalam keadaan \textit{open}, aplikasi tetap perlu menjawab sesuatu.
-Untuk ongkos kirim, jawabannya dapat
-berupa tarif terakhir yang tersimpan di \textit{cache}, atau pesan bahwa ongkos
+Untuk biaya kirim, jawabannya dapat
+berupa tarif terakhir yang tersimpan di \textit{cache}, atau pesan bahwa biaya
 kirim dihitung saat pembayaran. Perintah \texttt{stale-if-error} pada Tabel
 \ref{tab:cache-control} adalah bentuk yang sama pada HTTP.
 
@@ -1120,7 +1120,7 @@ halaman pribadi tidak boleh sampai di sana. Redis dengan pola
 \textit{cache-aside} menurunkan p50 daftar buku terlaris dari 70,44 menjadi
 0,31 milidetik. Redis yang macet menaikkannya menjadi 184,72 milidetik, lebih
 lambat daripada tanpa \textit{cache}. Karena itu setiap panggilan ke
-\textit{cache} diberi batas waktu, dan galatnya diteruskan menjadi pembacaan ke
+\textit{cache} diberi batas waktu, dan \textit{error}-nya diteruskan menjadi pembacaan ke
 basis data.
 
 Data basi dibatasi dengan TTL atau dengan menghapus kunci saat menulis.
@@ -1138,12 +1138,12 @@ akhirnya sama, tetapi pengguna merasakan jedanya lewat dua jaminan, yaitu
 \textit{read-your-writes} dan \textit{monotonic reads}.
 
 Panggilan ke layanan lain membutuhkan batas waktu, karena kegagalan yang lambat
-menghabiskan pekerja. \textit{Retry} mengembalikan keberhasilan saat gangguan
+menghabiskan \textit{worker}. \textit{Retry} mengembalikan keberhasilan saat gangguan
 hanya sesekali, tetapi melipatgandakan beban saat layanan kewalahan, dan pada
 pengukuran bab ini menghasilkan 300 panggilan tanpa satu pun berhasil.
 \textit{Circuit breaker} memangkasnya menjadi 10 panggilan dan 0,4 detik.
 Pustaka pun perlu diperiksa, karena \textit{retry} bawaannya dapat mengubah
-batas 50 milidetik menjadi lebih dari 4 detik. Seperti pada Bab 2 dan Bab 3,
+batas 50 milidetik menjadi 3,71 sampai 5,23 detik. Seperti pada Bab 2 dan Bab 3,
 TTL, batas waktu, dan jumlah \textit{retry} dipilih berdasarkan angka
 pengukuran.
 
@@ -1151,7 +1151,7 @@ pengukuran.
 
 Seluruh berkas yang dipakai pada latihan ini tersedia di
 \berkas{sources/chapter04/}, dihitung relatif terhadap akar repositori. Basis
-data, Redis, dan layanan ongkos kirim dijalankan di komputer sendiri, sehingga
+data, Redis, dan layanan biaya kirim dijalankan di komputer sendiri, sehingga
 tidak ada sistem milik pihak lain yang dibebani. Satu-satunya permintaan ke
 sistem luar ada pada Latihan 1, yaitu dua permintaan ke satu aset situs kampus,
 dan keduanya bersifat mengamati. Skrip yang sengaja membebani, yaitu
@@ -1371,7 +1371,7 @@ Baris ketiga pada contoh terisi tampak janggal, karena \textit{cache} yang
 seharusnya mempercepat justru membuat jawaban dua setengah kali lebih lambat.
 Penyebabnya dua kali penantian 50 milidetik, sekali untuk GET dan sekali untuk
 SET, ditambah kueri yang tetap harus dijalankan. Aplikasi tetap menjawab
-seluruh 20 permintaan karena galat Redis ditelan dan \textit{retry} bawaan
+seluruh 20 permintaan karena \textit{error} Redis ditelan dan \textit{retry} bawaan
 pustakanya dimatikan.
 
 \subsection*{Latihan 3: Cache Stampede}
@@ -1631,7 +1631,7 @@ berhasil 82 persen, bukan tepat 80 persen. \textit{Retry} berhasil 100 persen,
 sedikit di atas hitungan 99,2 persen. Kedua selisih itu berasal dari undian
 acak pada 100 permintaan. \textit{Circuit breaker} memanggil layanan 10 kali walaupun
 ambangnya lima,
-karena kesepuluh pekerja sudah terlanjur memanggil sebelum kegagalan kelima
+karena kesepuluh \textit{worker} sudah terlanjur memanggil sebelum kegagalan kelima
 tercatat.
 
 Setelah seluruh latihan selesai, hentikan \texttt{aplikasi.py} dan

@@ -7,14 +7,14 @@ biaya koneksinya.
 
   koneksi-baru  satu koneksi dibuka dan ditutup untuk tiap kueri
   satu-koneksi  satu koneksi dipakai ulang untuk seluruh kueri
-  pool          connection pool dipakai bersama oleh banyak pekerja
+  pool          connection pool dipakai bersama oleh banyak worker
 
-Bagian terakhir menunjukkan apa yang terjadi ketika jumlah pekerja melampaui
+Bagian terakhir menunjukkan apa yang terjadi ketika jumlah worker melampaui
 max_connections milik server.
 
 Pemakaian:
     source ../.venv/bin/activate
-    python pool-koneksi.py [jumlah_pekerja] [kueri_per_pekerja]
+    python pool-koneksi.py [jumlah_worker] [kueri_per_worker]
 """
 
 import sys
@@ -31,7 +31,7 @@ DSN = "postgresql://awe:awe@localhost:5433/toko"
 KUERI = "SELECT 1"
 
 UKURAN_POOL = 10
-PEKERJA_BERLEBIH = 40
+WORKER_BERLEBIH = 40
 
 
 def koneksi_baru(ulangan):
@@ -42,7 +42,7 @@ def koneksi_baru(ulangan):
 
 
 def satu_koneksi(ulangan):
-  """Memakai satu koneksi untuk seluruh kueri milik satu pekerja."""
+  """Memakai satu koneksi untuk seluruh kueri milik satu worker."""
   with psycopg.connect(DSN) as koneksi:
     for _ in range(ulangan):
       koneksi.execute(KUERI).fetchone()
@@ -55,24 +55,24 @@ def pakai_pool(pool, ulangan):
       koneksi.execute(KUERI).fetchone()
 
 
-def jalankan_aman(cara, ulangan, daftar_galat):
-  """Menjalankan satu pekerja dan mencatat galatnya, bukan melemparkannya.
+def jalankan_aman(cara, ulangan, daftar_error):
+  """Menjalankan satu worker dan mencatat error-nya, bukan melemparkannya.
 
   Kegagalan sengaja tidak menghentikan pengukuran, karena skenario terakhir
   memang dirancang untuk menabrak batas max_connections milik server.
   """
   try:
     cara(ulangan)
-  except Exception as galat:  # noqa: BLE001
-    daftar_galat.append(type(galat).__name__)
+  except Exception as error:  # noqa: BLE001
+    daftar_error.append(type(error).__name__)
 
 
-def ukur(nama, cara, jumlah_pekerja, ulangan, catatan=""):
+def ukur(nama, cara, jumlah_worker, ulangan, catatan=""):
   """Menjalankan satu skenario pada banyak utas, lalu mencetak hasilnya."""
-  daftar_galat = []
+  daftar_error = []
   daftar_utas = [
-      threading.Thread(target=jalankan_aman, args=(cara, ulangan, daftar_galat))
-      for _ in range(jumlah_pekerja)
+      threading.Thread(target=jalankan_aman, args=(cara, ulangan, daftar_error))
+      for _ in range(jumlah_worker)
   ]
 
   mulai = time.perf_counter()
@@ -82,9 +82,9 @@ def ukur(nama, cara, jumlah_pekerja, ulangan, catatan=""):
     utas.join()
   durasi_ms = (time.perf_counter() - mulai) * 1000
 
-  total_kueri = jumlah_pekerja * ulangan
-  per_kueri = durasi_ms / total_kueri if not daftar_galat else float("nan")
-  status = f"{len(daftar_galat)} gagal" if daftar_galat else "berhasil"
+  total_kueri = jumlah_worker * ulangan
+  per_kueri = durasi_ms / total_kueri if not daftar_error else float("nan")
+  status = f"{len(daftar_error)} gagal" if daftar_error else "berhasil"
   print(
       f"  {nama:<24} {durasi_ms:9.1f} ms {per_kueri:9.3f} ms "
       f"{status:>10}  {catatan}"
@@ -93,40 +93,40 @@ def ukur(nama, cara, jumlah_pekerja, ulangan, catatan=""):
 
 def main():
   """Menjalankan seluruh skenario perbandingan secara berurutan."""
-  jumlah_pekerja = int(sys.argv[1]) if len(sys.argv) > 1 else 10
+  jumlah_worker = int(sys.argv[1]) if len(sys.argv) > 1 else 10
   ulangan = int(sys.argv[2]) if len(sys.argv) > 2 else 50
 
-  print(f"{jumlah_pekerja} pekerja, {ulangan} kueri per pekerja\n")
+  print(f"{jumlah_worker} worker, {ulangan} kueri per worker\n")
   print(f"  {'Cara':<24} {'Total':>12} {'Per kueri':>12} {'Status':>10}")
 
-  ukur("koneksi baru tiap kueri", koneksi_baru, jumlah_pekerja, ulangan)
-  ukur("satu koneksi per pekerja", satu_koneksi, jumlah_pekerja, ulangan)
+  ukur("koneksi baru tiap kueri", koneksi_baru, jumlah_worker, ulangan)
+  ukur("satu koneksi per worker", satu_koneksi, jumlah_worker, ulangan)
 
   with ConnectionPool(DSN, min_size=2, max_size=UKURAN_POOL, timeout=5) as pool:
     pool.wait()
     ukur(
         f"pool, maksimum {UKURAN_POOL}",
         partial(pakai_pool, pool),
-        jumlah_pekerja,
+        jumlah_worker,
         ulangan,
     )
 
   # Server pada docker-compose.yml dibatasi max_connections=25.
-  # Tanpa pool, pekerja sebanyak ini melampaui batas tersebut.
+  # Tanpa pool, worker sebanyak ini melampaui batas tersebut.
   print()
   ukur(
-      f"{PEKERJA_BERLEBIH} pekerja tanpa pool",
+      f"{WORKER_BERLEBIH} worker tanpa pool",
       satu_koneksi,
-      PEKERJA_BERLEBIH,
+      WORKER_BERLEBIH,
       5,
       "batas server 25",
   )
   with ConnectionPool(DSN, min_size=2, max_size=UKURAN_POOL, timeout=10) as pool:
     pool.wait()
     ukur(
-        f"{PEKERJA_BERLEBIH} pekerja lewat pool",
+        f"{WORKER_BERLEBIH} worker lewat pool",
         partial(pakai_pool, pool),
-        PEKERJA_BERLEBIH,
+        WORKER_BERLEBIH,
         5,
         "antre, tidak ditolak",
     )

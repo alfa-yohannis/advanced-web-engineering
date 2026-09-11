@@ -3,7 +3,7 @@
 -- Kolom ditambahkan dalam keadaan boleh kosong, tanpa NOT NULL. Versi
 -- aplikasi yang lama tetap berjalan karena tidak mengenal kolom ini, dan
 -- versi baru sudah dapat menulisinya. Pengisian data lama dan pengetatan
--- batasannya dikerjakan pada migrasi terpisah, setelah seluruh instans
+-- constraint-nya dikerjakan pada migrasi terpisah, setelah seluruh instans
 -- aplikasi memakai versi baru.
 --
 -- ADD COLUMN dengan nilai bawaan tidak lagi menulis ulang seluruh tabel

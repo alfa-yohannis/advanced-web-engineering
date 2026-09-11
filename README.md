@@ -17,7 +17,7 @@ Urutan pertemuan disusun untuk menopang pengerjaan empat topik penelitian terata
 | 9 | Cloud Deployment, DevOps & Observability | Men-*deploy*, menginstrumentasi, membuat *dashboard*, dan satu *alert* bermakna | **T6** |
 | 10 | Identity, Authentication & Authorization | Menambahkan *authentication*, *authorization*, dan isolasi *tenant* | **T2** |
 | 11 | Frontend Architecture at Scale | Membangun *application shell*, *routing*, *layout*, dan arsitektur komponen | **T5** |
-| 12 | Type Safety, API Contracts & Service Design | Memformalkan kontrak API, membangkitkan tipe, menguji kompatibilitas versi, memasang *gateway* dan *rate limiting* | **T2** |
+| 12 | Type Safety, API Contracts & Service Design | Memformalkan kontrak API, meng-*generate* tipe, menguji kompatibilitas versi, memasang *gateway* dan *rate limiting* | **T2** |
 | 13 | Real-Time & Asynchronous Systems | Membangun satu fitur *real-time* dan satu alur asinkron | T3 |
 | 14 | Scaling, Distributed Web Systems & Emerging Web | Latihan evolusi arsitektur pada beban 100 kali lipat, ditambah eksperimen satu teknologi *emerging* | T4 |
 
@@ -63,7 +63,7 @@ Orientasi, tanpa materi teknis mendalam. Pembahasan mencakup arti "advanced" pad
 
 **Praktikum.** Memenuhi anggaran latensi dan Core Web Vitals yang sudah ditetapkan secara eksplisit. **Praktikum dinyatakan gagal bila anggaran tidak terpenuhi.** Perbaikan tanpa bukti pengukuran tidak dihitung.
 
-> Sampai titik ini seluruh perkakas untuk **Topik 1** sudah lengkap. Skema dan *query* dari Pertemuan 03. Mekanisme *caching* dari Pertemuan 04. Pembangkit beban dan cara membaca hasilnya dari Pertemuan 05.
+> Sampai titik ini seluruh perkakas untuk **Topik 1** sudah lengkap. Skema dan *query* dari Pertemuan 03. Mekanisme *caching* dari Pertemuan 04. *Load generator* dan cara membaca hasilnya dari Pertemuan 05.
 
 ### Bagian III. Jalur Berselang T6, T2, dan T5 (6 sampai 12)
 
@@ -111,9 +111,9 @@ Tiga jalur penelitian dijalankan bergantian. Tujuannya agar tim yang mengerjakan
 
 #### Pertemuan 12 · Type Safety, API Contracts & Service Design, *jalur T2*
 
-**Topik.** TypeScript untuk sistem besar. Perbandingan validasi *runtime* dan *compile-time*. *Schema validation*. OpenAPI dan pengembangan *contract-first*. *Client* hasil generate. DTO (*Data Transfer Object*). Validasi di batas sistem. Kompatibilitas dan *versioning* API (*Application Programming Interface*). Bagian kedua membahas desain layanan: batasan REST (*Representational State Transfer*) beserta tingkat kematangannya, GraphQL, konsep RPC (*Remote Procedure Call*) beserta tRPC dan gRPC, *trade-off* pemilihan gaya API, *pagination*, *filtering*, model error, *idempotency*, *rate limiting*, API *gateway*, dan pola BFF.
+**Topik.** TypeScript untuk sistem besar. Perbandingan validasi *runtime* dan *compile-time*. *Schema validation*. OpenAPI dan pengembangan *contract-first*. *Client* hasil generate. DTO (*Data Transfer Object*). Validasi di batas sistem. Kompatibilitas dan *versioning* API (*Application Programming Interface*). Bagian kedua membahas desain layanan: *constraint* REST (*Representational State Transfer*) beserta tingkat kematangannya, GraphQL, konsep RPC (*Remote Procedure Call*) beserta tRPC dan gRPC, *trade-off* pemilihan gaya API, *pagination*, *filtering*, model error, *idempotency*, *rate limiting*, API *gateway*, dan pola BFF.
 
-**Praktikum.** Memformalkan kontrak API yang selama ini tumbuh organik. Kontrak ditulis sebagai OpenAPI. Antarmuka *client* dan server yang bertipe dibangkitkan dari kontrak tersebut. Terakhir, kompatibilitas terhadap versi sebelumnya diuji.
+**Praktikum.** Memformalkan kontrak API yang selama ini tumbuh organik. Kontrak ditulis sebagai OpenAPI. Antarmuka *client* dan server yang bertipe di-*generate* dari kontrak tersebut. Terakhir, kompatibilitas terhadap versi sebelumnya diuji.
 
 > **Topik 2** lengkap. Skenario ancaman berupa token dicuri lalu diputar ulang dari Pertemuan 07. Alur token dari Pertemuan 10. *Gateway* dan *rate limiting* dari Pertemuan 12.
 
@@ -221,7 +221,7 @@ Sasarannya adalah artikel jurnal terindeks Q3 sampai Q4. Kebaruan yang dikejar b
 
 **Solusi A: SSR.** *Markup* dikirim sudah jadi, sehingga LCP (*Largest Contentful Paint*) dan indeksabilitas membaik, tanpa mengubah model komponen yang sudah dipakai tim.
 
-**Efek samping A.** Halaman memang tampil lebih cepat, tetapi belum bisa dipakai. Seluruh pohon komponen tetap harus dihidrasi di klien. Akibatnya *bundel* JavaScript tidak berkurang sama sekali, dan INP (*Interaction to Next Paint*) justru memburuk karena hidrasi memblokir *main thread*. Biaya CPU per *request* di server juga naik, sehingga TTFB (*Time To First Byte*) dan ongkos operasional bertambah. Sebagian keunggulan A termakan sendiri.
+**Efek samping A.** Halaman memang tampil lebih cepat, tetapi belum bisa dipakai. Seluruh pohon komponen tetap harus dihidrasi di klien. Akibatnya *bundel* JavaScript tidak berkurang sama sekali, dan INP (*Interaction to Next Paint*) justru memburuk karena hidrasi memblokir *main thread*. Biaya CPU per *request* di server juga naik, sehingga TTFB (*Time To First Byte*) dan biaya operasional bertambah. Sebagian keunggulan A termakan sendiri.
 
 **Komponen B: hidrasi selektif berbasis *islands* dengan prioritas menurut *viewport* dan interaksi, di atas *streaming* SSR.** Hanya komponen interaktif yang dikirimi JavaScript. Urutan hidrasinya mengikuti kemungkinan pemakaian, bukan urutan pohon komponen. *Bundel* mengecil dan *main thread* lebih longgar, sehingga INP membaik. Keunggulan LCP dan indeksabilitas yang menjadi alasan memilih A tetap dipertahankan.
 
@@ -247,7 +247,7 @@ Sasarannya adalah artikel jurnal terindeks Q3 sampai Q4. Kebaruan yang dikejar b
 
 **Metrik.** Presisi dan *recall* deteksi. Proporsi regresi yang tertangkap sebelum *merge*. Laju alarm palsu, yang menentukan apakah tim akan mematikan gerbang ini. Tambahan durasi *pipeline* CI. Korelasi antara temuan CI dan latensi persentil 95 yang teramati saat uji beban.
 
-**Klaim kontribusi.** Rancangan gerbang kinerja yang praktis dipakai tim kecil, beserta bukti seberapa banyak regresi basis data yang benar-benar tertangkap dan berapa ongkos CI yang harus dibayar untuk itu.
+**Klaim kontribusi.** Rancangan gerbang kinerja yang praktis dipakai tim kecil, beserta bukti seberapa banyak regresi basis data yang benar-benar tertangkap dan berapa biaya CI yang harus dibayar untuk itu.
 
 ### Urutan Pengerjaan yang Disarankan
 
@@ -268,11 +268,11 @@ Diurutkan dari yang paling mudah dieksekusi sampai yang paling menuntut.
 
 **T5** justru punya metrik paling objektif dan perkakas paling matang. Kesulitannya ada pada tuntutan membangun satu aplikasi dalam empat varian. Topik ini cocok untuk tim yang kuat di *frontend*, dengan satu syarat. Keempat varian harus memakai satu *framework* yang mendukung *islands*, agar perbedaan hasil tidak berasal dari perbedaan *framework*.
 
-**T3 dan T4 sebaiknya bukan proyek pertama.** T3 menuntut pembangkit beban puluhan ribu koneksi konkuren dan beberapa *node*. Hasilnya sensitif terhadap *tuning* sistem operasi, misalnya `ulimit` dan *ephemeral port*. Salah *tuning* berarti yang terukur adalah batas sistem operasi, bukan batas rancangan. T4 paling menarik perhatian, tetapi paling sulit dibuat rigor. Penilaian mutu jawaban bersifat subjektif, ada biaya API, dan reproduksibilitasnya rapuh karena model penyedia berubah tanpa pemberitahuan.
+**T3 dan T4 sebaiknya bukan proyek pertama.** T3 menuntut *load generator* puluhan ribu koneksi konkuren dan beberapa *node*. Hasilnya sensitif terhadap *tuning* sistem operasi, misalnya `ulimit` dan *ephemeral port*. Salah *tuning* berarti yang terukur adalah batas sistem operasi, bukan batas rancangan. T4 paling menarik perhatian, tetapi paling sulit dibuat rigor. Penilaian mutu jawaban bersifat subjektif, ada biaya API, dan reproduksibilitasnya rapuh karena model penyedia berubah tanpa pemberitahuan.
 
 ### Catatan Pelaksanaan
 
-**Infrastruktur bersama.** Satu *testbed* melayani keenam topik, terdiri atas aplikasi referensi, Docker Compose, PostgreSQL, Redis, k6 atau Locust untuk pembangkitan beban, dan OpenTelemetry untuk pengumpulan metrik. Repositori artefak yang dapat direproduksi, berisi skrip beban, konfigurasi, dan data mentah, menaikkan peluang penerimaan secara berarti pada tingkat jurnal ini.
+**Infrastruktur bersama.** Satu *testbed* melayani keenam topik, terdiri atas aplikasi referensi, Docker Compose, PostgreSQL, Redis, k6 atau Locust sebagai *load generator*, dan OpenTelemetry untuk pengumpulan metrik. Repositori artefak yang dapat direproduksi, berisi skrip beban, konfigurasi, dan data mentah, menaikkan peluang penerimaan secara berarti pada tingkat jurnal ini.
 
 **Disiplin metodologis.** Bagian inilah yang biasanya menjadi pembeda antara diterima dan ditolak. Tiap konfigurasi dijalankan minimal 30 repetisi. Yang dilaporkan adalah sebaran, bukan hanya rerata. Interval kepercayaan disertakan. Versi seluruh dependensi dikunci. Spesifikasi perangkat keras dilaporkan. Ancaman terhadap validitas disebutkan secara jujur, terutama bahwa hasil diperoleh pada satu *testbed*.
 
