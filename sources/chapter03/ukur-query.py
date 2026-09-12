@@ -18,7 +18,7 @@ from pathlib import Path
 
 import psycopg
 
-DSN = "postgresql://awe:awe@localhost:5433/toko"
+DSN = "postgresql://admin:admin123@localhost:5433/toko"
 
 
 def persentil(daftar_angka, peringkat):

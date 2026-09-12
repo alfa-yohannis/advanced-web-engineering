@@ -1,6 +1,6 @@
 -- Data uji berukuran cukup besar agar selisih rencana eksekusi terlihat.
 -- Jalankan dengan:
---   psql "postgresql://awe:awe@localhost:5433/toko" -f 02-data-uji.sql
+--   psql "postgresql://admin:admin123@localhost:5433/toko" -f 02-data-uji.sql
 --
 -- Ukurannya: 20 kategori, 50.000 buku, 20.000 pelanggan, 200.000 pesanan,
 -- dan 600.000 item pesanan. Pengisian memakan sekitar satu menit.

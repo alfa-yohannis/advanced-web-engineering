@@ -821,7 +821,7 @@ def single_flight(pool_koneksi, cache, penghitung_kueri):
     \node[pita, fill=green!10, minimum width=2.4cm] at (0,0)
       {Segar\\{\tiny\mdseries langsung dipakai}};
     \node[pita, fill=orange!12, minimum width=6.0cm] at (2.4,0)
-      {Basi\\{\tiny\mdseries tetap dipakai, sambil satu utas menyegarkan}};
+      {Basi\\{\tiny\mdseries tetap dipakai, sambil satu utas me-\textit{refresh}}};
     \node[pita, fill=gray!35, minimum width=2.4cm] at (8.4,0)
       {Dibuang\\{\tiny\mdseries harus dihitung ulang}};
     \foreach \x/\teks in {0/0 detik, 2.4/60 detik, 8.4/300 detik}
@@ -847,7 +847,7 @@ def single_flight(pool_koneksi, cache, penghitung_kueri):
           bergantian dijalankan program uji. Redis sendiri tetap cepat.
   \end{itemize}
   \vspace{8pt}
-  {\footnotesize Cara lain, yaitu menyegarkan lebih awal secara acak sebelum
+  {\footnotesize Cara lain, yaitu me-\textit{refresh} lebih awal secara acak sebelum
   kunci kedaluwarsa, dibahas oleh Vattani dkk.}
 \end{frame}
 
@@ -1268,11 +1268,11 @@ docker compose unpause cache
   sama untuk \textit{cache} di browser dan CDN.}
 \end{frame}
 
-\section{Penyiapan Latihan}
+\section{Persiapan Latihan}
 
 \begin{frame}{\hfill}
   \centering
-  \Huge{\textbf{Penyiapan Latihan}}
+  \Huge{\textbf{Persiapan Latihan}}
 \end{frame}
 
 \begin{frame}[fragile]{{\Large Basis Data dan Redis}}

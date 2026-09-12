@@ -3,7 +3,7 @@
 -- terekam di sini menjadi baseline.
 --
 -- Jalankan dengan:
---   psql "postgresql://awe:awe@localhost:5433/toko" -f 03-query-baseline.sql
+--   psql "postgresql://admin:admin123@localhost:5433/toko" -f 03-query-baseline.sql
 
 \echo '=== Q1: sepuluh pesanan terakhir milik satu pelanggan ==='
 EXPLAIN (ANALYZE, BUFFERS)

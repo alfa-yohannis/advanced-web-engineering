@@ -264,7 +264,7 @@ Diurutkan dari yang paling mudah dieksekusi sampai yang paling menuntut.
 
 **Mulai dari T1.** Seluruh komponennya sudah tersedia sebagai pustaka dan tinggal dirangkai. Bebannya dapat disintesis dengan k6 dalam hitungan hari. Semua metriknya objektif dan terkumpul otomatis. Baselinenya berjenjang rapi, sehingga alur naskahnya jelas sejak awal. Tidak ada biaya API, partisipan manusia, maupun perangkat keras khusus. Kelemahannya hanya satu, yaitu kebaruannya paling tipis. Karena itu kekuatan naskah harus bertumpu pada kelengkapan kurva *trade-off*.
 
-**Lanjutkan ke T6 dan T2.** Keduanya memakai ulang *testbed* T1 tanpa penyiapan tambahan. T6 menuntut korpus perubahan kode berlabel sebagai *ground truth*. Itu biaya waktu yang dapat diperkirakan, bukan risiko yang dapat menggagalkan penelitian. T2 mengukur overhead pada skala mikrodetik, sehingga menuntut disiplin ekstra dalam menekan derau pengukuran. Ada kemungkinan selisihnya terlalu kecil untuk bermakna secara statistik.
+**Lanjutkan ke T6 dan T2.** Keduanya memakai ulang *testbed* T1 tanpa penyiapan tambahan. T6 menuntut korpus perubahan kode berlabel sebagai *ground truth*. Itu biaya waktu yang dapat diperkirakan, bukan risiko yang dapat menggagalkan penelitian. T2 mengukur overhead pada skala mikrodetik, sehingga menuntut disiplin ekstra dalam menekan *noise* pengukuran. Ada kemungkinan selisihnya terlalu kecil untuk bermakna secara statistik.
 
 **T5** justru punya metrik paling objektif dan perkakas paling matang. Kesulitannya ada pada tuntutan membangun satu aplikasi dalam empat varian. Topik ini cocok untuk tim yang kuat di *frontend*, dengan satu syarat. Keempat varian harus memakai satu *framework* yang mendukung *islands*, agar perbedaan hasil tidak berasal dari perbedaan *framework*.
 

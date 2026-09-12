@@ -24,7 +24,7 @@ import time
 import psycopg
 import redis
 
-DSN = "postgresql://awe:awe@localhost:5434/toko"
+DSN = "postgresql://admin:admin123@localhost:5434/toko"
 REDIS_HOST = "localhost"
 REDIS_PORT = 6380
 

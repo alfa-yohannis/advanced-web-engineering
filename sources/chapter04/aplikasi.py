@@ -27,7 +27,7 @@ from redis.backoff import NoBackoff
 from redis.retry import Retry
 
 ALAMAT_DENGAR = ("127.0.0.1", 8000)
-DSN = "postgresql://awe:awe@localhost:5434/toko"
+DSN = "postgresql://admin:admin123@localhost:5434/toko"
 REDIS_HOST = "localhost"
 REDIS_PORT = 6380
 UKURAN_POOL = 10

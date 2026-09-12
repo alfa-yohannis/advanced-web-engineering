@@ -6,7 +6,7 @@ bersamaan. Tanpa pengaman, seluruhnya meleset dan menjalankan kueri yang sama
 ke basis data. Tiga cara dibandingkan pada beban yang sama persis:
   tanpa_pengaman          tiap permintaan yang meleset menghitung sendiri
   single_flight           hanya satu yang menghitung, sisanya menunggu hasilnya
-  stale_while_revalidate  nilai lama langsung dipakai, satu utas menyegarkan
+  stale_while_revalidate  nilai lama langsung dipakai, satu utas me-refresh
 
 Peringatan: skrip ini sengaja membebani basis data. Jalankan hanya pada
 container milik sendiri.
@@ -24,7 +24,7 @@ import time
 import redis
 from psycopg_pool import ConnectionPool
 
-DSN = "postgresql://awe:awe@localhost:5434/toko"
+DSN = "postgresql://admin:admin123@localhost:5434/toko"
 REDIS_HOST = "localhost"
 REDIS_PORT = 6380
 UKURAN_POOL = 10
@@ -34,14 +34,14 @@ PERMINTAAN_SERENTAK_BAWAAN = 50
 KUNCI_TERLARIS = "peragaan:terlaris:30hari"
 KUNCI_GEMBOK = "peragaan:gembok:terlaris:30hari"
 # Setelah TTL keras, Redis membuang nilainya. Setelah TTL lunak, nilainya
-# dianggap basi, tetapi masih boleh dipakai sambil disegarkan.
+# dianggap basi, tetapi masih boleh dipakai sambil di-refresh.
 TTL_KERAS_DETIK = 300
 TTL_LUNAK_DETIK = 60
 # Gembok dilepas otomatis bila pemegangnya mati sebelum sempat melepasnya.
 UMUR_GEMBOK_MS = 2000
 JEDA_PERIKSA_ULANG_DETIK = 0.01
 BATAS_MENUNGGU_DETIK = 2.0
-NAMA_UTAS_PENYEGAR = "penyegar"
+NAMA_UTAS_REFRESH = "refresh"
 
 SQL_TERLARIS = """
     SELECT b.judul, sum(i.jumlah) AS terjual
@@ -133,7 +133,7 @@ def bungkus_dengan_batas_segar(isi_json):
   return json.dumps({"isi": isi_json, "segar_sampai": batas_segar})
 
 
-def segarkan_di_latar(pool_koneksi, cache, penghitung_kueri):
+def refresh_di_latar(pool_koneksi, cache, penghitung_kueri):
   """Menghitung ulang nilai lalu menyimpannya. Dijalankan di utas terpisah."""
   try:
     isi_json = jalankan_kueri_terlaris(pool_koneksi, penghitung_kueri)
@@ -144,7 +144,7 @@ def segarkan_di_latar(pool_koneksi, cache, penghitung_kueri):
 
 
 def stale_while_revalidate(pool_koneksi, cache, penghitung_kueri):
-  """Nilai basi langsung dipakai, sementara satu utas menyegarkannya.
+  """Nilai basi langsung dipakai, sementara satu utas me-refresh-nya.
 
   Tidak ada klien yang menunggu kueri. Biayanya, sebagian klien menerima
   nilai yang sudah lewat masa segarnya.
@@ -160,9 +160,9 @@ def stale_while_revalidate(pool_koneksi, cache, penghitung_kueri):
   sudah_basi = nilai_terbungkus["segar_sampai"] < time.time()
   if sudah_basi and cache.set(KUNCI_GEMBOK, "1", nx=True, px=UMUR_GEMBOK_MS):
     threading.Thread(
-        target=segarkan_di_latar,
+        target=refresh_di_latar,
         args=(pool_koneksi, cache, penghitung_kueri),
-        name=NAMA_UTAS_PENYEGAR,
+        name=NAMA_UTAS_REFRESH,
     ).start()
   return nilai_terbungkus["isi"]
 
@@ -189,10 +189,10 @@ def kirim_satu_permintaan(cara, pool_koneksi, cache, penghitung_kueri,
   daftar_lama_ms.append((time.perf_counter() - waktu_mulai) * 1000)
 
 
-def tunggu_utas_penyegar():
-  """Menunggu utas penyegar selesai, agar kuerinya ikut terhitung."""
+def tunggu_utas_refresh():
+  """Menunggu utas refresh selesai, agar kuerinya ikut terhitung."""
   for utas in threading.enumerate():
-    if utas.name == NAMA_UTAS_PENYEGAR:
+    if utas.name == NAMA_UTAS_REFRESH:
       utas.join()
 
 
@@ -215,7 +215,7 @@ def jalankan_satu_cara(cara, jumlah_permintaan, pool_koneksi, cache):
     utas.start()
   for utas in daftar_utas:
     utas.join()
-  tunggu_utas_penyegar()
+  tunggu_utas_refresh()
   print(
       f"  {cara.__name__:<23} {penghitung_kueri.jumlah:>5} "
       f"{hitung_persentil(daftar_lama_ms, 50):>11.1f} "

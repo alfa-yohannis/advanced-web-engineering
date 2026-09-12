@@ -447,3 +447,4 @@ Thumbs.db
 
 # Virtualenv lokal untuk skrip Python di sources/
 sources/.venv/
+videos

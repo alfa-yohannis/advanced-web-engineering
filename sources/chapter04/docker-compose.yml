@@ -10,8 +10,8 @@ services:
     image: postgres:16
     container_name: awe4-db
     environment:
-      POSTGRES_USER: awe
-      POSTGRES_PASSWORD: awe
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
       POSTGRES_DB: toko
     ports:
       - "5434:5432"

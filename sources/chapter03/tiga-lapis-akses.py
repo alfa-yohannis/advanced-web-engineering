@@ -29,8 +29,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
-DSN = "postgresql://awe:awe@localhost:5433/toko"
-URL_SQLALCHEMY = "postgresql+psycopg://awe:awe@localhost:5433/toko"
+DSN = "postgresql://admin:admin123@localhost:5433/toko"
+URL_SQLALCHEMY = "postgresql+psycopg://admin:admin123@localhost:5433/toko"
 ID_PELANGGAN = 12345
 BATAS = 10
 

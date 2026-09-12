@@ -1,6 +1,6 @@
 -- Skema toko buku kampus.
 -- Jalankan dengan:
---   psql "postgresql://awe:awe@localhost:5433/toko" -f 01-skema.sql
+--   psql "postgresql://admin:admin123@localhost:5433/toko" -f 01-skema.sql
 --
 -- Catatan sengaja: pada tahap ini tidak ada satu pun indeks tambahan.
 -- Indeks baru ditambahkan pada 04-indeks.sql, setelah rencana eksekusi

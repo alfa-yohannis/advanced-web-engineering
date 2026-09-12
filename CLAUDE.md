@@ -24,10 +24,12 @@ sebagai satu suara.
   truth}`, `\textit{request}`, `\textit{key-value}`, `\textit{compress}`,
   `\textit{range}`, `\textit{dashboard}`, `\textit{social network}`,
   `\textit{constraint}`, `\textit{generate}`, `\textit{error}`,
-  `\textit{worker}`, `\textit{conflict}`, `\textit{disk}`, bukan kolam,
+  `\textit{worker}`, `\textit{conflict}`, `\textit{disk}`, `\textit{node}`,
+  `\textit{noise}`, `\textit{refresh}`, `\textit{throttling}`, bukan kolam,
   pemutus sirkuit, pengulangan, balapan, sumber kebenaran, pemanggilan,
   kunci-nilai, dimampatkan, papan pemantauan, jaringan pertemanan,
-  dibangkitkan, galat, pekerja, benturan, cakram, batasan
+  dibangkitkan, galat, pekerja, benturan, cakram, simpul, derau,
+  menyegarkan, pembatasan, batasan
   dalam arti \textit{constraint} basis data, atau rentang dalam arti
   \textit{range} pada kueri dan penyimpanan. Judul slide dan
   judul seksi menulis istilah Inggris tegak, tanpa cetak miring. Imbuhan bahasa Indonesia pada
@@ -89,7 +91,7 @@ konsekuensi praktis. Pertama, ... Kedua, ...".
 - Tiap seksi materi punya minimal satu gambar TikZ atau satu tabel.
 - Gambar dibuat dengan TikZ, bukan gambar raster, kecuali tangkapan layar.
 - Palet tetap: `blue!8` untuk tahap biasa, `orange!12` untuk tahap yang
-  ditekankan, `green!10` untuk hasil akhir, `praditagreen!15` untuk simpul
+  ditekankan, `green!10` untuk hasil akhir, `praditagreen!15` untuk node
   induk, `red!22` dan `gray!35` untuk penanda masalah.
 - Gaya panah tetap: `panah/.style={-{Stealth[length=2mm]}, thick}`.
 - Font di dalam gambar `\scriptsize` atau `\footnotesize`, keterangan kecil

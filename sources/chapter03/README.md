@@ -22,8 +22,9 @@
 ```bash
 cd sources/chapter03
 docker compose up -d
-docker compose exec -T db psql "postgresql://awe:awe@localhost/toko" < 01-skema.sql
-docker compose exec -T db psql "postgresql://awe:awe@localhost/toko" < 02-data-uji.sql
+DSN="postgresql://admin:admin123@localhost/toko"
+docker compose exec -T db psql "$DSN" < 01-skema.sql
+docker compose exec -T db psql "$DSN" < 02-data-uji.sql
 ```
 
 Pengisian data memakan sekitar dua belas detik. Basis data dapat dihubungi dari

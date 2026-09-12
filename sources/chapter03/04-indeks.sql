@@ -3,7 +3,7 @@
 -- dijalankan ulang untuk membandingkan.
 --
 -- Jalankan dengan:
---   psql "postgresql://awe:awe@localhost:5433/toko" -f 04-indeks.sql
+--   psql "postgresql://admin:admin123@localhost:5433/toko" -f 04-indeks.sql
 
 -- Q1. Kolom penyaring lebih dahulu, kolom pengurut sesudahnya, arahnya
 -- disamakan dengan ORDER BY agar pengurutan tidak perlu dikerjakan lagi.

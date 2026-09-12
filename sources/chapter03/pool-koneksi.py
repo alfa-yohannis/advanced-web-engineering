@@ -25,7 +25,7 @@ from functools import partial
 import psycopg
 from psycopg_pool import ConnectionPool
 
-DSN = "postgresql://awe:awe@localhost:5433/toko"
+DSN = "postgresql://admin:admin123@localhost:5433/toko"
 
 # Kueri sengaja sesepele mungkin agar yang terukur adalah biaya koneksinya.
 KUERI = "SELECT 1"

@@ -682,7 +682,7 @@ perhitungan \textit{style}, perhitungan tata letak, penggambaran, dan penyusunan
 lapisan.
 
 Dua hal perlu ditegaskan. Pertama, tahap penggambaran tidak dijalankan pada
-tiap putaran. Browser hanya menggambar mengikuti laju penyegaran layar, umumnya
+tiap putaran. Browser hanya menggambar mengikuti laju \textit{refresh} layar, umumnya
 60 kali per detik, sehingga jatahnya sekitar 16,7 milidetik per \textit{frame}.
 Bila tidak ada yang berubah, tahap itu dilewati. Kedua, karena berbagi satu
 utas, JavaScript dan penggambaran saling menahan. Tugas yang berjalan 200
@@ -1029,9 +1029,9 @@ ada di server atau basis data. Bila bagian \emph{Content Download} yang
 panjang, masalahnya ada pada ukuran berkas. Bila bagian \emph{Queueing} yang
 panjang, jumlah permintaan serentak terlalu banyak.
 
-Pengukuran wajib dilakukan dengan pembatasan yang mendekati kondisi pengguna.
-Aktifkan \textit{network throttling} pada profil Slow 4G. Aktifkan juga pembatasan kecepatan Central Processing Unit (CPU) pada faktor
-4 kali lebih lambat. Tanpa pembatasan itu,
+Pengukuran wajib dilakukan dengan \textit{throttling} yang mendekati kondisi pengguna.
+Aktifkan \textit{network throttling} pada profil Slow 4G. Aktifkan juga \textit{throttling} Central Processing Unit (CPU) pada faktor
+4 kali lebih lambat. Tanpa \textit{throttling} itu,
 hasil pengukuran hanya menggambarkan komputer pengembang, bukan ponsel
 mahasiswa.
 
@@ -1085,7 +1085,7 @@ dapat dianggap serangan.
 \begin{enumerate}
   \item Buka \texttt{https://www.pradita.ac.id} pada jendela penyamaran, agar
         ekstensi dan \textit{cache} lama tidak memengaruhi hasil.
-  \item Buka DevTools, aktifkan Slow 4G dan pembatasan CPU 4 kali lebih lambat,
+  \item Buka DevTools, aktifkan Slow 4G dan \textit{throttling} CPU 4 kali lebih lambat,
         lalu muat ulang halaman dengan \textit{cache} dikosongkan.
   \item Catat rincian waktu pada panel Network untuk lima permintaan terlambat,
         beserta pembagian tahapnya.
@@ -1099,7 +1099,7 @@ dapat dianggap serangan.
         \url{https://www.pradita.ac.id/praktisi-akademisi}. Halaman itu dipilih
         karena isinya lebih padat daripada halaman depan, sehingga selisih
         angkanya mudah terlihat. Seluruh kondisi pengukuran dijaga sama persis,
-        yaitu profil jaringan, faktor pembatasan CPU, dan mode tampilan, agar
+        yaitu profil jaringan, faktor \textit{throttling} CPU, dan mode tampilan, agar
         yang dibandingkan benar-benar halamannya, bukan pengaturannya.
   \item Isi Tabel \ref{tab:baseline} dengan kedua hasil tersebut, lalu
         bandingkan. Perhatikan metrik mana yang berubah paling besar, lalu

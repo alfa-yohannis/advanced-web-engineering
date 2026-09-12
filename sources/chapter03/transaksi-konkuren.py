@@ -21,7 +21,7 @@ import threading
 
 import psycopg
 
-DSN = "postgresql://awe:awe@localhost:5433/toko"
+DSN = "postgresql://admin:admin123@localhost:5433/toko"
 ID_BUKU = 1
 STOK_AWAL = 1000
 

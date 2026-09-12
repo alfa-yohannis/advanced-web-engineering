@@ -64,7 +64,7 @@ pada aplikasi web \cite{kleppmann2017ddia}.
     \hline
     Kolomnar & Data disimpan per kolom, bukan per baris, sehingga satu kolom dapat dibaca tanpa menyentuh kolom lain (berbeda dengan relasional, yang membaca semua kolom) & Analitik atas jutaan baris, misalnya laporan dan \textit{dashboard} & Penulisan satu baris mahal, dan tidak dirancang untuk transaksi \\
     \hline
-    Graf & Simpul dan sisi disimpan sebagai penunjuk langsung, sehingga penelusuran hubungan tidak memerlukan penggabungan & \textit{Social network}, rekomendasi, penelusuran hak akses berjenjang & Kueri agregat biasa justru lebih lambat, dan penskalaannya rumit \\
+    Graf & \textit{Node} dan \textit{edge} disimpan sebagai penunjuk langsung, sehingga penelusuran hubungan tidak memerlukan penggabungan & \textit{Social network}, rekomendasi, penelusuran hak akses berjenjang & Kueri agregat biasa justru lebih lambat, dan penskalaannya rumit \\
     \hline
     Deret waktu & Baris berstempel waktu ditulis berurutan dan di-\textit{compress} per \textit{range} & Metrik, sensor, dan pemantauan, sebagaimana Bab 9 & Pembaruan dan penghapusan baris lama hampir tidak didukung \\
     \hline
@@ -793,6 +793,12 @@ baris tanpa membaca seluruh tabel. Analoginya seperti indeks di belakang buku.
 Tanpa indeks, satu-satunya cara menemukan istilah adalah membalik seluruh
 halaman. Dengan indeks, halaman yang dituju langsung ketahuan.
 
+Bentuk bawaannya adalah B-tree, yaitu pohon terurut dan berimbang
+\cite{pgdoc-indexes}. Pencarian turun dari akar ke daun, sehingga tabel
+\texttt{pesanan} yang berisi 200.000 baris cukup ditelusuri beberapa tingkat
+saja, bukan dibaca satu per satu. Karena isinya terurut, indeks yang sama juga
+melayani \textit{range} dan \texttt{ORDER BY}.
+
 Analogi tersebut sekaligus menjelaskan biayanya. Indeks buku harus disusun
 ulang setiap kali isi buku berubah, dan indeks itu sendiri memakan halaman.
 Begitu pula di basis data: tiap indeks memperlambat penulisan dan memakan
@@ -801,21 +807,21 @@ ruang. Tabel \ref{tab:jenis-indeks} merangkum jenis yang dipakai pada bab ini
 
 \begin{table}[!htb]
   \centering
-  \caption{Jenis indeks dan kegunaannya}
+  \caption{Jenis indeks, kegunaannya, dan contohnya}
   \label{tab:jenis-indeks}
-  \begin{tabularx}{\textwidth}{lX}
+  \begin{tabularx}{\textwidth}{lXX}
     \hline
-    \textbf{Jenis} & \textbf{Dipakai untuk} \\
+    \textbf{Jenis} & \textbf{Dipakai untuk} & \textbf{Contoh} \\
     \hline
-    B-tree kolom tunggal & Kesamaan, \textit{range}, dan pengurutan pada satu kolom. Bawaan PostgreSQL. \\
+    B-tree kolom tunggal & Kesamaan, \textit{range}, dan pengurutan pada satu kolom. Bawaan PostgreSQL. & \texttt{item\_pesanan (buku\_id)} \\
     \hline
-    B-tree gabungan & Penyaringan pada beberapa kolom sekaligus. Hanya terpakai bila kolom terdepan ikut disaring. \\
+    B-tree gabungan & Penyaringan pada beberapa kolom sekaligus. Hanya terpakai bila kolom terdepan ikut disaring. & \texttt{pesanan (pelanggan\_id, dibuat\_pada DESC)} \\
     \hline
-    Indeks parsial & Sebagian baris saja, lewat klausa \texttt{WHERE}. Lebih kecil dan lebih cepat. \\
+    Indeks parsial & Sebagian baris saja, lewat klausa \texttt{WHERE}. Lebih kecil dan lebih cepat. & \texttt{pesanan (dibuat\_pada) WHERE status <> 'batal'} \\
     \hline
-    Indeks ekspresi & Penyaringan atas hasil fungsi, misalnya \texttt{lower(email)}. \\
+    Indeks ekspresi & Penyaringan atas hasil fungsi. & \texttt{pelanggan (lower(email))} \\
     \hline
-    GIN dengan trigram & Pencarian pola di tengah teks, yang tidak dapat dilayani B-tree. \\
+    GIN dengan trigram & Pencarian pola di tengah teks, yang tidak dapat dilayani B-tree. & \texttt{buku USING gin (judul gin\_trgm\_ops)} \\
     \hline
   \end{tabularx}
 \end{table}
@@ -828,43 +834,90 @@ seperti buku telepon yang terurut menurut nama keluarga lalu nama depan.
 
 \subsection*{Membaca rencana eksekusi}
 
+Sepanjang seksi ini dipakai empat kueri acuan, seperti pada Listing
+\ref{lst:kueri-acuan}. Q1 mengambil sepuluh pesanan terakhir milik satu
+pelanggan, Q2 menghitung sepuluh buku terlaris dalam 30 hari terakhir, Q3
+mencari pola di tengah judul, dan Q4 menyaring seperempat tabel.
+
+\begin{lstlisting}[style=SqlStyle, caption={Empat kueri acuan yang dipakai sepanjang bab ini, tersedia di \berkas{sources/chapter03/03-query-baseline.sql}}, label={lst:kueri-acuan}]
+\echo '=== Q1: sepuluh pesanan terakhir milik satu pelanggan ==='
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT id, status, total, dibuat_pada
+FROM pesanan
+WHERE pelanggan_id = 12345
+ORDER BY dibuat_pada DESC
+LIMIT 10;
+
+\echo '=== Q2: sepuluh buku terlaris dalam 30 hari terakhir ==='
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT b.judul, sum(i.jumlah) AS terjual
+FROM item_pesanan i
+JOIN pesanan p ON p.id = i.pesanan_id
+JOIN buku b ON b.id = i.buku_id
+WHERE p.dibuat_pada >= now() - interval '30 days'
+  AND p.status <> 'batal'
+GROUP BY b.id, b.judul
+ORDER BY terjual DESC
+LIMIT 10;
+
+\echo '=== Q3: pencarian judul dengan pola di tengah ==='
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT id, judul
+FROM buku
+WHERE judul ILIKE '%Jilid 4321%'
+LIMIT 20;
+
+\echo '=== Q4: penyaringan yang mengembalikan seperempat tabel ==='
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT count(*)
+FROM pesanan
+WHERE status = 'baru';
+\end{lstlisting}
+
 Perintah \texttt{EXPLAIN} memperlihatkan rencana yang disusun perencana kueri,
 sedangkan \texttt{EXPLAIN ANALYZE} benar-benar menjalankannya dan melaporkan
-waktu nyatanya \cite{pgdoc-explain}. Tabel \ref{tab:simpul} merangkum simpul
-yang paling sering muncul.
+waktu nyatanya \cite{pgdoc-explain}. Rencana itu berbentuk pohon. Tiap
+\textit{node} adalah satu langkah kerja, misalnya membaca tabel, menggabungkan
+dua sumber, atau mengurutkan. Baris yang paling menjorok ke dalam dikerjakan
+lebih dahulu, lalu hasilnya mengalir ke \textit{node} di atasnya. Tabel
+\ref{tab:simpul} merangkum \textit{node} yang paling sering muncul.
 
 \begin{table}[!htb]
   \centering
-  \caption{Simpul rencana eksekusi yang paling sering ditemui}
+  \caption{\textit{Node} rencana eksekusi yang paling sering ditemui, beserta
+           contohnya}
   \label{tab:simpul}
-  \begin{tabularx}{\textwidth}{lX}
+  \begin{tabularx}{\textwidth}{lXX}
     \hline
-    \textbf{Simpul} & \textbf{Artinya} \\
+    \textbf{\textit{Node}} & \textbf{Artinya} & \textbf{Contoh} \\
     \hline
-    Seq Scan & Seluruh tabel dibaca. Wajar untuk tabel kecil, mencurigakan untuk tabel besar dengan penyaring selektif. \\
+    Seq Scan & Seluruh tabel dibaca. Wajar untuk tabel kecil, mencurigakan untuk tabel besar dengan penyaring selektif. & Q1 sebelum indeks: 200.000 baris dibaca untuk 10 baris hasil \\
     \hline
-    Index Scan & Indeks ditelusuri, lalu barisnya diambil dari tabel. \\
+    Index Scan & Indeks ditelusuri, lalu barisnya diambil dari tabel. & Mencari satu pesanan lewat \texttt{id}-nya \\
     \hline
-    Index Only Scan & Seluruh kolom yang diminta ada di indeks, sehingga tabelnya tidak perlu disentuh. \\
+    Index Only Scan & Seluruh kolom yang diminta ada di indeks, sehingga tabelnya tidak perlu disentuh. & Menghitung baris ketika seluruh kolom yang dibutuhkan ada di indeks \\
     \hline
-    Bitmap Index Scan & Indeks dipakai untuk menandai halaman yang perlu dibaca, lalu halaman itu dibaca berurutan. Cocok untuk jumlah baris menengah. \\
+    Bitmap Index Scan & Indeks dipakai untuk menandai halaman yang perlu dibaca, lalu halaman itu dibaca berurutan. Cocok untuk jumlah baris menengah. & Q1 sesudah indeks gabungan dipasang \\
     \hline
-    Nested Loop & Untuk tiap baris sisi luar, sisi dalam dicari. Cepat bila sisi luarnya sedikit. \\
+    Nested Loop & Untuk tiap baris sisi luar, sisi dalam dicari. Cepat bila sisi luarnya sedikit. & Sepuluh pesanan digabungkan ke \texttt{item\_pesanan} \\
     \hline
-    Hash Join & Sisi yang lebih kecil dibangun menjadi tabel hash. Cocok untuk penggabungan besar. \\
+    Hash Join & Sisi yang lebih kecil dibangun menjadi tabel hash. Cocok untuk penggabungan besar. & Laporan yang menggabungkan \texttt{pesanan}, \texttt{item\_pesanan}, dan \texttt{buku} \\
     \hline
-    Sort & Pengurutan tersendiri. Dapat dihilangkan bila indeksnya sudah berurutan sesuai \texttt{ORDER BY}. \\
+    Sort & Pengurutan tersendiri. Dapat dihilangkan bila indeksnya sudah berurutan sesuai \texttt{ORDER BY}. & Q1 sebelum indeks: \texttt{ORDER BY dibuat\_pada DESC} \\
     \hline
   \end{tabularx}
 \end{table}
 
-Yang paling penting dibaca bukan nama simpulnya, melainkan tiga hal berikut.
+Yang paling penting dibaca bukan nama \textit{node}-nya, melainkan tiga hal berikut.
 Pertama, selisih antara \texttt{rows} pada perkiraan dan \texttt{rows} pada
 hasil sebenarnya. Selisih yang besar berarti statistiknya usang, dan seluruh
 rencana disusun di atas perkiraan yang salah. Kedua, \texttt{Rows Removed by
 Filter}, yaitu jumlah baris yang dibaca lalu dibuang, dan angka besar di sini
 adalah tanda indeks yang hilang. Ketiga, \texttt{loops}, karena waktu yang
-tertulis adalah waktu per satu \textit{loop}, bukan totalnya.
+tertulis adalah waktu per satu \textit{loop}, bukan totalnya. Ketiganya
+tampak pada Listing \ref{lst:plan-sebelum}: perkiraan 8 baris lawan 10 baris
+sebenarnya, 66.663 baris yang dibuang penyaring, dan waktu 3,531 milidetik
+yang berlaku per satu \textit{loop} dari tiga \textit{loop}.
 
 Listing \ref{lst:plan-sebelum} memperlihatkan rencana Q1 sebelum indeks
 dipasang, pada tabel \texttt{pesanan} berisi 200.000 baris.
@@ -882,21 +935,34 @@ Execution Time: 6.450 ms
 \end{lstlisting}
 
 Dua tanda terbaca di sana. Seluruh tabel dibaca, dan 66.663 baris per \textit{worker}
-dibuang oleh penyaring hanya untuk memperoleh 10 baris. Selain itu ada simpul
+dibuang oleh penyaring hanya untuk memperoleh 10 baris. Selain itu ada \textit{node}
 Sort, padahal pengurutannya dapat ditanggung indeks. Listing \ref{lst:indeks}
-memperlihatkan indeks yang menjawab keduanya sekaligus.
+memperlihatkan indeks yang menjawab keduanya sekaligus, beserta dua indeks lain
+yang dipakai kueri berikutnya, yaitu indeks kunci asing untuk penggabungan dan
+indeks GIN trigram untuk Q3.
 
-\begin{lstlisting}[style=SqlStyle, caption={Indeks untuk Q1 dan Q2, tersedia di \berkas{sources/chapter03/04-indeks.sql}}, label={lst:indeks}]
--- Kolom penyaring lebih dahulu, kolom pengurut sesudahnya, arahnya
+\begin{lstlisting}[style=SqlStyle, caption={Empat indeks perbaikan, tersedia di \berkas{sources/chapter03/04-indeks.sql}}, label={lst:indeks}]
+-- Q1. Kolom penyaring lebih dahulu, kolom pengurut sesudahnya, arahnya
 -- disamakan dengan ORDER BY agar pengurutan tidak perlu dikerjakan lagi.
-CREATE INDEX idx_pesanan_pelanggan_waktu
+CREATE INDEX IF NOT EXISTS idx_pesanan_pelanggan_waktu
   ON pesanan (pelanggan_id, dibuat_pada DESC);
 
--- Indeks parsial. Baris berstatus 'batal' tidak pernah ikut dihitung,
+-- Q2. Indeks parsial. Baris berstatus 'batal' tidak pernah ikut dihitung,
 -- sehingga tidak perlu ikut disimpan di dalam indeks.
-CREATE INDEX idx_pesanan_waktu_aktif
+CREATE INDEX IF NOT EXISTS idx_pesanan_waktu_aktif
   ON pesanan (dibuat_pada)
   WHERE status <> 'batal';
+
+-- Kunci asing tidak otomatis berindeks di PostgreSQL. Tanpa indeks ini,
+-- penggabungan dari pesanan ke item_pesanan memindai seluruh tabel.
+CREATE INDEX IF NOT EXISTS idx_item_pesanan_buku
+  ON item_pesanan (buku_id);
+
+-- Q3. Pola '%teks%' tidak dapat dilayani B-tree, karena B-tree hanya
+-- berguna untuk awalan. Trigram memecah teks menjadi potongan tiga huruf.
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX IF NOT EXISTS idx_buku_judul_trgm
+  ON buku USING gin (judul gin_trgm_ops);
 \end{lstlisting}
 
 Sesudahnya, Seq Scan berganti menjadi Bitmap Index Scan, dan waktu eksekusinya
@@ -907,19 +973,19 @@ merangkum keempat kueri, diukur memakai
 \begin{table}[!htb]
   \centering
   \caption{Waktu eksekusi p50 sebelum dan sesudah indeks dipasang, dalam
-           milidetik, hasil pengukuran nyata}
+           milidetik, beserta rasionya, hasil pengukuran nyata}
   \label{tab:sebelum-sesudah}
-  \begin{tabularx}{\textwidth}{lXrrl}
+  \begin{tabularx}{\textwidth}{lXrrrl}
     \hline
-    \textbf{Kueri} & \textbf{Isinya} & \textbf{Sebelum} & \textbf{Sesudah} & \textbf{Perubahan rencana} \\
+    \textbf{Kueri} & \textbf{Isinya} & \textbf{Sebelum} & \textbf{Sesudah} & \textbf{Rasio} & \textbf{Perubahan rencana} \\
     \hline
-    Q1 & Riwayat pesanan satu pelanggan & 5,602 & 0,016 & Seq $\rightarrow$ Bitmap Index \\
+    Q1 & Riwayat pesanan satu pelanggan & 5,602 & 0,016 & 350$\times$ & Seq $\rightarrow$ Bitmap Index \\
     \hline
-    Q2 & Buku terlaris 30 hari & 88,459 & 80,433 & Sebagian saja \\
+    Q2 & Buku terlaris 30 hari & 88,459 & 80,433 & 1,1$\times$ & Sebagian saja \\
     \hline
-    Q3 & Pencarian pola di tengah judul & 30,839 & 0,714 & Seq $\rightarrow$ GIN trigram \\
+    Q3 & Pencarian pola di tengah judul & 30,839 & 0,714 & 43$\times$ & Seq $\rightarrow$ GIN trigram \\
     \hline
-    Q4 & Hitung pesanan berstatus baru & 6,617 & 7,201 & Tetap Seq Scan \\
+    Q4 & Hitung pesanan berstatus baru & 6,617 & 7,201 & 0,9$\times$ & Tetap Seq Scan \\
     \hline
   \end{tabularx}
 \end{table}
@@ -928,7 +994,7 @@ Dua baris terakhir sengaja dibiarkan apa adanya, karena keduanya justru yang
 paling banyak mengajarkan.
 
 Baris Q4 tidak membaik, bahkan sedikit memburuk, dan selisihnya masih dalam
-batas derau pengukuran. Penyebabnya, penyaring \texttt{status = 'baru'}
+batas \textit{noise} pengukuran. Penyebabnya, penyaring \texttt{status = 'baru'}
 mengembalikan sekitar seperempat isi tabel. Untuk sebanyak itu, membaca seluruh
 tabel secara berurutan lebih murah daripada melompat-lompat lewat indeks.
 Perencana memilih Seq Scan, dan pilihan itu benar. Indeks berguna ketika
@@ -939,17 +1005,6 @@ Penyebabnya, indeks memang mempercepat penyaringan pada tabel \texttt{pesanan},
 tetapi biaya terbesar kueri tersebut ada pada pembacaan seluruh 600.000 baris
 \texttt{item\_pesanan} untuk digabungkan. Batu sandungannya berpindah, dan
 inilah alasan pengukuran harus diulang setelah tiap perbaikan.
-
-Pemeriksaan lebih jauh atas Q2 menemukan hal yang lebih menarik lagi. Ketika
-Hash Join dimatikan sementara memakai \texttt{SET enable\_hashjoin = off},
-perencana beralih ke Nested Loop yang memakai kunci primer
-\texttt{item\_pesanan}, dan waktunya justru turun menjadi 65,9 milidetik dari
-78,8 milidetik. Artinya rencana yang dipilih perencana bukan rencana tercepat
-yang tersedia. Perencana memilih berdasarkan taksiran biaya, dan taksiran itu
-sendiri dapat meleset. Perlu ditegaskan, mematikan Hash Join adalah alat
-diagnosis, bukan perbaikan yang dibawa ke produksi. Perbaikan yang benar
-menyentuh sebabnya, misalnya menyegarkan statistik, menaikkan target
-statistik pada kolom yang bersangkutan, atau menulis ulang kuerinya.
 
 \section{Connection Pooling}
 
@@ -1336,8 +1391,9 @@ Penyiapannya dilakukan sekali, seperti pada Listing \ref{lst:c3-siapkan}.
 \begin{lstlisting}[language=bash, caption={Menyiapkan basis data dan data uji, dijalankan sekali di awal}, label={lst:c3-siapkan}]
 cd sources/chapter03
 docker compose up -d
-docker compose exec -T db psql "postgresql://awe:awe@localhost/toko" < 01-skema.sql
-docker compose exec -T db psql "postgresql://awe:awe@localhost/toko" < 02-data-uji.sql
+DSN="postgresql://admin:admin123@localhost/toko"
+docker compose exec -T db psql "$DSN" < 01-skema.sql
+docker compose exec -T db psql "$DSN" < 02-data-uji.sql
 
 # Keluarannya:
 #     tabel     | count
@@ -1369,7 +1425,7 @@ rencananya, sebelum satu indeks pun ditambahkan.
   \item Jalankan \berkas{sources/chapter03/03-query-baseline.sql}, lalu simpan
         seluruh keluarannya ke berkas. Rencana ini tidak dapat diperoleh
         kembali setelah indeks terpasang, kecuali indeksnya dihapus lagi.
-  \item Untuk tiap kueri, catat simpul pemindaian teratas, nilai
+  \item Untuk tiap kueri, catat \textit{node} pemindaian teratas, nilai
         \texttt{Rows Removed by Filter}, dan \texttt{Execution Time}.
   \item Ukur sebarannya memakai perintah pada Listing \ref{lst:c3-lat1-jalan},
         lalu catat p50 dan p95. Jalankan pertama sengaja dibuang oleh skrip,
@@ -1378,7 +1434,7 @@ rencananya, sebelum satu indeks pun ditambahkan.
         memperlihatkan contoh yang sudah terisi.
   \item Jawab tiga pertanyaan berikut. Pertama, kueri mana yang membuang baris
         terbanyak dibanding baris yang dikembalikannya? Kedua, kueri mana yang
-        punya simpul Sort, dan mengapa simpul itu muncul? Ketiga, mengapa p95
+        punya \textit{node} Sort, dan mengapa \textit{node} itu muncul? Ketiga, mengapa p95
         selalu lebih besar daripada p50, padahal kueri dan datanya sama persis?
 \end{enumerate}
 
@@ -1450,14 +1506,9 @@ melainkan jawaban atas satu bentuk kueri tertentu.
   \item Isi Tabel \ref{tab:c3-lat2-hasil}, lalu bandingkan dengan dugaan pada
         langkah pertama. Tabel \ref{tab:c3-lat2-contoh} memperlihatkan contoh yang
         sudah terisi.
-  \item Untuk Q2, jalankan ulang kuerinya dengan \texttt{SET enable\_hashjoin =
-        off} lebih dahulu, lalu catat waktunya. Perlu ditegaskan, penyetelan itu
-        adalah alat diagnosis, bukan perbaikan yang dibawa ke produksi.
-  \item Jawab tiga pertanyaan berikut. Pertama, mengapa Q4 tidak membaik
+  \item Jawab dua pertanyaan berikut. Pertama, mengapa Q4 tidak membaik
         walaupun kolom \texttt{status} sering dipakai sebagai penyaring? Kedua,
-        mengapa Q2 hanya membaik sedikit padahal indeksnya terpakai? Ketiga,
-        apa artinya bila rencana hasil \texttt{enable\_hashjoin = off} ternyata
-        lebih cepat daripada rencana yang dipilih sendiri oleh perencana?
+        mengapa Q2 hanya membaik sedikit padahal indeksnya terpakai?
 \end{enumerate}
 
 \begin{table}[!htb]
@@ -1466,13 +1517,13 @@ melainkan jawaban atas satu bentuk kueri tertentu.
   \label{tab:c3-lat2-contoh}
   \begin{tabularx}{\textwidth}{lrrrX}
     \hline
-    \textbf{Kueri} & \textbf{Sebelum} & \textbf{Sesudah} & \textbf{Rasio} & \textbf{Pemindaian sesudahnya} \\
+    \textbf{Kueri} & \textbf{Sebelum} & \textbf{Sesudah} & \textbf{Rasio} & \textbf{Perubahan rencana} \\
     \hline
-    Q1 & 5,602 & 0,016 & 350$\times$ & Bitmap Index Scan \\
+    Q1 & 5,602 & 0,016 & 350$\times$ & Seq $\rightarrow$ Bitmap Index \\
     \hline
-    Q2 & 88,459 & 80,433 & 1,1$\times$ & Sebagian indeks, sebagian Seq Scan \\
+    Q2 & 88,459 & 80,433 & 1,1$\times$ & Sebagian saja \\
     \hline
-    Q3 & 30,839 & 0,714 & 43$\times$ & Bitmap Index Scan trigram \\
+    Q3 & 30,839 & 0,714 & 43$\times$ & Seq $\rightarrow$ GIN trigram \\
     \hline
     Q4 & 6,617 & 7,201 & 0,9$\times$ & Tetap Seq Scan \\
     \hline
@@ -1481,7 +1532,7 @@ melainkan jawaban atas satu bentuk kueri tertentu.
 
 Contoh pada Tabel \ref{tab:c3-lat2-contoh} sengaja diambil apa adanya, termasuk
 baris Q4 yang rasionya di bawah satu. Selisih sekecil itu masih dalam batas
-derau, dan yang perlu disimpulkan bukan bahwa indeks memperlambatnya, melainkan
+\textit{noise}, dan yang perlu disimpulkan bukan bahwa indeks memperlambatnya, melainkan
 bahwa indeksnya memang tidak dipakai sama sekali. Angka pada tabel tersebut juga
 bergantung pada perangkat keras dan versi PostgreSQL yang dipakai, sehingga
 hasil tiap mahasiswa akan berbeda. Yang dilaporkan adalah pola perbandingannya
@@ -1493,7 +1544,7 @@ beserta penjelasannya, bukan angka persisnya.
   \label{tab:c3-lat2-hasil}
   \begin{tabularx}{\textwidth}{lrrrX}
     \hline
-    \textbf{Kueri} & \textbf{Sebelum} & \textbf{Sesudah} & \textbf{Rasio} & \textbf{Pemindaian sesudahnya} \\
+    \textbf{Kueri} & \textbf{Sebelum} & \textbf{Sesudah} & \textbf{Rasio} & \textbf{Perubahan rencana} \\
     \hline
     Q1 & \dots & \dots & \dots & \dots \\
     \hline

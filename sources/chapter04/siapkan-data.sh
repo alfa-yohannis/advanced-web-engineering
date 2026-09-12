@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-DSN="postgresql://awe:awe@localhost/toko"
+DSN="postgresql://admin:admin123@localhost/toko"
 DIREKTORI_BAB3="../chapter03"
 
 # Container yang baru menyala sempat menjalankan server sementara yang hanya
