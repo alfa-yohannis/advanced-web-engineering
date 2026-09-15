@@ -12,7 +12,8 @@ services:
       POSTGRES_DB: toko
     ports:
       - "5433:5432"
-    # Angka di bawah sengaja kecil agar batas pool terlihat pada Latihan 4.
+    # Angka di bawah sengaja kecil agar batas koneksi terlihat pada peragaan
+    # pool-koneksi.py.
     command:
       - postgres
       - -c

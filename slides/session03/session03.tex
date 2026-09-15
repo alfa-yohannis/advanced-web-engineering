@@ -481,6 +481,9 @@ def lewat_sql_langsung():
   \vspace{4pt}
   \begin{itemize}
     \item Teks kueri dikirim apa adanya lewat \texttt{psycopg}.
+    \item \textit{Data Source Name} (DSN) adalah satu baris teks berisi
+          keterangan untuk menghubungi basis data, misalnya
+          \texttt{postgresql://admin:admin123@localhost:5433/toko}.
     \item Ketiga cara menghasilkan baris yang identik, dan berkas
           \texttt{tiga-lapis-akses.py} membuktikannya setiap kali dijalankan.
   \end{itemize}
@@ -1707,15 +1710,17 @@ docker compose exec -T db psql "$DSN" < 02-data-uji.sql
 \begin{frame}[fragile]{{\Large Venv dan Urutan Kerja}}
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
-cd sources
-python3 -m venv .venv
-.venv/bin/pip install "psycopg[binary,pool]" sqlalchemy
+python3 -m venv ../.venv
+../.venv/bin/pip install "psycopg[binary,pool]" sqlalchemy
 \end{lstlisting}
 
   \vspace{4pt}
   \begin{itemize}
-    \item Seluruh skrip Python memakai venv bersama di
-          \texttt{sources/.venv}, dibuat sekali saja.
+    \item Venv bersama di \texttt{sources/.venv} dibuat sekali. Seluruh
+          perintah latihan dijalankan dari \texttt{sources/chapter03}.
+    \item Skrip Python berjalan di luar container, jadi DSN-nya memakai port
+          5433. \texttt{psql} di slide sebelumnya berjalan di dalam container
+          dengan port 5432.
     \item Rencana eksekusi sebelum perbaikan direkam lebih dahulu, karena
           begitu indeks terpasang rencana itu tidak dapat diperoleh kembali.
     \item Seusai latihan, \texttt{docker compose down -v} menghentikan
@@ -1736,10 +1741,11 @@ python3 -m venv .venv
     \item Jalankan penyiapan, lalu pastikan jumlah barisnya sesuai.
     \item Jalankan \texttt{03-query-baseline.sql}, lalu simpan seluruh
           keluarannya ke berkas.
-    \item Untuk tiap kueri, catat \textit{node} pemindaian teratas,
-          \texttt{Rows Removed by Filter}, dan \texttt{Execution Time}.
-    \item Ukur sebarannya memakai \texttt{ukur-query.py}, lalu catat p50 dan
-          p95.
+    \item Untuk tiap kueri, catat baris yang dikembalikan, \textit{node}
+          pemindaian teratas, \texttt{Rows Removed by Filter}, dan
+          \texttt{Execution Time}.
+    \item Ukur \texttt{q1.sql} sampai \texttt{q4.sql} memakai
+          \texttt{ukur-query.py}, lalu catat p50 dan p95.
     \item Isi lembar isian, lalu jawab tiga pertanyaan analisis.
   \end{enumerate}
   \vspace{4pt}
@@ -1747,10 +1753,30 @@ python3 -m venv .venv
   sebelum satu indeks pun ditambahkan.}
 \end{frame}
 
+\begin{frame}[fragile]{{\Large Merekam Rencana Baseline}}
+  \vspace{2pt}
+\begin{lstlisting}[language=bash]
+DSN="postgresql://admin:admin123@localhost/toko"
+docker compose exec -T db psql "$DSN" < 03-query-baseline.sql > baseline.txt
+grep -A3 "^===" baseline.txt | grep -E "^===|rows="
+grep -E "^===|Rows Removed by Filter|Execution Time" baseline.txt
+\end{lstlisting}
+
+  \vspace{4pt}
+  \begin{itemize}
+    \item Berkas ini menjalankan \texttt{EXPLAIN (ANALYZE, BUFFERS)} untuk Q1
+          sampai Q4, lalu keluarannya disimpan ke \texttt{baseline.txt}.
+    \item \texttt{grep} pertama menampilkan baris pertama rencana, tempat
+          jumlah baris yang dikembalikan dibaca. \texttt{grep} kedua
+          menampilkan \texttt{Rows Removed by Filter} untuk kolom Dibuang
+          penyaring.
+    \item \texttt{ukur-query.py} hanya melaporkan p50, p95, dan pemindaian.
+  \end{itemize}
+\end{frame}
+
 \begin{frame}[fragile]{{\Large Mengukur Sebaran Waktu Eksekusi}}
   \vspace{3pt}
 \begin{lstlisting}[language=bash]
-cd sources/chapter03
 source ../.venv/bin/activate
 python ukur-query.py kueri/q1.sql 20
 
@@ -1763,8 +1789,9 @@ python ukur-query.py kueri/q1.sql 20
 \end{lstlisting}
 
   \vspace{3pt}
-  {\footnotesize Jalankan pertama sengaja dibuang oleh skrip, karena
-  menanggung pengisian \textit{cache}.}
+  {\footnotesize Ulangi untuk \texttt{q2.sql} sampai \texttt{q4.sql}.
+  Jalankan pertama sengaja dibuang oleh skrip, karena menanggung pengisian
+  \textit{cache}.}
 \end{frame}
 
 \begin{frame}{{\Large Contoh Hasil Latihan 1}}
@@ -1786,7 +1813,9 @@ python ukur-query.py kueri/q1.sql 20
   \end{tabularx}}\par}
 
   \vspace{8pt}
-  {\footnotesize Waktu dalam milidetik.}
+  {\footnotesize Waktu dalam milidetik. Dibuang penyaring diambil dari
+  \texttt{baseline.txt}, sedangkan p50, p95, dan pemindaian dari
+  \texttt{ukur-query.py}.}
 \end{frame}
 
 \begin{frame}{{\Large Lembar Isian Latihan 1}}
@@ -1827,13 +1856,34 @@ python ukur-query.py kueri/q1.sql 20
     \item Tulis dugaan untuk tiap kueri: apakah indeks akan terpakai, dan
           berapa perkiraan perbaikannya.
     \item Jalankan \texttt{04-indeks.sql}, lalu catat ukuran tiap indeks.
-    \item Ulangi pengukuran Latihan 1 dengan cara dan ulangan yang sama
-          persis.
+    \item Ulangi pengukuran Latihan 1 dengan cara yang sama, tetapi
+          rencananya disimpan ke \texttt{sesudah.txt}.
     \item Isi lembar isian, lalu bandingkan dengan dugaan.
   \end{enumerate}
   \vspace{4pt}
   {\footnotesize Dugaan ditulis lebih dahulu agar tidak menyesuaikan diri
   dengan hasilnya.}
+\end{frame}
+
+\begin{frame}[fragile]{{\Large Memasang Indeks dan Merekam Ulang}}
+  \vspace{2pt}
+\begin{lstlisting}[language=bash]
+DSN="postgresql://admin:admin123@localhost/toko"
+docker compose exec -T db psql "$DSN" < 04-indeks.sql
+docker compose exec -T db psql "$DSN" < 03-query-baseline.sql > sesudah.txt
+grep -E "^===|Scan on|Execution Time" sesudah.txt
+
+# Keluarannya (dipotong pada empat indeks baru):
+#  idx_pesanan_pelanggan_waktu | 6184 kB |                0
+#  idx_item_pesanan_buku       | 5040 kB |                0
+#  idx_pesanan_waktu_aktif     | 3672 kB |                0
+#  idx_buku_judul_trgm         | 2232 kB |                0
+\end{lstlisting}
+
+  \vspace{2pt}
+  {\footnotesize Rencana sesudah indeks disimpan ke \texttt{sesudah.txt} agar
+  \texttt{baseline.txt} tidak tertimpa. Untuk mengulang Latihan 1 tanpa indeks,
+  jalankan \texttt{docker compose down -v} lalu penyiapan lagi.}
 \end{frame}
 
 \begin{frame}{{\Large Contoh Hasil Latihan 2}}
@@ -1906,7 +1956,6 @@ python ukur-query.py kueri/q1.sql 20
 \begin{frame}[fragile]{{\Large Menjalankan Perbandingan}}
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
-cd sources/chapter03
 source ../.venv/bin/activate
 python n-plus-1.py 25
 
@@ -1921,8 +1970,8 @@ python n-plus-1.py 25
 \end{lstlisting}
 
   \vspace{2pt}
-  {\footnotesize Jalankan untuk 5, 25, dan seluruh pesanan milik pelanggan
-  tersibuk. Baris terakhir membuktikan kedua cara mengembalikan data yang
+  {\footnotesize Jalankan untuk 5 dan 25. Pelanggan tersibuk punya 25
+  pesanan, jadi angka yang lebih besar tetap mengambil 25. Baris terakhir membuktikan kedua cara mengembalikan data yang
   sama persis, karena perbaikan yang mengubah hasil bukan perbaikan.}
 \end{frame}
 
@@ -1977,7 +2026,6 @@ python n-plus-1.py 25
 \begin{frame}[fragile]{{\Large Menjalankan Peragaan}}
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
-cd sources/chapter03
 source ../.venv/bin/activate
 python transaksi-konkuren.py 8 50
 
@@ -1993,9 +2041,8 @@ python transaksi-konkuren.py 8 50
   \begin{itemize}
     \item Jalankan dengan 8 \textit{worker} dan 50 pengurangan, lalu ulangi dengan 2
           dan 16 \textit{worker}.
-    \item Perhatikan bagaimana jumlah pembaruan yang hilang dan jumlah
-          percobaan cara \texttt{optimistis} berubah mengikuti jumlah
-          \textit{worker}.
+    \item Catat kolom Hilang dan Percobaan untuk tiap jumlah
+          \textit{worker}, karena keduanya dipakai untuk menjawab pertanyaan.
   \end{itemize}
 \end{frame}
 
@@ -2025,22 +2072,23 @@ python transaksi-konkuren.py 8 50
   \vspace{5pt}
   {\centering
   {\small
-  \begin{tabularx}{\textwidth}{lccc}
+  \begin{tabularx}{\textwidth}{lYYY}
     \hline
-    \textbf{Cara} & \textbf{2 \textit{worker}, hilang} & \textbf{8 \textit{worker}, hilang} & \textbf{16 \textit{worker}, hilang} \\
+    \textbf{Cara} & \textbf{2 \textit{worker}} & \textbf{8 \textit{worker}} & \textbf{16 \textit{worker}} \\
     \hline
-    \texttt{naif} & \dots & \dots & \dots \\
+    \texttt{naif} & \dots{} / \dots & \dots{} / \dots & \dots{} / \dots \\
     \hline
-    \texttt{atomik} & \dots & \dots & \dots \\
+    \texttt{atomik} & \dots{} / \dots & \dots{} / \dots & \dots{} / \dots \\
     \hline
-    \texttt{pesimistis} & \dots & \dots & \dots \\
+    \texttt{pesimistis} & \dots{} / \dots & \dots{} / \dots & \dots{} / \dots \\
     \hline
-    \texttt{optimistis} & \dots & \dots & \dots \\
+    \texttt{optimistis} & \dots{} / \dots & \dots{} / \dots & \dots{} / \dots \\
     \hline
   \end{tabularx}}\par}
 
   \vspace{8pt}
-  {\footnotesize Pertanyaan: mengapa cara \texttt{naif} tidak pernah gagal
+  {\footnotesize Tiap sel diisi hilang / percobaan. Pertanyaan: mengapa cara
+  \texttt{naif} tidak pernah gagal
   padahal datanya salah, pada jumlah \textit{worker} berapa cara \texttt{optimistis}
   mulai lebih mahal daripada \texttt{pesimistis}, dan mengapa cara
   \texttt{atomik} tidak membutuhkan \textit{retry} sama sekali?}

@@ -300,6 +300,7 @@ Diurutkan dari yang paling mudah dieksekusi sampai yang paling menuntut.
 | CSR | Client-Side Rendering |
 | CSRF | Cross-Site Request Forgery |
 | DNS | Domain Name System |
+| DSN | Data Source Name |
 | DTO | Data Transfer Object |
 | E2E | End-to-End |
 | GraphQL | Graph Query Language |

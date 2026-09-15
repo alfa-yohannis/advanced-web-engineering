@@ -12,7 +12,6 @@ Pemakaian:
     python ukur-query.py kueri/q1.sql [jumlah_ulangan]
 """
 
-import statistics
 import sys
 from pathlib import Path
 
@@ -79,9 +78,6 @@ def main():
   print(f"Ulangan      : {ulangan}, jalankan pertama dibuang")
   print(f"p50          : {persentil(daftar_waktu, 50):8.3f} ms")
   print(f"p95          : {persentil(daftar_waktu, 95):8.3f} ms")
-  print(f"Terkecil     : {min(daftar_waktu):8.3f} ms")
-  print(f"Terbesar     : {max(daftar_waktu):8.3f} ms")
-  print(f"Simpangan    : {statistics.pstdev(daftar_waktu):8.3f} ms")
   print("Pemindaian   : " + ", ".join(simpul_pemindaian(rencana["Plan"])))
 
 

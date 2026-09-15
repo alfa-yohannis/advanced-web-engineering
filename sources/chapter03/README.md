@@ -27,17 +27,17 @@ docker compose exec -T db psql "$DSN" < 01-skema.sql
 docker compose exec -T db psql "$DSN" < 02-data-uji.sql
 ```
 
-Pengisian data memakan sekitar dua belas detik. Basis data dapat dihubungi dari
+Pengisian data memakan sekitar lima belas detik. Basis data dapat dihubungi dari
 luar container pada port 5433.
 
 ## Menjalankan skrip Python
 
-Skrip memakai venv bersama di `sources/.venv`. Bila belum ada, buat sekali saja:
+Skrip memakai venv bersama di `sources/.venv`. Bila belum ada, buat sekali saja
+dari direktori bab ini:
 
 ```bash
-cd sources
-python3 -m venv .venv
-.venv/bin/pip install "psycopg[binary,pool]" sqlalchemy
+python3 -m venv ../.venv
+../.venv/bin/pip install "psycopg[binary,pool]" sqlalchemy
 ```
 
 Selanjutnya, dari direktori bab ini:

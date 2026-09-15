@@ -246,6 +246,26 @@ yaitu sepuluh pesanan terakhir milik satu pelanggan beserta jumlah itemnya.
 Ketiganya menghasilkan baris yang identik, dan berkas sumbernya membuktikan hal
 itu pada setiap kali dijalankan.
 
+Fungsi \texttt{lewat\_sql\_langsung} pada listing tersebut membuka koneksi
+memakai konstanta \texttt{DSN}. \textit{Data Source Name} (DSN) adalah satu
+baris teks berisi keterangan untuk menghubungi basis data. Skrip bab ini
+memakai DSN berikut.
+
+\begin{center}
+  \texttt{postgresql://admin:admin123@localhost:5433/toko}
+\end{center}
+
+Bagian-bagiannya ditulis dengan urutan tetap \cite{pgdoc-connection-uri}:
+
+\begin{enumerate}
+  \item \texttt{postgresql://} menyebut jenis basis datanya.
+  \item \texttt{admin:admin123} berisi nama pengguna dan kata sandi, dipisahkan
+        titik dua.
+  \item \texttt{localhost:5433}, sesudah tanda \texttt{@}, menunjuk server di
+        komputer sendiri pada port 5433.
+  \item \texttt{toko}, sesudah garis miring, adalah nama basis datanya.
+\end{enumerate}
+
 \begin{lstlisting}[style=PythonStyle, caption={Satu kebutuhan ditulis dalam tiga tingkat abstraksi, tersedia di \berkas{sources/chapter03/tiga-lapis-akses.py}}, label={lst:tiga-lapis}]
 def lewat_orm(mesin):
   """Menyusun kueri dari kelas hasil pemetaan, tanpa menulis SQL sama sekali."""
@@ -1378,9 +1398,12 @@ rencana eksekusi.
 
 Seluruh berkas yang dipakai pada latihan ini tersedia di
 \berkas{sources/chapter03/}, dihitung relatif terhadap akar repositori.
-Basis data dijalankan sebagai container, sehingga tidak ada sistem milik pihak
-lain yang tersentuh. Uji beban pada bab ini pun dijalankan pada basis data
-sendiri.
+Latihan membutuhkan Docker dengan Compose versi 2 dan Python 3. Listing
+penyiapan masuk ke direktori itu lebih dahulu, dan seluruh perintah sesudahnya
+dijalankan dari sana. Bila membuka terminal baru, masuk kembali dengan
+\texttt{cd sources/chapter03} dari akar repositori. Basis data dijalankan
+sebagai container, sehingga tidak ada sistem milik pihak lain yang tersentuh.
+Uji beban pada bab ini pun dijalankan pada basis data sendiri.
 
 Rencana eksekusi sebelum perbaikan direkam lebih dahulu, karena begitu indeks
 terpasang rencana tersebut tidak dapat diperoleh kembali tanpa menghapus
@@ -1405,13 +1428,23 @@ docker compose exec -T db psql "$DSN" < 02-data-uji.sql
 #  item_pesanan | 600000
 \end{lstlisting}
 
+DSN pada Listing \ref{lst:c3-siapkan} tidak mencantumkan port, sedangkan DSN
+di skrip Python memakai port 5433. Perintah \texttt{psql} pada listing itu
+berjalan di dalam container lewat \texttt{docker compose exec}. Tanpa nomor
+port, koneksinya menuju port bawaan PostgreSQL, yaitu 5432
+\cite{pgdoc-connections}. Skrip Python berjalan di luar container, sehingga
+harus memakai port 5433. Baris \texttt{5433:5432} pada
+\berkas{sources/chapter03/docker-compose.yml} meneruskan port 5433 di komputer
+ke port 5432 di dalam container. Akibatnya, DSN tanpa port tidak dapat dipakai
+dari luar container, karena port 5432 di komputer sendiri tidak tersambung ke
+container latihan.
+
 Skrip Python memakai venv bersama di \berkas{sources/.venv}. Bila belum ada,
 buat sekali seperti pada Listing \ref{lst:c3-venv}.
 
 \begin{lstlisting}[language=bash, caption={Menyiapkan venv untuk seluruh skrip Python}, label={lst:c3-venv}]
-cd sources
-python3 -m venv .venv
-.venv/bin/pip install "psycopg[binary,pool]" sqlalchemy
+python3 -m venv ../.venv
+../.venv/bin/pip install "psycopg[binary,pool]" sqlalchemy
 \end{lstlisting}
 
 \subsection*{Latihan 1: Menetapkan Baseline Kueri}
@@ -1422,13 +1455,19 @@ rencananya, sebelum satu indeks pun ditambahkan.
 \begin{enumerate}
   \item Jalankan penyiapan pada Listing \ref{lst:c3-siapkan}, lalu pastikan jumlah
         barisnya sesuai.
-  \item Jalankan \berkas{sources/chapter03/03-query-baseline.sql}, lalu simpan
-        seluruh keluarannya ke berkas. Rencana ini tidak dapat diperoleh
+  \item Jalankan \berkas{sources/chapter03/03-query-baseline.sql} seperti pada
+        Listing \ref{lst:c3-lat1-baseline}, lalu simpan seluruh keluarannya ke
+        berkas. Rencana ini tidak dapat diperoleh
         kembali setelah indeks terpasang, kecuali indeksnya dihapus lagi.
-  \item Untuk tiap kueri, catat \textit{node} pemindaian teratas, nilai
-        \texttt{Rows Removed by Filter}, dan \texttt{Execution Time}.
-  \item Ukur sebarannya memakai perintah pada Listing \ref{lst:c3-lat1-jalan},
-        lalu catat p50 dan p95. Jalankan pertama sengaja dibuang oleh skrip,
+  \item Dari keluaran itu, catat untuk tiap kueri jumlah baris yang
+        dikembalikan, yaitu \texttt{rows} pada bagian \texttt{actual} di baris
+        pertama rencananya, lalu \textit{node} pemindaian teratas, nilai
+        \texttt{Rows Removed by Filter}, dan \texttt{Execution Time}. Semuanya
+        berasal dari \texttt{EXPLAIN ANALYZE} di dalam berkas tersebut, karena
+        \texttt{ukur-query.py} hanya melaporkan p50, p95, dan pemindaian.
+  \item Ukur sebarannya memakai perintah pada Listing \ref{lst:c3-lat1-jalan}
+        untuk \texttt{kueri/q1.sql} sampai \texttt{kueri/q4.sql}, lalu catat p50
+        dan p95. Jalankan pertama sengaja dibuang oleh skrip,
         karena menanggung pengisian \textit{cache}.
   \item Isi Tabel \ref{tab:c3-lat1-hasil}. Tabel \ref{tab:c3-lat1-contoh}
         memperlihatkan contoh yang sudah terisi.
@@ -1438,8 +1477,19 @@ rencananya, sebelum satu indeks pun ditambahkan.
         selalu lebih besar daripada p50, padahal kueri dan datanya sama persis?
 \end{enumerate}
 
+\begin{lstlisting}[language=bash, caption={Merekam rencana baseline keempat kueri, memakai \berkas{sources/chapter03/03-query-baseline.sql}}, label={lst:c3-lat1-baseline}]
+DSN="postgresql://admin:admin123@localhost/toko"
+docker compose exec -T db psql "$DSN" < 03-query-baseline.sql > baseline.txt
+grep -A3 "^===" baseline.txt | grep -E "^===|rows="
+grep -E "^===|Rows Removed by Filter|Execution Time" baseline.txt
+\end{lstlisting}
+
+Keluaran untuk Q1 sama dengan Listing \ref{lst:plan-sebelum}. Perintah
+\texttt{grep} pertama menampilkan baris pertama rencana tiap kueri, tempat jumlah
+baris yang dikembalikan dibaca. Perintah kedua menampilkan
+\texttt{Rows Removed by Filter}, yang mengisi kolom Dibuang penyaring.
+
 \begin{lstlisting}[language=bash, caption={Mengukur sebaran waktu eksekusi satu kueri, tersedia di \berkas{sources/chapter03/ukur-query.py}}, label={lst:c3-lat1-jalan}]
-cd sources/chapter03
 source ../.venv/bin/activate
 python ukur-query.py kueri/q1.sql 20
 
@@ -1453,7 +1503,7 @@ python ukur-query.py kueri/q1.sql 20
 
 \begin{table}[!htb]
   \centering
-  \caption{Contoh hasil Latihan 1 yang sudah terisi, dalam milidetik}
+  \caption{Contoh hasil Latihan 1 yang sudah terisi, dalam milidetik. Kolom Pemindaian diringkas dari keluaran \texttt{ukur-query.py}}
   \label{tab:c3-lat1-contoh}
   \begin{tabularx}{\textwidth}{lXrrl}
     \hline
@@ -1499,10 +1549,13 @@ melainkan jawaban atas satu bentuk kueri tertentu.
         dugaan untuk tiap kueri: apakah indeks akan terpakai, dan berapa
         perkiraan perbaikannya. Dugaan ditulis lebih dahulu agar tidak
         menyesuaikan diri dengan hasilnya.
-  \item Jalankan \berkas{sources/chapter03/04-indeks.sql}, lalu catat ukuran
-        tiap indeks dari keluaran perintah terakhirnya.
+  \item Jalankan \berkas{sources/chapter03/04-indeks.sql} seperti pada Listing
+        \ref{lst:c3-lat2-indeks}, lalu catat ukuran tiap indeks dari keluaran
+        perintah terakhirnya.
   \item Ulangi pengukuran Latihan 1 seluruhnya, dengan cara dan ulangan yang
-        sama persis.
+        sama persis. Rencana sesudah indeks disimpan ke \texttt{sesudah.txt},
+        bukan \texttt{baseline.txt}, agar rencana sebelum indeks tidak
+        tertimpa.
   \item Isi Tabel \ref{tab:c3-lat2-hasil}, lalu bandingkan dengan dugaan pada
         langkah pertama. Tabel \ref{tab:c3-lat2-contoh} memperlihatkan contoh yang
         sudah terisi.
@@ -1510,6 +1563,23 @@ melainkan jawaban atas satu bentuk kueri tertentu.
         walaupun kolom \texttt{status} sering dipakai sebagai penyaring? Kedua,
         mengapa Q2 hanya membaik sedikit padahal indeksnya terpakai?
 \end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Memasang indeks lalu merekam ulang rencana, memakai \berkas{sources/chapter03/04-indeks.sql}}, label={lst:c3-lat2-indeks}]
+DSN="postgresql://admin:admin123@localhost/toko"
+docker compose exec -T db psql "$DSN" < 04-indeks.sql
+docker compose exec -T db psql "$DSN" < 03-query-baseline.sql > sesudah.txt
+grep -E "^===|Scan on|Execution Time" sesudah.txt
+
+# Keluarannya (dipotong pada empat indeks baru):
+#  idx_pesanan_pelanggan_waktu | 6184 kB |                0
+#  idx_item_pesanan_buku       | 5040 kB |                0
+#  idx_pesanan_waktu_aktif     | 3672 kB |                0
+#  idx_buku_judul_trgm         | 2232 kB |                0
+\end{lstlisting}
+
+Untuk mengulang Latihan 1 dari keadaan tanpa indeks, jalankan
+\texttt{docker compose down -v}, lalu ulangi penyiapan pada Listing
+\ref{lst:c3-siapkan}.
 
 \begin{table}[!htb]
   \centering
@@ -1563,8 +1633,10 @@ Latihan ini memperlihatkan bahwa jumlah perjalanan ke basis data adalah metrik
 tersendiri, terpisah dari lama tiap kuerinya.
 
 \begin{enumerate}
-  \item Jalankan perintah pada Listing \ref{lst:c3-lat3-jalan} untuk 5, 25, dan
-        seluruh pesanan milik pelanggan tersibuk.
+  \item Jalankan perintah pada Listing \ref{lst:c3-lat3-jalan} untuk 5 dan 25
+        pesanan, yaitu \texttt{python n-plus-1.py 5} dan
+        \texttt{python n-plus-1.py 25}. Pelanggan tersibuk pada data uji punya
+        25 pesanan, sehingga angka yang lebih besar tetap mengambil 25.
   \item Catat jumlah kueri dan waktunya untuk tiap ukuran, lalu isi Tabel
         \ref{tab:c3-lat3-hasil}. Tabel \ref{tab:c3-lat3-contoh} memperlihatkan contoh
         yang sudah terisi.
@@ -1581,7 +1653,6 @@ tersendiri, terpisah dari lama tiap kuerinya.
 \end{enumerate}
 
 \begin{lstlisting}[language=bash, caption={Membandingkan N+1 dengan kueri yang jumlahnya tetap, tersedia di \berkas{sources/chapter03/n-plus-1.py}}, label={lst:c3-lat3-jalan}]
-cd sources/chapter03
 source ../.venv/bin/activate
 python n-plus-1.py 25
 
@@ -1635,10 +1706,12 @@ untuk banyak pengguna, lalu membandingkan biaya tiap pengamannya.
 \begin{enumerate}
   \item Jalankan perintah pada Listing \ref{lst:c3-lat4-jalan} dengan 8 \textit{worker}
         dan 50 pengurangan.
-  \item Catat selisih antara stok yang diharapkan dan stok yang benar-benar
-        tercatat untuk keempat cara, lalu isi Tabel \ref{tab:c3-lat4-hasil}.
+  \item Catat kolom Hilang dan Percobaan untuk keempat cara, lalu isi Tabel
+        \ref{tab:c3-lat4-hasil}.
         Tabel \ref{tab:c3-lat4-contoh} memperlihatkan contoh yang sudah terisi.
-  \item Ulangi dengan 2 \textit{worker}, lalu dengan 16 \textit{worker}. Perhatikan bagaimana
+  \item Ulangi dengan 2 \textit{worker}, yaitu
+        \texttt{python transaksi-konkuren.py 2 50}, lalu dengan 16
+        \textit{worker}. Perhatikan bagaimana
         jumlah pembaruan yang hilang dan jumlah percobaan cara
         \texttt{optimistis} berubah mengikuti jumlah \textit{worker}.
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa cara \texttt{naif} tidak
@@ -1649,7 +1722,6 @@ untuk banyak pengguna, lalu membandingkan biaya tiap pengamannya.
 \end{enumerate}
 
 \begin{lstlisting}[language=bash, caption={Memperagakan lost update dan tiga pengamannya, tersedia di \berkas{sources/chapter03/transaksi-konkuren.py}}, label={lst:c3-lat4-jalan}]
-cd sources/chapter03
 source ../.venv/bin/activate
 python transaksi-konkuren.py 8 50
 
@@ -1682,19 +1754,19 @@ python transaksi-konkuren.py 8 50
 
 \begin{table}[!htb]
   \centering
-  \caption{Lembar isian hasil pengukuran Latihan 4}
+  \caption{Lembar isian hasil pengukuran Latihan 4, tiap sel diisi hilang / percobaan}
   \label{tab:c3-lat4-hasil}
-  \begin{tabularx}{\textwidth}{lccc}
+  \begin{tabularx}{\textwidth}{lXXX}
     \hline
-    \textbf{Cara} & \textbf{2 \textit{worker}, hilang} & \textbf{8 \textit{worker}, hilang} & \textbf{16 \textit{worker}, hilang} \\
+    \textbf{Cara} & \textbf{2 \textit{worker}} & \textbf{8 \textit{worker}} & \textbf{16 \textit{worker}} \\
     \hline
-    \texttt{naif} & \dots & \dots & \dots \\
+    \texttt{naif} & \dots{} / \dots & \dots{} / \dots & \dots{} / \dots \\
     \hline
-    \texttt{atomik} & \dots & \dots & \dots \\
+    \texttt{atomik} & \dots{} / \dots & \dots{} / \dots & \dots{} / \dots \\
     \hline
-    \texttt{pesimistis} & \dots & \dots & \dots \\
+    \texttt{pesimistis} & \dots{} / \dots & \dots{} / \dots & \dots{} / \dots \\
     \hline
-    \texttt{optimistis} & \dots & \dots & \dots \\
+    \texttt{optimistis} & \dots{} / \dots & \dots{} / \dots & \dots{} / \dots \\
     \hline
   \end{tabularx}
 \end{table}
