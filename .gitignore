@@ -448,3 +448,6 @@ Thumbs.db
 # Virtualenv lokal untuk skrip Python di sources/
 sources/.venv/
 videos
+
+# Pengaturan lokal Claude Code, berisi jalur absolut komputer sendiri
+.claude/
