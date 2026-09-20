@@ -1,0 +1,29 @@
+{
+  "keterangan": "Anggaran performa Bab 5. Angka p95 dalam milidetik, ukuran dalam kibibyte. Alamat terberat ditaruh terakhir agar tidak mencemari pengukuran alamat sesudahnya.",
+  "beban": {
+    "jumlah_worker": 8,
+    "permintaan_per_worker": 25
+  },
+  "alamat": [
+    {
+      "jalur": "/api/katalog?halaman=1&ukuran=20",
+      "p95_ms": 60,
+      "maks_kb": 8
+    },
+    {
+      "jalur": "/api/terlaris",
+      "p95_ms": 400,
+      "maks_kb": 2
+    },
+    {
+      "jalur": "/api/katalog-penuh",
+      "p95_ms": 60,
+      "maks_kb": 8
+    }
+  ],
+  "core_web_vitals": {
+    "lcp_ms": 2500,
+    "inp_ms": 200,
+    "cls": 0.1
+  }
+}

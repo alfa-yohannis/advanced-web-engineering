@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Mengukur biaya membuka koneksi dan manfaat connection pool.
 
-Tiga cara dibandingkan pada beban yang sama persis, yaitu sejumlah kueri
+Tiga cara dibandingkan pada beban yang sama persis, yaitu sejumlah query
 sepele yang biayanya sendiri hampir nol, sehingga yang terukur benar-benar
 biaya koneksinya.
 
-  koneksi-baru  satu koneksi dibuka dan ditutup untuk tiap kueri
-  satu-koneksi  satu koneksi dipakai ulang untuk seluruh kueri
+  koneksi-baru  satu koneksi dibuka dan ditutup untuk tiap query
+  satu-koneksi  satu koneksi dipakai ulang untuk seluruh query
   pool          connection pool dipakai bersama oleh banyak worker
 
 Bagian terakhir menunjukkan apa yang terjadi ketika jumlah worker melampaui
@@ -14,7 +14,7 @@ max_connections milik server.
 
 Pemakaian:
     source ../.venv/bin/activate
-    python pool-koneksi.py [jumlah_worker] [kueri_per_worker]
+    python pool-koneksi.py [jumlah_worker] [query_per_worker]
 """
 
 import sys
@@ -27,7 +27,7 @@ from psycopg_pool import ConnectionPool
 
 DSN = "postgresql://admin:admin123@localhost:5433/toko"
 
-# Kueri sengaja sesepele mungkin agar yang terukur adalah biaya koneksinya.
+# Query sengaja sesepele mungkin agar yang terukur adalah biaya koneksinya.
 KUERI = "SELECT 1"
 
 UKURAN_POOL = 10
@@ -35,14 +35,14 @@ WORKER_BERLEBIH = 40
 
 
 def koneksi_baru(ulangan):
-  """Membuka dan menutup satu koneksi untuk tiap kueri."""
+  """Membuka dan menutup satu koneksi untuk tiap query."""
   for _ in range(ulangan):
     with psycopg.connect(DSN) as koneksi:
       koneksi.execute(KUERI).fetchone()
 
 
 def satu_koneksi(ulangan):
-  """Memakai satu koneksi untuk seluruh kueri milik satu worker."""
+  """Memakai satu koneksi untuk seluruh query milik satu worker."""
   with psycopg.connect(DSN) as koneksi:
     for _ in range(ulangan):
       koneksi.execute(KUERI).fetchone()
@@ -82,11 +82,11 @@ def ukur(nama, cara, jumlah_worker, ulangan, catatan=""):
     utas.join()
   durasi_ms = (time.perf_counter() - mulai) * 1000
 
-  total_kueri = jumlah_worker * ulangan
-  per_kueri = durasi_ms / total_kueri if not daftar_error else float("nan")
+  total_query = jumlah_worker * ulangan
+  per_query = durasi_ms / total_query if not daftar_error else float("nan")
   status = f"{len(daftar_error)} gagal" if daftar_error else "berhasil"
   print(
-      f"  {nama:<24} {durasi_ms:9.1f} ms {per_kueri:9.3f} ms "
+      f"  {nama:<24} {durasi_ms:9.1f} ms {per_query:9.3f} ms "
       f"{status:>10}  {catatan}"
   )
 
@@ -96,10 +96,10 @@ def main():
   jumlah_worker = int(sys.argv[1]) if len(sys.argv) > 1 else 10
   ulangan = int(sys.argv[2]) if len(sys.argv) > 2 else 50
 
-  print(f"{jumlah_worker} worker, {ulangan} kueri per worker\n")
-  print(f"  {'Cara':<24} {'Total':>12} {'Per kueri':>12} {'Status':>10}")
+  print(f"{jumlah_worker} worker, {ulangan} query per worker\n")
+  print(f"  {'Cara':<24} {'Total':>12} {'Per query':>12} {'Status':>10}")
 
-  ukur("koneksi baru tiap kueri", koneksi_baru, jumlah_worker, ulangan)
+  ukur("koneksi baru tiap query", koneksi_baru, jumlah_worker, ulangan)
   ukur("satu koneksi per worker", satu_koneksi, jumlah_worker, ulangan)
 
   with ConnectionPool(DSN, min_size=2, max_size=UKURAN_POOL, timeout=5) as pool:

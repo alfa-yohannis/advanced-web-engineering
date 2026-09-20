@@ -9,7 +9,7 @@
 | `statis/app.3f9a2c.js` | *Fingerprinted asset*, dikirim dengan `max-age` satu tahun |
 | `ukur-ttfb.py` | Mengukur waktu sampai byte pertama, melaporkan p50, p95, dan jumlah HIT dan MISS |
 | `stampede.py` | Memperagakan cache stampede dan dua cara meredamnya |
-| `invalidasi.py` | Mengukur lama data basi pada empat cara memperbarui cache |
+| `invalidasi.py` | Mengukur lama data *stale* pada empat cara memperbarui cache |
 | `optimistic-update.ts` | Tombol suka yang diperbarui secara optimistis di browser |
 | `layanan-lambat.py` | Layanan biaya kirim tiruan yang sebagian jawabannya ditahan 2 detik |
 | `resilience.py` | Membandingkan tanpa batas waktu, batas waktu, *retry*, dan *circuit breaker* |
@@ -26,7 +26,9 @@ docker compose up -d
 ./siapkan-data.sh
 ```
 
-Pengisian data memakan sekitar lima belas detik.
+Pengisian data memakan sekitar lima belas detik. Skrip `siapkan-data.sh`
+membaca berkas SQL milik `sources/chapter03`, sehingga direktori tersebut harus
+ada di sebelah direktori bab ini.
 
 ## Menyiapkan venv
 

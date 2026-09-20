@@ -7,7 +7,7 @@ kali untuk perintah yang gagal, dengan jeda acak yang makin panjang di
 antaranya. Skrip ini mengukur selisih kedua pengaturan tersebut.
 
 Redis dibekukan lebih dahulu dengan docker compose pause, sehingga perintah
-tidak pernah dijawab. Keadaan ini lebih buruk daripada Redis yang mati,
+tidak pernah dijawab. Keadaan ini lebih buruk daripada Redis yang down,
 karena kegagalannya baru ketahuan setelah batas waktu habis.
 
 Pemakaian (dari sources/chapter04):

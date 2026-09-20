@@ -5,7 +5,7 @@ Empat alamat disediakan, masing-masing dengan kebijakan cache berbeda:
   /                    halaman HTML, selalu divalidasi ulang lewat ETag
   /aset/app.3f9a2c.js  fingerprinted asset, boleh disimpan setahun
   /api/terlaris        buku terlaris 30 hari, dihitung ulang tiap permintaan
-  /api/terlaris-cache  kueri yang sama, lewat cache-aside di Redis
+  /api/terlaris-cache  query yang sama, lewat cache-aside di Redis
 
 Header X-Cache pada alamat terakhir berisi HIT atau MISS, sehingga asal
 jawabannya dapat diamati lewat curl maupun panel Network.
@@ -71,10 +71,10 @@ def hitung_etag(isi_berkas):
   return '"' + hashlib.sha256(isi_berkas).hexdigest()[:16] + '"'
 
 
-def jalankan_kueri_terlaris(pool_koneksi):
-  """Menjalankan kueri buku terlaris langsung ke basis data.
+def jalankan_query_terlaris(pool_koneksi):
+  """Menjalankan query buku terlaris langsung ke basis data.
 
-  Inilah pekerjaan mahal yang ingin dihindari. Pada data uji Bab 3 kueri ini
+  Inilah pekerjaan mahal yang ingin dihindari. Pada data uji Bab 3 query ini
   memakan puluhan milidetik, walaupun indeksnya sudah dipasang.
   """
   with pool_koneksi.connection() as koneksi:
@@ -86,7 +86,7 @@ def baca_dari_cache(cache, kunci):
   """Membaca satu kunci dari Redis, atau None bila kuncinya tidak ada.
 
   Error Redis sengaja ditelan. Cache bukan source of truth, sehingga Redis
-  yang mati hanya membuat aplikasi lebih lambat, bukan ikut mati.
+  yang down hanya membuat aplikasi lebih lambat, bukan ikut down.
   """
   try:
     return cache.get(kunci)
@@ -110,7 +110,7 @@ def ambil_terlaris_lewat_cache(pool_koneksi, cache):
   isi_tersimpan = baca_dari_cache(cache, KUNCI_TERLARIS)
   if isi_tersimpan is not None:
     return isi_tersimpan, "HIT"
-  isi_json = json.dumps(jalankan_kueri_terlaris(pool_koneksi)).encode()
+  isi_json = json.dumps(jalankan_query_terlaris(pool_koneksi)).encode()
   simpan_ke_cache(cache, KUNCI_TERLARIS, isi_json, TTL_TERLARIS_DETIK)
   return isi_json, "MISS"
 
@@ -158,7 +158,7 @@ class PenanganToko(BaseHTTPRequestHandler):
       self.kirim_jawaban(200, server.isi_aset, "text/javascript",
                          header_tambahan, sertakan_isi)
     elif self.path == "/api/terlaris":
-      isi_json = json.dumps(jalankan_kueri_terlaris(server.pool_koneksi)).encode()
+      isi_json = json.dumps(jalankan_query_terlaris(server.pool_koneksi)).encode()
       header_tambahan = {"Cache-Control": CACHE_CONTROL_API}
       self.kirim_jawaban(200, isi_json, "application/json",
                          header_tambahan, sertakan_isi)
@@ -179,7 +179,7 @@ class PenanganToko(BaseHTTPRequestHandler):
         "ETag": self.server.etag_halaman,
     }
     if self.headers.get("If-None-Match") == self.server.etag_halaman:
-      # 304 tidak membawa isi. Browser memakai salinan yang sudah dimilikinya.
+      # 304 tidak membawa isi. Browser memakai copy yang sudah dimilikinya.
       self.kirim_jawaban(304, b"", "text/html", header_tambahan,
                          sertakan_isi=False)
       return

@@ -172,7 +172,7 @@
     \hline
     \textbf{Jenis} & \textbf{Cara kerjanya} \\
     \hline
-    Relasional & Data dipecah menjadi tabel normal, pemetaan relasi disusun saat kueri lewat penggabungan \\
+    Relasional & Data dipecah menjadi tabel normal, pemetaan relasi disusun saat \textit{query} lewat penggabungan \\
     \hline
     Dokumen & Satu entitas beserta banyak atributnya disimpan utuh sebagai satu dokumen JSON \\
     \hline
@@ -205,7 +205,7 @@
     \hline
     Kolomnar & Analitik atas jutaan baris, misalnya laporan dan \textit{dashboard} & Penulisan satu baris mahal, dan tidak dirancang untuk transaksi \\
     \hline
-    Graf & \textit{Social network}, rekomendasi, penelusuran hak akses berjenjang & Kueri agregat biasa justru lebih lambat, dan penskalaannya rumit \\
+    Graf & \textit{Social network}, rekomendasi, penelusuran hak akses berjenjang & \textit{Query} agregat biasa justru lebih lambat, dan penskalaannya rumit \\
     \hline
     Deret waktu & Metrik, sensor, dan pemantauan, sebagaimana Bab 9 & Pembaruan dan penghapusan baris lama hampir tidak didukung \\
     \hline
@@ -222,7 +222,7 @@
           transaksi. Pencarian judulnya dilayani mesin pencari, dan keranjang
           belanja sementaranya disimpan di penyimpanan \textit{key-value} di memori.
     \item \textit{Dashboard} penjualan setahun terakhir dipindahkan ke basis
-          data kolomnar. Kuerinya hanya menyentuh tiga kolom dari puluhan,
+          data kolomnar. \textit{Query}-nya hanya menyentuh tiga kolom dari puluhan,
           sehingga sisanya tidak perlu dibaca sama sekali.
   \end{enumerate}
   \vspace{6pt}
@@ -388,9 +388,9 @@ CREATE TABLE item_pesanan (
     \item \textit{Object-Relational Mapping} (ORM) memetakan tabel menjadi
           kelas dan baris menjadi objek. SQL di-\textit{generate} seluruhnya.
     \item \textit{Query builder} menyusun SQL dari objek tabel dan kolom,
-          bukan dari teks. Bentuk kuerinya masih terbaca, dan nama kolom yang
-          salah ketahuan sebelum kueri dikirim.
-    \item SQL langsung mengirim teks kueri apa adanya.
+          bukan dari teks. Bentuk \textit{query}-nya masih terbaca, dan nama kolom yang
+          salah ketahuan sebelum \textit{query} dikirim.
+    \item SQL langsung mengirim teks \textit{query} apa adanya.
   \end{itemize}
   \vspace{10pt}
   {\footnotesize Analoginya berkendara. ORM transmisi otomatis, \textit{query
@@ -402,7 +402,7 @@ CREATE TABLE item_pesanan (
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
 def lewat_orm(mesin):
-  """Menyusun kueri dari kelas hasil pemetaan, tanpa menulis SQL sama sekali."""
+  """Menyusun query dari kelas hasil pemetaan, tanpa menulis SQL sama sekali."""
   perintah = (
       select(Pesanan.id, Pesanan.total, func.count(ItemPesanan.buku_id))
       .join(ItemPesanan, ItemPesanan.pesanan_id == Pesanan.id)
@@ -439,7 +439,7 @@ def lewat_orm(mesin):
           seterusnya. Tabel di \texttt{FROM} disimpulkan dari kolom yang
           dipilih.
     \item Kedua \texttt{\%s} diisi \texttt{ID\_PELANGGAN} dan \texttt{BATAS}
-          saat kueri dikirim.
+          saat \textit{query} dikirim.
   \end{itemize}
 \end{frame}
 
@@ -464,7 +464,7 @@ def lewat_query_builder(mesin):
 
   \vspace{2pt}
   {\footnotesize Kolom diambil dari objek tabel lewat \texttt{.c}, misalnya
-  \texttt{pesanan.c.id}, bukan dari kelas. Kueri dijalankan lewat koneksi
+  \texttt{pesanan.c.id}, bukan dari kelas. \textit{Query} dijalankan lewat koneksi
   biasa, tanpa \texttt{Session}.}
 \end{frame}
 
@@ -480,7 +480,7 @@ def lewat_sql_langsung():
 
   \vspace{4pt}
   \begin{itemize}
-    \item Teks kueri dikirim apa adanya lewat \texttt{psycopg}.
+    \item Teks \textit{query} dikirim apa adanya lewat \texttt{psycopg}.
     \item \textit{Data Source Name} (DSN) adalah satu baris teks berisi
           keterangan untuk menghubungi basis data, misalnya
           \texttt{postgresql://admin:admin123@localhost:5433/toko}.
@@ -499,7 +499,7 @@ def lewat_sql_langsung():
     \hline
     ORM & Kode singkat, struktur tabel cukup ditulis sekali di kelas model, perubahan skema dicatat sebagai berkas migrasi & SQL yang dikirim tidak terlihat, sehingga N+1 dan indeks hilang mudah lolos \\
     \hline
-    Query builder & Bentuk kueri terbaca, nama kolom diperiksa lebih awal & Kueri rumit menjadi bertele-tele \\
+    Query builder & Bentuk \textit{query} terbaca, nama kolom diperiksa lebih awal & \textit{Query} rumit menjadi bertele-tele \\
     \hline
     SQL langsung & Yang dijalankan persis seperti yang tertulis & Kode berulang, dan perubahan skema tidak ketahuan sampai program berjalan \\
     \hline
@@ -512,18 +512,18 @@ def lewat_sql_langsung():
     \item Ketiganya dipakai dalam satu aplikasi yang sama.
     \begin{itemize}
       \item ORM untuk operasi baca dan tulis biasa yang banyak dan seragam.
-      \item \textit{Query builder} untuk kueri yang bentuknya bergantung pada
+      \item \textit{Query builder} untuk \textit{query} yang bentuknya bergantung pada
             masukan pengguna, misalnya penyaringan dan pengurutan.
-      \item SQL langsung untuk kueri laporan dan kueri yang perlu disetel.
+      \item SQL langsung untuk \textit{query} laporan dan \textit{query} yang perlu disetel.
     \end{itemize}
     \item Syaratnya, SQL yang benar-benar dikirim harus dapat dilihat:
-          pencatatan kueri saat pengembangan, dan jumlah kueri per
+          pencatatan \textit{query} saat pengembangan, dan jumlah \textit{query} per
           \textit{endpoint} saat pengujian.
   \end{itemize}
   \vspace{4pt}
   {\footnotesize \textit{Endpoint} adalah satu alamat yang dilayani server
-  aplikasi, misalnya \texttt{GET /api/pesanan}. Jumlah kueri per
-  \textit{endpoint} berarti banyaknya kueri SQL untuk melayani satu
+  aplikasi, misalnya \texttt{GET /api/pesanan}. Jumlah \textit{query} per
+  \textit{endpoint} berarti banyaknya \textit{query} SQL untuk melayani satu
   \textit{request} ke alamat itu.}
 \end{frame}
 
@@ -609,7 +609,7 @@ def lewat_sql_langsung():
     \hline
     \textit{Non-repeatable read} & Baris yang sama dibaca dua kali dalam satu transaksi, dan isinya sudah berubah. \\
     \hline
-    \textit{Phantom read} & Kueri yang sama dijalankan dua kali, dan jumlah barisnya bertambah. \\
+    \textit{Phantom read} & \textit{Query} yang sama dijalankan dua kali, dan jumlah barisnya bertambah. \\
     \hline
     \textit{Lost update} & Dua transaksi membaca nilai yang sama, menghitung, lalu menulis. Tulisan yang terakhir menimpa yang pertama. \\
     \hline
@@ -630,7 +630,7 @@ def lewat_sql_langsung():
     \hline
     \textit{Non-repeatable read} & A membaca harga buku Rp 80.000. B mengubahnya menjadi Rp 90.000, lalu melakukan \textit{commit}. A membaca baris yang sama sekali lagi dan mendapat Rp 90.000. \\
     \hline
-    \textit{Phantom read} & A menghitung pesanan hari ini dan mendapat 120. B menambah satu pesanan, lalu melakukan \textit{commit}. A menjalankan kueri yang sama dan mendapat 121. \\
+    \textit{Phantom read} & A menghitung pesanan hari ini dan mendapat 120. B menambah satu pesanan, lalu melakukan \textit{commit}. A menjalankan \textit{query} yang sama dan mendapat 121. \\
     \hline
   \end{tabularx}}
 
@@ -809,7 +809,7 @@ def pesimistis(koneksi):
   tercatat.}
 \end{frame}
 
-\begin{frame}[fragile]{{\Large Kueri pada Cara Optimistis}}
+\begin{frame}[fragile]{{\Large Query pada Cara Optimistis}}
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
 SQL_BACA_STOK_VERSI = "SELECT stok, versi FROM buku WHERE id = %s"
@@ -963,8 +963,8 @@ def optimistis(koneksi):
   \end{tikzpicture}}\par}
 
   \vspace{8pt}
-  {\footnotesize Hasilnya benar, tetapi cara memperolehnya boros: satu kueri
-  untuk mengambil daftar, lalu satu kueri tambahan untuk tiap baris pada
+  {\footnotesize Hasilnya benar, tetapi cara memperolehnya boros: satu \textit{query}
+  untuk mengambil daftar, lalu satu \textit{query} tambahan untuk tiap baris pada
   daftar tersebut.}
 \end{frame}
 
@@ -972,24 +972,24 @@ def optimistis(koneksi):
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
 def ambil_dengan_n_plus_1(koneksi, id_pelanggan, batas):
-  """Mengambil daftar pesanan, lalu itemnya satu kueri untuk tiap pesanan."""
+  """Mengambil daftar pesanan, lalu itemnya satu query untuk tiap pesanan."""
   with koneksi.cursor() as kursor:
     kursor.execute(SQL_DAFTAR_PESANAN, (id_pelanggan, batas))
     daftar_pesanan = kursor.fetchall()
-    jumlah_kueri = 1
+    jumlah_query = 1
 
     hasil = []
     for id_pesanan, total, waktu in daftar_pesanan:
       kursor.execute(SQL_ITEM_SATU_PESANAN, (id_pesanan,))
       hasil.append((id_pesanan, total, waktu, kursor.fetchall()))
-      jumlah_kueri += 1
+      jumlah_query += 1
 
-  return hasil, jumlah_kueri
+  return hasil, jumlah_query
 \end{lstlisting}
 
   \vspace{2pt}
-  {\footnotesize Kueri kedua ada di dalam perulangan, sehingga dijalankan
-  sekali untuk tiap pesanan: 25 pesanan berarti 1 + 25 = 26 kueri.}
+  {\footnotesize \textit{Query} kedua ada di dalam perulangan, sehingga dijalankan
+  sekali untuk tiap pesanan: 25 pesanan berarti 1 + 25 = 26 \textit{query}.}
 \end{frame}
 
 \begin{frame}[fragile]{{\Large Satu per Satu atau Sekaligus}}
@@ -1011,18 +1011,18 @@ SQL_ITEM_BANYAK_PESANAN = """
   \vspace{2pt}
   {\footnotesize
   \begin{itemize}
-    \item Kueri pertama mengambil item satu pesanan, sehingga harus dijalankan
+    \item \textit{Query} pertama mengambil item satu pesanan, sehingga harus dijalankan
           sekali untuk tiap pesanan. Inilah sumber N+1.
-    \item Kueri kedua menerima seluruh id pesanan sebagai larik lewat
+    \item \textit{Query} kedua menerima seluruh id pesanan sebagai larik lewat
           \texttt{ANY(\%s)}, sehingga cukup dijalankan sekali.
   \end{itemize}}
 \end{frame}
 
-\begin{frame}[fragile]{{\Large Dua Kueri, Berapa pun N-nya}}
+\begin{frame}[fragile]{{\Large Dua Query, Berapa pun N-nya}}
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
-def ambil_dengan_dua_kueri(koneksi, id_pelanggan, batas):
-  """Mengambil data yang sama dengan jumlah kueri yang tidak bergantung N."""
+def ambil_dengan_dua_query(koneksi, id_pelanggan, batas):
+  """Mengambil data yang sama dengan jumlah query yang tidak bergantung N."""
   with koneksi.cursor() as kursor:
     kursor.execute(SQL_DAFTAR_PESANAN, (id_pelanggan, batas))
     daftar_pesanan = kursor.fetchall()
@@ -1036,8 +1036,8 @@ def ambil_dengan_dua_kueri(koneksi, id_pelanggan, batas):
 \end{lstlisting}
 
   \vspace{2pt}
-  {\footnotesize Pada 25 pesanan, 26 kueri dalam 7,28 milidetik menjadi 2
-  kueri dalam 1,07 milidetik untuk 75 item yang sama persis. Satu kueri
+  {\footnotesize Pada 25 pesanan, 26 \textit{query} dalam 7,28 milidetik menjadi 2
+  \textit{query} dalam 1,07 milidetik untuk 75 item yang sama persis. Satu \textit{query}
   \texttt{JOIN} juga bisa, tetapi kolom pesanan terulang di setiap baris
   item.}
 \end{frame}
@@ -1049,14 +1049,14 @@ def ambil_dengan_dua_kueri(koneksi, id_pelanggan, batas):
           satu perjalanan hampir tidak berbiaya.
     \item Di produksi, aplikasi dan basis data berada di mesin berbeda dengan
           RTT sekitar 1 milidetik.
-    \item 26 kueri menanggung tambahan 26 milidetik, 2 kueri hanya 2
+    \item 26 \textit{query} menanggung tambahan 26 milidetik, 2 \textit{query} hanya 2
           milidetik. Pada 100 baris, selisihnya 100 milidetik lawan 2
           milidetik.
     \item Seluruhnya masuk ke bagian \emph{Waiting} yang diukur pada Bab 2.
   \end{itemize}
   \vspace{6pt}
   {\footnotesize Cara menemukannya bukan membaca kode satu per satu, melainkan
-  menghitung jumlah kueri per \textit{endpoint} saat uji integrasi, lalu
+  menghitung jumlah \textit{query} per \textit{endpoint} saat uji integrasi, lalu
   menegakkan ambang batasnya di \textit{Continuous Integration}.}
 \end{frame}
 
@@ -1186,7 +1186,7 @@ def ambil_dengan_dua_kueri(koneksi, id_pelanggan, batas):
   \end{tabularx}}
 \end{frame}
 
-\begin{frame}[fragile]{{\Large Kueri Acuan Q1 dan Q2}}
+\begin{frame}[fragile]{{\Large Query Acuan Q1 dan Q2}}
   \vspace{2pt}
   {\footnotesize Q1: sepuluh pesanan terakhir milik satu pelanggan\par}
 \begin{lstlisting}[style=SqlStyle, basicstyle=\ttfamily\fontsize{7}{8.5}\selectfont]
@@ -1212,7 +1212,7 @@ LIMIT 10
 \end{lstlisting}
 \end{frame}
 
-\begin{frame}[fragile]{{\Large Kueri Acuan Q3 dan Q4}}
+\begin{frame}[fragile]{{\Large Query Acuan Q3 dan Q4}}
   \vspace{2pt}
   {\footnotesize Q3: pencarian judul dengan pola di tengah\par}
 \begin{lstlisting}[style=SqlStyle]
@@ -1307,7 +1307,7 @@ CREATE INDEX IF NOT EXISTS idx_buku_judul_trgm
   {\footnotesize
   \begin{tabularx}{\textwidth}{lXrrrl}
     \hline
-    \textbf{Kueri} & \textbf{Isinya} & \textbf{Sebelum} & \textbf{Sesudah} & \textbf{Rasio} & \textbf{Perubahan rencana} \\
+    \textbf{\textit{Query}} & \textbf{Isinya} & \textbf{Sebelum} & \textbf{Sesudah} & \textbf{Rasio} & \textbf{Perubahan rencana} \\
     \hline
     Q1 & Riwayat pesanan satu pelanggan & 5,602 & 0,016 & 350$\times$ & Seq $\rightarrow$ Bitmap Index \\
     \hline
@@ -1356,7 +1356,7 @@ CREATE INDEX IF NOT EXISTS idx_buku_judul_trgm
           server, lengkap dengan memorinya.
     \item Membuka koneksi berarti membangun soket, melakukan
           \textit{handshake} autentikasi, dan menyiapkan proses baru.
-    \item Biayanya jauh lebih besar daripada menjalankan satu kueri
+    \item Biayanya jauh lebih besar daripada menjalankan satu \textit{query}
           sederhana.
   \end{itemize}
   \vspace{10pt}
@@ -1406,15 +1406,15 @@ CREATE INDEX IF NOT EXISTS idx_buku_judul_trgm
   sampai ada koneksi yang dikembalikan.}
 \end{frame}
 
-\begin{frame}{{\Large Hasil: 10 Worker, 50 Kueri Sepele}}
+\begin{frame}{{\Large Hasil: 10 Worker, 50 Query Sepele}}
   \vspace{5pt}
   {\centering
   {\small
   \begin{tabularx}{\textwidth}{lXrr}
     \hline
-    \textbf{Cara} & \textbf{Keterangan} & \textbf{Total} & \textbf{Per kueri} \\
+    \textbf{Cara} & \textbf{Keterangan} & \textbf{Total} & \textbf{Per \textit{query}} \\
     \hline
-    Koneksi baru tiap kueri & 500 koneksi dibuka dan ditutup & 843,4 ms & 1,687 ms \\
+    Koneksi baru tiap \textit{query} & 500 koneksi dibuka dan ditutup & 843,4 ms & 1,687 ms \\
     \hline
     Satu koneksi per \textit{worker} & 10 koneksi, dipakai ulang & 45,4 ms & 0,091 ms \\
     \hline
@@ -1424,7 +1424,7 @@ CREATE INDEX IF NOT EXISTS idx_buku_judul_trgm
 
   \vspace{8pt}
   {\footnotesize Selisih baris pertama dan kedua sekitar delapan belas kali
-  lipat. Seluruhnya biaya membuka koneksi, karena kuerinya hanya
+  lipat. Seluruhnya biaya membuka koneksi, karena \textit{query}-nya hanya
   \texttt{SELECT 1}.}
 \end{frame}
 
@@ -1462,7 +1462,7 @@ CREATE INDEX IF NOT EXISTS idx_buku_judul_trgm
     \item Server biasa menyala terus. Seluruh \textit{request} meminjam
           koneksi dari satu \textit{pool} yang sama, misalnya 10 koneksi.
     \item Di \textit{serverless} tidak ada server yang menyala terus.
-          Tiap \textit{request} yang datang bersamaan dilayani salinan
+          Tiap \textit{request} yang datang bersamaan dilayani \textit{copy}
           aplikasi terpisah, disebut instans.
     \item Pada Amazon Web Services (AWS) Lambda, 100 \textit{request}
           bersamaan dilayani 100 instans.
@@ -1537,7 +1537,7 @@ CREATE INDEX IF NOT EXISTS idx_buku_judul_trgm
     \hline
     \texttt{transaction} & Satu transaksi berlangsung & Satu koneksi server melayani banyak klien bergantian, tetapi keadaan sesi tidak terbawa \\
     \hline
-    \texttt{statement} & Satu kueri berlangsung & Transaksi berisi lebih dari satu kueri tidak diizinkan \\
+    \texttt{statement} & Satu \textit{query} berlangsung & Transaksi berisi lebih dari satu \textit{query} tidak diizinkan \\
     \hline
   \end{tabularx}}\par}
 
@@ -1728,11 +1728,11 @@ python3 -m venv ../.venv
   \end{itemize}
 \end{frame}
 
-\section{Latihan 1: Baseline Kueri}
+\section{Latihan 1: Baseline Query}
 
 \begin{frame}{\hfill}
   \centering
-  \Huge{\textbf{Latihan 1\\Menetapkan Baseline Kueri}}
+  \Huge{\textbf{Latihan 1\\Menetapkan Baseline \textit{Query}}}
 \end{frame}
 
 \begin{frame}{{\Large Langkah Kerja}}
@@ -1741,7 +1741,7 @@ python3 -m venv ../.venv
     \item Jalankan penyiapan, lalu pastikan jumlah barisnya sesuai.
     \item Jalankan \texttt{03-query-baseline.sql}, lalu simpan seluruh
           keluarannya ke berkas.
-    \item Untuk tiap kueri, catat baris yang dikembalikan, \textit{node}
+    \item Untuk tiap \textit{query}, catat baris yang dikembalikan, \textit{node}
           pemindaian teratas, \texttt{Rows Removed by Filter}, dan
           \texttt{Execution Time}.
     \item Ukur \texttt{q1.sql} sampai \texttt{q4.sql} memakai
@@ -1778,10 +1778,10 @@ grep -E "^===|Rows Removed by Filter|Execution Time" baseline.txt
   \vspace{3pt}
 \begin{lstlisting}[language=bash]
 source ../.venv/bin/activate
-python ukur-query.py kueri/q1.sql 20
+python ukur-query.py query/q1.sql 20
 
 # Keluarannya:
-# Berkas       : kueri/q1.sql
+# Berkas       : query/q1.sql
 # Ulangan      : 20, jalankan pertama dibuang
 # p50          :    5.602 ms
 # p95          :    5.905 ms
@@ -1800,7 +1800,7 @@ python ukur-query.py kueri/q1.sql 20
   {\small
   \begin{tabularx}{\textwidth}{lXrrl}
     \hline
-    \textbf{Kueri} & \textbf{Dibuang penyaring} & \textbf{p50} & \textbf{p95} & \textbf{Pemindaian} \\
+    \textbf{\textit{Query}} & \textbf{Dibuang penyaring} & \textbf{p50} & \textbf{p95} & \textbf{Pemindaian} \\
     \hline
     Q1 & 66.663 per \textit{worker} & 5,602 & 5,905 & Seq Scan pesanan \\
     \hline
@@ -1824,7 +1824,7 @@ python ukur-query.py kueri/q1.sql 20
   {\small
   \begin{tabularx}{\textwidth}{lXrrl}
     \hline
-    \textbf{Kueri} & \textbf{Dibuang penyaring} & \textbf{p50} & \textbf{p95} & \textbf{Pemindaian} \\
+    \textbf{\textit{Query}} & \textbf{Dibuang penyaring} & \textbf{p50} & \textbf{p95} & \textbf{Pemindaian} \\
     \hline
     Q1 & \dots & \dots & \dots & \dots \\
     \hline
@@ -1837,9 +1837,9 @@ python ukur-query.py kueri/q1.sql 20
   \end{tabularx}}\par}
 
   \vspace{8pt}
-  {\footnotesize Pertanyaan: kueri mana yang membuang baris terbanyak
-  dibanding baris yang dikembalikannya, kueri mana yang punya \textit{node} Sort dan
-  mengapa, serta mengapa p95 selalu lebih besar daripada p50 padahal kueri
+  {\footnotesize Pertanyaan: \textit{query} mana yang membuang baris terbanyak
+  dibanding baris yang dikembalikannya, \textit{query} mana yang punya \textit{node} Sort dan
+  mengapa, serta mengapa p95 selalu lebih besar daripada p50 padahal \textit{query}
   dan datanya sama persis?}
 \end{frame}
 
@@ -1853,7 +1853,7 @@ python ukur-query.py kueri/q1.sql 20
 \begin{frame}{{\Large Langkah Kerja}}
   \vspace{5pt}
   \begin{enumerate}
-    \item Tulis dugaan untuk tiap kueri: apakah indeks akan terpakai, dan
+    \item Tulis dugaan untuk tiap \textit{query}: apakah indeks akan terpakai, dan
           berapa perkiraan perbaikannya.
     \item Jalankan \texttt{04-indeks.sql}, lalu catat ukuran tiap indeks.
     \item Ulangi pengukuran Latihan 1 dengan cara yang sama, tetapi
@@ -1892,7 +1892,7 @@ grep -E "^===|Scan on|Execution Time" sesudah.txt
   {\small
   \begin{tabularx}{\textwidth}{lrrrX}
     \hline
-    \textbf{Kueri} & \textbf{Sebelum} & \textbf{Sesudah} & \textbf{Rasio} & \textbf{Perubahan rencana} \\
+    \textbf{\textit{Query}} & \textbf{Sebelum} & \textbf{Sesudah} & \textbf{Rasio} & \textbf{Perubahan rencana} \\
     \hline
     Q1 & 5,602 & 0,016 & 350$\times$ & Seq $\rightarrow$ Bitmap Index \\
     \hline
@@ -1928,7 +1928,7 @@ grep -E "^===|Scan on|Execution Time" sesudah.txt
   {\small
   \begin{tabularx}{\textwidth}{lrrrX}
     \hline
-    \textbf{Kueri} & \textbf{Sebelum} & \textbf{Sesudah} & \textbf{Rasio} & \textbf{Perubahan rencana} \\
+    \textbf{\textit{Query}} & \textbf{Sebelum} & \textbf{Sesudah} & \textbf{Rasio} & \textbf{Perubahan rencana} \\
     \hline
     Q1 & \dots & \dots & \dots & \dots \\
     \hline
@@ -1962,9 +1962,9 @@ python n-plus-1.py 25
 # Keluarannya:
 # Pelanggan 12059 punya 25 pesanan, diambil 25.
 #
-#   Cara                          Kueri       Item       Waktu
-#   N+1                        26 kueri    75 item     7.28 ms
-#   Dua kueri tetap             2 kueri    75 item     1.07 ms
+#   Cara                          Query       Item       Waktu
+#   N+1                        26 query    75 item     7.28 ms
+#   Dua query tetap             2 query    75 item     1.07 ms
 #
 # Hasil kedua cara identik: True
 \end{lstlisting}
@@ -1981,7 +1981,7 @@ python n-plus-1.py 25
   {\small \textbf{Contoh terisi}\\[3pt]
   \begin{tabularx}{\textwidth}{Xcccc}
     \hline
-    \textbf{Jumlah pesanan} & \textbf{Kueri N+1} & \textbf{Waktu N+1} & \textbf{Kueri tetap} & \textbf{Waktu tetap} \\
+    \textbf{Jumlah pesanan} & \textbf{\textit{Query} N+1} & \textbf{Waktu N+1} & \textbf{\textit{Query} tetap} & \textbf{Waktu tetap} \\
     \hline
     25 & 26 & 7,28 ms & 2 & 1,07 ms \\
     \hline
@@ -1993,7 +1993,7 @@ python n-plus-1.py 25
   {\small \textbf{Lembar isian}\\[3pt]
   \begin{tabularx}{\textwidth}{Xcccc}
     \hline
-    \textbf{Jumlah pesanan} & \textbf{Kueri N+1} & \textbf{Waktu N+1} & \textbf{Kueri tetap} & \textbf{Waktu tetap} \\
+    \textbf{Jumlah pesanan} & \textbf{\textit{Query} N+1} & \textbf{Waktu N+1} & \textbf{\textit{Query} tetap} & \textbf{Waktu tetap} \\
     \hline
     5 & \dots & \dots & \dots & \dots \\
     \hline
@@ -2008,10 +2008,10 @@ python n-plus-1.py 25
   \vspace{10pt}
   \begin{itemize}
     \item Waktu produksi dihitung dengan menambahkan 1 milidetik untuk tiap
-          kueri, sesuai RTT antara aplikasi dan basis data.
+          \textit{query}, sesuai RTT antara aplikasi dan basis data.
     \item Berapa kali lipat selisihnya pada pengukuran lokal, dan berapa kali
           lipat setelah RTT diperhitungkan?
-    \item Mengapa jumlah kueri cara kedua tetap dua, berapa pun jumlah
+    \item Mengapa jumlah \textit{query} cara kedua tetap dua, berapa pun jumlah
           pesanannya?
   \end{itemize}
 \end{frame}

@@ -99,7 +99,7 @@
 
 \begin{frame}{\hfill}
   \centering
-  \Huge{\textbf{Kapan salinan boleh dipakai,\\dan berapa lama menunggu?}}
+  \Huge{\textbf{Kapan \textit{copy} boleh dipakai,\\dan berapa lama menunggu?}}
 \end{frame}
 
 \section{Tujuan dan Kerangka Bahasan}
@@ -116,8 +116,8 @@
           \textit{cache} aplikasi memutuskan apakah sebuah jawaban boleh
           dipakai ulang, berdasarkan header \texttt{Cache-Control},
           \texttt{ETag}, dan masa berlakunya.
-    \item Mengukur untung rugi pola \textit{cache-aside}, termasuk data basi
-          dan lonjakan kueri yang muncul ketika sebuah kunci kedaluwarsa.
+    \item Mengukur untung rugi pola \textit{cache-aside}, termasuk data \textit{stale}
+          dan lonjakan \textit{query} yang muncul ketika sebuah kunci kedaluwarsa.
     \item Merancang batas waktu, \textit{retry}, dan \textit{circuit breaker}
           untuk panggilan ke layanan lain, lalu membuktikan pengaruhnya ketika
           layanan itu melambat.
@@ -127,16 +127,16 @@
 \begin{frame}{{\Large Dua Pertanyaan Bab Ini}}
   \vspace{10pt}
   \begin{itemize}
-    \item Kueri buku terlaris 30 hari pada Bab 3 tetap memakan puluhan
+    \item \textit{Query} buku terlaris 30 hari pada Bab 3 tetap memakan puluhan
           milidetik walaupun indeksnya sudah dipasang.
     \item Jawabannya sama untuk semua pengunjung, dan hanya berubah sedikit
           dari menit ke menit.
     \item \textit{Caching} menyimpan jawaban yang sudah jadi, lalu memakainya
-          lagi. Harganya: salinan dapat basi, dan tempat penyimpanannya dapat
-          lambat atau mati.
+          lagi. \textit{Tradeoff}-nya: \textit{copy} dapat \textit{stale}, dan tempat
+          penyimpanannya dapat \textit{slow} atau \textit{down}.
   \end{itemize}
   \vspace{8pt}
-  {\footnotesize Dua pertanyaan: kapan sebuah salinan boleh dipakai, dan apa
+  {\footnotesize Dua pertanyaan: kapan sebuah \textit{copy} boleh dipakai, dan apa
   yang terjadi ketika komponen yang dipanggil aplikasi bermasalah.}
 \end{frame}
 
@@ -147,21 +147,25 @@
   \Huge{\textbf{Caching di Browser\\dan HTTP}}
 \end{frame}
 
-\begin{frame}{{\Large Segar atau Basi}}
+\begin{frame}{{\Large Fresh atau Stale}}
   \vspace{10pt}
   \begin{itemize}
-    \item Salinan yang masih segar langsung dipakai, tanpa menghubungi server
+    \item \textit{Copy} yang masih \textit{fresh} langsung dipakai, tanpa menghubungi server
           sama sekali.
-    \item Salinan yang basi ditanyakan ulang. Browser mengirim tanda versi
-          salinannya lewat \texttt{If-None-Match}, berisi nilai \texttt{ETag}
+    \item \textit{Copy} yang \textit{stale} ditanyakan ulang. Browser mengirim tanda versi
+          \textit{copy}-nya lewat \texttt{If-None-Match}, berisi nilai \texttt{ETag}
           dari server.
     \item Server menjawab \texttt{304 Not Modified} tanpa isi bila belum
           berubah, atau \texttt{200} dengan isi baru bila sudah berubah.
   \end{itemize}
-  \vspace{8pt}
-  {\footnotesize Analoginya fotokopi jadwal ujian bertuliskan ``berlaku sampai
-  Jumat'' dan ``versi 7''. Setelah Jumat, mahasiswa cukup bertanya ``versi 7
-  masih berlaku?'', dan petugas cukup menjawab ``masih''.}
+  \vspace{6pt}
+  {\footnotesize \texttt{ETag} adalah tanda versi isi jawaban, dibuat server
+  dari isi berkasnya. Begitu isinya berubah, nilainya ikut berubah.
+
+  \vspace{4pt}
+  Analoginya fotokopi jadwal ujian bertuliskan ``berlaku sampai Jumat'' dan
+  ``versi 7''. Setelah Jumat, mahasiswa cukup bertanya ``versi 7 masih
+  berlaku?'', dan petugas cukup menjawab ``masih''.}
 \end{frame}
 
 \begin{frame}{{\Large Keputusan Browser}}
@@ -177,23 +181,23 @@
     ket/.style={font=\tiny, gray}
   ]
     \node[kotak] (minta) at (0,0) {Permintaan};
-    \node[kotak] (ada) at (3.2,0) {Ada salinan?};
+    \node[kotak] (ada) at (3.2,0) {Ada \textit{copy}?};
     \node[hasil] (ambil) at (7.0,0)
       {Minta ke server\\{\tiny\mdseries 200 beserta isi}};
-    \node[kotak] (segar) at (3.2,-1.5) {Masih segar?};
+    \node[kotak] (fresh) at (3.2,-1.5) {Masih \textit{fresh}?};
     \node[hasil] (pakai) at (7.0,-1.5)
-      {Pakai salinan\\{\tiny\mdseries tanpa jaringan}};
+      {Pakai \textit{copy}\\{\tiny\mdseries tanpa jaringan}};
     \node[kotak, fill=orange!12] (tanya) at (3.2,-3.1)
       {Tanya ulang\\{\tiny\mdseries membawa If-None-Match}};
     \node[hasil] (tetap) at (7.0,-2.7)
-      {304\\{\tiny\mdseries pakai salinan lama}};
+      {304\\{\tiny\mdseries pakai \textit{copy} lama}};
     \node[hasil] (baru) at (7.0,-3.7)
-      {200\\{\tiny\mdseries simpan salinan baru}};
+      {200\\{\tiny\mdseries simpan \textit{copy} baru}};
     \draw[panah] (minta) -- (ada);
     \draw[panah] (ada) -- node[ket, above] {tidak} (ambil);
-    \draw[panah] (ada) -- node[ket, right] {ya} (segar);
-    \draw[panah] (segar) -- node[ket, above] {ya} (pakai);
-    \draw[panah] (segar) -- node[ket, right] {tidak} (tanya);
+    \draw[panah] (ada) -- node[ket, right] {ya} (fresh);
+    \draw[panah] (fresh) -- node[ket, above] {ya} (pakai);
+    \draw[panah] (fresh) -- node[ket, right] {tidak} (tanya);
     \draw[panah] (tanya.east) -- node[ket, above, sloped] {sama} (tetap.west);
     \draw[panah] (tanya.east) -- node[ket, below, sloped] {berubah} (baru.west);
   \end{tikzpicture}}
@@ -207,11 +211,11 @@
     \hline
     \textbf{Perintah} & \textbf{Artinya} \\
     \hline
-    \texttt{max-age=N} & Salinan segar selama N detik sejak jawaban dibuat. Selama itu server tidak ditanya. \\
+    \texttt{max-age=N} & \textit{Copy} tetap \textit{fresh} selama N detik sejak jawaban dibuat. Selama itu server tidak ditanya. \\
     \hline
     \texttt{s-maxage=N} & Sama dengan \texttt{max-age}, tetapi khusus untuk \textit{cache} bersama seperti CDN. Browser mengabaikannya. \\
     \hline
-    \texttt{no-cache} & Salinan boleh disimpan, tetapi setiap pemakaian wajib ditanyakan ulang ke server. \\
+    \texttt{no-cache} & \textit{Copy} boleh disimpan, tetapi setiap pemakaian wajib ditanyakan ulang ke server. \\
     \hline
     \texttt{no-store} & Jawaban tidak boleh disimpan sama sekali, di mana pun. \\
     \hline
@@ -230,11 +234,11 @@
     \hline
     \texttt{public} & \textit{Cache} bersama boleh menyimpan, walaupun permintaannya membawa header \texttt{Authorization}. \\
     \hline
-    \texttt{immutable} & Isinya tidak berubah selama masih segar, sehingga memuat ulang halaman pun tidak memicu pertanyaan ulang. \\
+    \texttt{immutable} & Isinya tidak berubah selama masih \textit{fresh}, sehingga memuat ulang halaman pun tidak memicu pertanyaan ulang. \\
     \hline
-    \texttt{stale-while-revalidate=N} & Setelah basi, salinan masih boleh dipakai selama N detik sambil diperbarui di belakang layar. \\
+    \texttt{stale-while-revalidate=N} & Setelah \textit{stale}, \textit{copy} masih boleh dipakai selama N detik sambil diperbarui di belakang layar. \\
     \hline
-    \texttt{stale-if-error=N} & Setelah basi, salinan masih boleh dipakai selama N detik bila server sedang \textit{error}. \\
+    \texttt{stale-if-error=N} & Setelah \textit{stale}, \textit{copy} masih boleh dipakai selama N detik bila server sedang \textit{error}. \\
     \hline
   \end{tabularx}}
 \end{frame}
@@ -277,7 +281,7 @@
         "ETag": self.server.etag_halaman,
     }
     if self.headers.get("If-None-Match") == self.server.etag_halaman:
-      # 304 tidak membawa isi. Browser memakai salinan yang sudah dimilikinya.
+      # 304 tidak membawa isi. Browser memakai copy yang sudah dimilikinya.
       self.kirim_jawaban(304, b"", "text/html", header_tambahan,
                          sertakan_isi=False)
       return
@@ -316,13 +320,13 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
     \item Aset \texttt{stylenew.css} situs kampus hanya mengirim
           \texttt{Last-Modified} dan \texttt{ETag}.
     \item Request for Comments (RFC) 9111 membolehkan browser menebak masa
-          segar dari umur berkas. Angka yang lazim adalah sepersepuluh selang
+          \textit{fresh} dari umur berkas. Angka yang lazim adalah sepersepuluh selang
           sejak berkas terakhir diubah.
     \item Berkas diubah 14 Maret 2025. Pada 10 September 2026 umurnya sekitar
-          545 hari, sehingga dianggap segar sekitar 54 hari.
+          545 hari, sehingga dianggap \textit{fresh} sekitar 54 hari.
   \end{itemize}
   \vspace{8pt}
-  {\footnotesize Itulah sebab aset yang tercatat 0 milidetik pada Latihan 2 di
+  {\footnotesize Itulah sebab aset yang tercatat 0 milidetik pada Latihan 3 di
   Bab 2.}
 \end{frame}
 
@@ -338,7 +342,7 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
     \hline
     Halaman HTML & \texttt{no-cache}, disertai \texttt{ETag} & Alamatnya tetap, sehingga perubahan hanya ketahuan lewat pertanyaan ulang. \\
     \hline
-    Data umum dari API & \texttt{public, s-maxage=60, stale-while-revalidate=30} & CDN menyimpannya sebentar, dan sedikit basi masih dapat diterima. \\
+    Data umum dari API & \texttt{public, s-maxage=60, stale-while-revalidate=30} & CDN menyimpannya sebentar, dan sedikit \textit{stale} masih dapat diterima. \\
     \hline
     Data pribadi pengguna & \texttt{private, no-cache} & Tidak boleh tersimpan di \textit{cache} bersama. \\
     \hline
@@ -401,7 +405,7 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
   {\scriptsize
   \begin{tabularx}{\textwidth}{lYYY}
     \hline
-    \textbf{Titik} & \textbf{Dipakai oleh} & \textbf{Diatur lewat} & \textbf{Cara membuang salinan} \\
+    \textbf{Titik} & \textbf{Dipakai oleh} & \textbf{Diatur lewat} & \textbf{Cara membuang \textit{copy}} \\
     \hline
     Browser & Satu pengguna & Header \texttt{Cache-Control} dari server & Tidak dapat dari server. Tunggu kedaluwarsa, atau ganti nama berkas. \\
     \hline
@@ -409,7 +413,7 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
     \hline
     Redis & Seluruh pengguna aplikasi & Kode aplikasi & Menghapus kunci dari kode, tepat setelah data diubah. \\
     \hline
-    Memori basis data & Seluruh kueri & Basis data sendiri, lewat \texttt{shared\_buffers} & Otomatis, tidak perlu diatur. \\
+    Memori basis data & Seluruh \textit{query} & Basis data sendiri, lewat \texttt{shared\_buffers} & Otomatis, tidak perlu diatur. \\
     \hline
   \end{tabularx}}
 
@@ -426,25 +430,25 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
           server CDN, server \textit{origin} menerima paling banyak 20 permintaan per
           menit, walaupun pengunjungnya 10.000 orang.
     \item Halaman yang memuat nama pengguna keliru diberi \texttt{public}.
-          Salinan milik pengguna pertama terkirim ke pengguna berikutnya.
+          \textit{Copy} milik pengguna pertama terkirim ke pengguna berikutnya.
           Halaman semacam itu diberi \texttt{private}.
   \end{enumerate}
   \vspace{6pt}
   {\footnotesize \texttt{Vary: Accept-Encoding} wajar. \texttt{Vary: Cookie}
-  membuat tiap pengguna punya salinan sendiri, sehingga CDN hampir tidak pernah
-  menemukan salinan yang dapat dipakai ulang.}
+  membuat tiap pengguna punya \textit{copy} sendiri, sehingga CDN hampir tidak pernah
+  menemukan \textit{copy} yang dapat dipakai ulang.}
 \end{frame}
 
-\begin{frame}{{\Large Kapan Hasil Kueri Layak Disimpan}}
+\begin{frame}{{\Large Kapan Hasil Query Layak Disimpan}}
   \vspace{10pt}
   \begin{itemize}
-    \item Tiga syaratnya: mahal dihitung, dibaca jauh lebih sering daripada
-          berubah, dan boleh sedikit basi.
+    \item Tiga syaratnya: beban komputasi mahal, lebih sering dibaca daripada
+          diubah, dan boleh sedikit \textit{stale}.
     \item Buku terlaris 30 hari memenuhi ketiganya: sekitar 70 milidetik, sama
           untuk semua pengunjung, dan hampir tidak bergeser dalam satu menit.
     \item Q1 pada Bab 3 hanya memakan 0,016 milidetik di dalam basis data.
           Menyimpannya di Redis tidak menghemat apa pun yang berarti, tetapi
-          menambah kemungkinan data basi.
+          menambah kemungkinan data \textit{stale}.
   \end{itemize}
 \end{frame}
 
@@ -456,7 +460,11 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
 \end{frame}
 
 \begin{frame}{{\Large Pola Cache-Aside}}
-  \vspace{8pt}
+  \vspace{4pt}
+  {\footnotesize \textit{Cache-aside} berarti aplikasi sendiri yang mengurus
+  \textit{cache}-nya: aplikasi memeriksa \textit{cache} lebih dahulu, dan
+  mengisinya sendiri ketika kosong.}
+  \vspace{4pt}
   \begin{itemize}
     \item Membaca: periksa Redis. Bila ada (HIT), langsung dipakai. Bila tidak
           ada (MISS), baca basis data, simpan ke Redis beserta \textit{Time To
@@ -464,12 +472,16 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
     \item Menulis: ubah basis data lebih dahulu, lalu hapus kunci terkait di
           Redis.
     \item Redis tidak pernah menjadi \textit{source of truth}. Bila Redis kosong atau
-          mati, jawaban tetap benar, hanya lebih lambat.
+          \textit{down}, jawaban tetap benar, hanya lebih lambat.
   \end{itemize}
-  \vspace{6pt}
-  {\footnotesize Analoginya warung dengan kulkas di depan. Bila kulkas kosong,
-  penjual mengambil dari gudang belakang sekalian mengisi kulkas. Kulkas boleh
-  kosong kapan saja, dan warung tetap berjualan.}
+  \vspace{4pt}
+  {\footnotesize HIT dan MISS bukan singkatan, melainkan kata Inggris untuk
+  ketemu dan tidak ketemu, dipakai sebagai nama status \textit{cache}.
+
+  \vspace{4pt}
+  Analoginya warung dengan kulkas di depan. Bila kulkas kosong, penjual
+  mengambil dari gudang belakang sekalian mengisi kulkas. Kulkas boleh kosong
+  kapan saja, dan warung tetap berjualan.}
 \end{frame}
 
 \begin{frame}{{\Large Urutan Pesan: Satu MISS, Lalu Satu HIT}}
@@ -490,7 +502,7 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
     \foreach \x in {0,4,8} \draw[garis] (\x,-0.35) -- (\x,-5.2);
     \draw[panah] (0,-0.9) -- node[pesan] {1. GET terlaris:30hari} (4,-0.9);
     \draw[panah] (4,-1.5) -- node[pesan] {2. tidak ada (MISS)} (0,-1.5);
-    \draw[panah] (0,-2.1) -- node[pesan] {3. kueri buku terlaris} (8,-2.1);
+    \draw[panah] (0,-2.1) -- node[pesan] {3. \textit{query} buku terlaris} (8,-2.1);
     \draw[panah] (8,-2.7) -- node[pesan] {4. sepuluh baris} (0,-2.7);
     \draw[panah] (0,-3.3) -- node[pesan] {5. SET, berlaku 60 detik} (4,-3.3);
     \draw[gray, thin] (-1.2,-3.75) -- (9.2,-3.75);
@@ -509,7 +521,7 @@ def baca_dari_cache(cache, kunci):
   """Membaca satu kunci dari Redis, atau None bila kuncinya tidak ada.
 
   Error Redis sengaja ditelan. Cache bukan source of truth, sehingga Redis
-  yang mati hanya membuat aplikasi lebih lambat, bukan ikut mati.
+  yang down hanya membuat aplikasi lebih lambat, bukan ikut down.
   """
   try:
     return cache.get(kunci)
@@ -533,7 +545,7 @@ def ambil_terlaris_lewat_cache(pool_koneksi, cache):
   isi_tersimpan = baca_dari_cache(cache, KUNCI_TERLARIS)
   if isi_tersimpan is not None:
     return isi_tersimpan, "HIT"
-  isi_json = json.dumps(jalankan_kueri_terlaris(pool_koneksi)).encode()
+  isi_json = json.dumps(jalankan_query_terlaris(pool_koneksi)).encode()
   simpan_ke_cache(cache, KUNCI_TERLARIS, isi_json, TTL_TERLARIS_DETIK)
   return isi_json, "MISS"
 \end{lstlisting}
@@ -550,7 +562,7 @@ def ambil_terlaris_lewat_cache(pool_koneksi, cache):
     \hline
     \textbf{Keadaan} & \textbf{p50} & \textbf{p95} & \textbf{Terbesar} & \textbf{Asal jawaban} \\
     \hline
-    Tanpa \textit{cache}, 50 permintaan & 70,44 & 81,99 & 94,41 & 50 kueri ke basis data \\
+    Tanpa \textit{cache}, 50 permintaan & 70,44 & 81,99 & 94,41 & 50 \textit{query} ke basis data \\
     \hline
     \textit{Cache-aside}, 50 permintaan & 0,31 & 0,63 & 67,55 & 1 MISS, 49 HIT \\
     \hline
@@ -572,7 +584,7 @@ def ambil_terlaris_lewat_cache(pool_koneksi, cache):
   \begin{itemize}
     \item Redis dibekukan dengan \texttt{docker compose pause}, sehingga tidak
           menjawab perintah apa pun.
-    \item Tiap permintaan menunggu 50 milidetik untuk GET, menjalankan kueri,
+    \item Tiap permintaan menunggu 50 milidetik untuk GET, menjalankan \textit{query},
           lalu menunggu 50 milidetik lagi untuk SET: 184,72 milidetik.
     \item Hasilnya lebih dari dua kali lipat keadaan tanpa \textit{cache}.
           \textit{Cache} yang macet lebih buruk daripada tidak ada
@@ -587,10 +599,10 @@ def ambil_terlaris_lewat_cache(pool_koneksi, cache):
 \begin{frame}{{\Large Dua Konsekuensi dan Satu Peringatan}}
   \vspace{8pt}
   \begin{enumerate}
-    \item Kegagalan \textit{cache} tidak boleh menjatuhkan aplikasi. Setiap
+    \item Kegagalan \textit{cache} tidak boleh meng-\textit{crash} aplikasi. Setiap
           \textit{error} Redis diteruskan menjadi pembacaan ke basis data.
     \item Setiap panggilan ke \textit{cache} membutuhkan batas waktu yang jauh
-          lebih kecil daripada kueri yang ingin dihindarinya.
+          lebih kecil daripada \textit{query} yang ingin dihindarinya.
   \end{enumerate}
   \vspace{6pt}
   {\footnotesize Redis pada bab ini dibatasi 64 MB dengan kebijakan
@@ -609,9 +621,9 @@ def ambil_terlaris_lewat_cache(pool_koneksi, cache):
 \begin{frame}{{\Large TTL dan Invalidasi}}
   \vspace{10pt}
   \begin{itemize}
-    \item Salinan menjadi basi ketika data aslinya berubah.
-    \item TTL: salinan kedaluwarsa sendiri setelah sekian detik.
-    \item Invalidasi: kode yang mengubah data langsung menghapus salinannya,
+    \item \textit{Copy} menjadi \textit{stale} ketika data aslinya berubah.
+    \item TTL: \textit{copy} kedaluwarsa sendiri setelah sekian detik.
+    \item Invalidasi: kode yang mengubah data langsung menghapus \textit{copy}-nya,
           sehingga pembacaan berikutnya terpaksa mengambil data baru.
   \end{itemize}
   \vspace{8pt}
@@ -620,7 +632,7 @@ def ambil_terlaris_lewat_cache(pool_koneksi, cache):
   begitu harga naik memaksa pembeli berikutnya bertanya ke kasir.}
 \end{frame}
 
-\begin{frame}{{\Large Cara Membatasi Data Basi}}
+\begin{frame}{{\Large Cara Membatasi Data Stale}}
   \vspace{4pt}
   \centering
   {\scriptsize
@@ -628,11 +640,11 @@ def ambil_terlaris_lewat_cache(pool_koneksi, cache):
     \hline
     \textbf{Cara} & \textbf{Cara kerjanya} & \textbf{Kelemahannya} \\
     \hline
-    TTL saja & Salinan dibiarkan sampai masa berlakunya habis. & Data basi selama sisa TTL, paling lama sepanjang TTL itu sendiri. \\
+    TTL saja & \textit{Copy} dibiarkan sampai masa berlakunya habis. & Data \textit{stale} selama sisa TTL, paling lama sepanjang TTL itu sendiri. \\
     \hline
     Hapus saat menulis & Kunci dihapus tepat setelah basis data diubah. & Dapat kalah dalam \textit{race condition} dengan pembaca yang lambat. \\
     \hline
-    Hapus dua kali & Kunci dihapus sekali lagi beberapa saat kemudian, disebut \textit{delayed double delete}. & Masih ada jendela basi sepanjang jeda penghapusan kedua. \\
+    Hapus dua kali & Kunci dihapus sekali lagi beberapa saat kemudian, disebut \textit{delayed double delete}. & Masih ada jendela \textit{stale} sepanjang jeda penghapusan kedua. \\
     \hline
     Kunci berversi & Nomor versi menjadi bagian nama kunci, misalnya \texttt{buku:1:v8}. & Pembaca harus tahu nomor versi terbaru lebih dahulu, dan kunci versi lama tertinggal sampai TTL-nya habis. \\
     \hline
@@ -671,7 +683,7 @@ def ambil_terlaris_lewat_cache(pool_koneksi, cache):
   {\small
   \begin{tabularx}{\textwidth}{Xrr}
     \hline
-    \textbf{Cara} & \textbf{Pembacaan basi} & \textbf{Lama basi (detik)} \\
+    \textbf{Cara} & \textbf{Pembacaan \textit{stale}} & \textbf{Lama \textit{stale} (detik)} \\
     \hline
     \texttt{ttl\_saja} & 50 & 5,1 \\
     \hline
@@ -706,7 +718,7 @@ def ambil_terlaris_lewat_cache(pool_koneksi, cache):
 \end{lstlisting}
 
   \vspace{4pt}
-  {\footnotesize Jendela basi menyusut menjadi 0,5 detik. Cara yang lebih rapi
+  {\footnotesize Jendela \textit{stale} menyusut menjadi 0,5 detik. Cara yang lebih rapi
   dipakai Facebook: \textit{cache} memberi token (\textit{lease}) saat kunci
   tidak ditemukan, penghapusan membatalkan token itu, dan penyimpanan dengan
   token batal ditolak.}
@@ -720,7 +732,7 @@ def ambil_terlaris_lewat_cache(pool_koneksi, cache):
     \item Daftar buku terlaris diberi TTL 60 detik. Selisih satu menit tidak
           merugikan siapa pun.
     \item Harga dan stok pada saat pembayaran tidak dibaca dari
-          \textit{cache} sama sekali. Harga yang basi 5 detik saja dapat
+          \textit{cache} sama sekali. Harga yang \textit{stale} 5 detik saja dapat
           membuat pembeli membayar harga lama.
   \end{enumerate}
   \vspace{6pt}
@@ -733,7 +745,7 @@ def ambil_terlaris_lewat_cache(pool_koneksi, cache):
   \vspace{10pt}
   \begin{itemize}
     \item Kunci yang sering dibaca kedaluwarsa, lalu banyak permintaan meleset
-          pada saat yang sama dan menjalankan kueri yang sama.
+          pada saat yang sama dan menjalankan \textit{query} yang sama.
     \item \texttt{stampede.py} melepas 50 permintaan serentak dengan
           \textit{pool} berisi 10 koneksi, pada tiga cara:
           \texttt{tanpa\_pengaman}, \texttt{single\_flight}, dan
@@ -751,7 +763,7 @@ def ambil_terlaris_lewat_cache(pool_koneksi, cache):
   {\small
   \begin{tabularx}{\textwidth}{Xrrrr}
     \hline
-    \textbf{Cara} & \textbf{Kueri} & \textbf{p50} & \textbf{p95} & \textbf{Terbesar} \\
+    \textbf{Cara} & \textbf{\textit{Query}} & \textbf{p50} & \textbf{p95} & \textbf{Terbesar} \\
     \hline
     \texttt{tanpa\_pengaman} & 50 & 895,7 & 1.529,3 & 1.564,3 \\
     \hline
@@ -763,10 +775,10 @@ def ambil_terlaris_lewat_cache(pool_koneksi, cache):
 
   \vspace{6pt}
   \begin{itemize}
-    \item Tanpa pengaman, 50 kueri mengantre dalam lima gelombang: p50-nya
-          hampir tujuh kali lipat satu kueri yang berjalan sendirian, yaitu
+    \item Tanpa pengaman, 50 \textit{query} mengantre dalam lima gelombang: p50-nya
+          hampir tujuh kali lipat satu \textit{query} yang berjalan sendirian, yaitu
           135,2 milidetik.
-    \item Dengan \textit{single-flight}, hanya satu kueri yang sampai ke basis
+    \item Dengan \textit{single-flight}, hanya satu \textit{query} yang sampai ke basis
           data.
   \end{itemize}
 \end{frame}
@@ -774,7 +786,7 @@ def ambil_terlaris_lewat_cache(pool_koneksi, cache):
 \begin{frame}[fragile]{{\Large Single-Flight: Satu Menghitung}}
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
-def single_flight(pool_koneksi, cache, penghitung_kueri):
+def single_flight(pool_koneksi, cache, penghitung_query):
   """Hanya pemegang gembok yang menghitung, sisanya menunggu hasilnya muncul.
 
   SET NX berhasil bagi tepat satu klien. Klien lain memeriksa ulang cache
@@ -784,7 +796,7 @@ def single_flight(pool_koneksi, cache, penghitung_kueri):
   if nilai_tersimpan is not None:
     return nilai_tersimpan
   if cache.set(KUNCI_GEMBOK, "1", nx=True, px=UMUR_GEMBOK_MS):
-    isi_json = jalankan_kueri_terlaris(pool_koneksi, penghitung_kueri)
+    isi_json = jalankan_query_terlaris(pool_koneksi, penghitung_query)
     cache.set(KUNCI_TERLARIS, isi_json, ex=TTL_KERAS_DETIK)
     cache.delete(KUNCI_GEMBOK)
     return isi_json
@@ -801,7 +813,7 @@ def single_flight(pool_koneksi, cache, penghitung_kueri):
     if nilai_tersimpan is not None:
       return nilai_tersimpan
   # Pemegang gembok terlalu lama, jadi hitung sendiri daripada gagal.
-  return jalankan_kueri_terlaris(pool_koneksi, penghitung_kueri)
+  return jalankan_query_terlaris(pool_koneksi, penghitung_query)
 \end{lstlisting}
 
   \vspace{4pt}
@@ -819,9 +831,9 @@ def single_flight(pool_koneksi, cache, penghitung_kueri):
                  font=\scriptsize\bfseries}
   ]
     \node[pita, fill=green!10, minimum width=2.4cm] at (0,0)
-      {Segar\\{\tiny\mdseries langsung dipakai}};
+      {\textit{Fresh}\\{\tiny\mdseries langsung dipakai}};
     \node[pita, fill=orange!12, minimum width=6.0cm] at (2.4,0)
-      {Basi\\{\tiny\mdseries tetap dipakai, sambil satu utas me-\textit{refresh}}};
+      {\textit{Stale}\\{\tiny\mdseries tetap dipakai, sambil satu utas me-\textit{refresh}}};
     \node[pita, fill=gray!35, minimum width=2.4cm] at (8.4,0)
       {Dibuang\\{\tiny\mdseries harus dihitung ulang}};
     \foreach \x/\teks in {0/0 detik, 2.4/60 detik, 8.4/300 detik}
@@ -832,7 +844,7 @@ def single_flight(pool_koneksi, cache, penghitung_kueri):
 
   \vspace{12pt}
   {\footnotesize HTTP punya perintah yang sama:
-  \texttt{Cache-Control: max-age=60, stale-while-revalidate=240}. Salinan segar
+  \texttt{Cache-Control: max-age=60, stale-while-revalidate=240}. \textit{Copy} tetap \textit{fresh}
   60 detik, lalu masih boleh dipakai 240 detik lagi sambil diperbarui.}
 \end{frame}
 
@@ -986,9 +998,9 @@ async function tekanSuka(
 \begin{frame}{{\Large Eventual Consistency}}
   \vspace{10pt}
   \begin{itemize}
-    \item Salinan di browser, CDN, dan Redis tidak berubah pada saat yang sama
+    \item \textit{Copy} di browser, CDN, dan Redis tidak berubah pada saat yang sama
           ketika data diubah.
-    \item Bila tidak ada perubahan baru, semua salinan pada akhirnya kembali
+    \item Bila tidak ada perubahan baru, semua \textit{copy} pada akhirnya kembali
           sama.
     \item Kata ``pada akhirnya'' tidak menyebut berapa lama.
   \end{itemize}
@@ -1008,7 +1020,7 @@ async function tekanSuka(
     \hline
     \textit{Read-your-writes} & Pengguna mengganti nama, lalu halaman profilnya masih menampilkan nama lama. & Hapus kunci \textit{cache} saat menulis, dan layani pengguna itu dari sumber utama selama beberapa detik sesudahnya. \\
     \hline
-    \textit{Monotonic reads} & Komentar baru muncul, lalu hilang lagi setelah halaman dimuat ulang. & Arahkan pengguna yang sama ke salinan yang sama, atau kirim nomor versi terakhir yang pernah dilihatnya. \\
+    \textit{Monotonic reads} & Komentar baru muncul, lalu hilang lagi setelah halaman dimuat ulang. & Arahkan pengguna yang sama ke \textit{copy} yang sama, atau kirim nomor versi terakhir yang pernah dilihatnya. \\
     \hline
   \end{tabularx}}
 
@@ -1295,8 +1307,8 @@ docker compose up -d
 
   \vspace{2pt}
   {\footnotesize Basis data, Redis, dan layanan biaya kirim dijalankan di
-  komputer sendiri. Permintaan ke sistem luar hanya dua, ke satu aset situs
-  kampus, dan keduanya bersifat mengamati.}
+  komputer sendiri. Permintaan ke sistem luar hanya tiga, ke satu aset situs
+  kampus, dan ketiganya bersifat mengamati.}
 \end{frame}
 
 \begin{frame}[fragile]{{\Large Venv dan Aturan Main}}
@@ -1310,8 +1322,9 @@ python3 -m venv .venv
   \vspace{4pt}
   \begin{itemize}
     \item Bab ini menambahkan pustaka \texttt{redis} pada venv bersama.
-    \item \texttt{stampede.py} dan \texttt{resilience.py} sengaja membebani,
-          sehingga tidak boleh diarahkan ke sistem milik orang lain.
+    \item \texttt{stampede.py}, \texttt{resilience.py}, dan
+          \texttt{ukur-ttfb.py} sengaja membebani, sehingga tidak boleh
+          diarahkan ke sistem milik orang lain.
     \item Hasil tiap mahasiswa akan berbeda. Yang dilaporkan adalah pola
           perbandingannya beserta penjelasannya, bukan angka persisnya.
   \end{itemize}
@@ -1325,21 +1338,35 @@ python3 -m venv .venv
 \end{frame}
 
 \begin{frame}{{\Large Langkah Kerja}}
-  \vspace{4pt}
+  \vspace{2pt}
+  {\small
   \begin{enumerate}
     \item Jalankan \texttt{python aplikasi.py} pada terminal pertama.
     \item Baca header halaman dan aset aplikasi, catat \texttt{Cache-Control}
           dan \texttt{ETag}-nya.
     \item Kirim permintaan bersyarat ke halaman dengan \texttt{ETag} tersebut.
     \item Kirim satu permintaan \texttt{HEAD} ke \texttt{stylenew.css} situs
-          kampus, lalu hitung masa segar tebakannya.
-    \item Kirim satu permintaan bersyarat ke aset kampus yang sama.
-    \item Muat ulang \texttt{http://localhost:8000/} dua kali di browser, catat
-          kolom \emph{Status} dan \emph{Size}.
-  \end{enumerate}
+          kampus, lalu hitung masa \textit{fresh} tebakannya.
+  \end{enumerate}}
   \vspace{4pt}
   {\footnotesize Permintaan yang membawa \texttt{If-None-Match} disebut
   permintaan bersyarat.}
+\end{frame}
+
+\begin{frame}{{\Large Langkah Kerja (Lanjutan)}}
+  \vspace{6pt}
+  \begin{enumerate}
+    \setcounter{enumi}{4}
+    \item Kirim satu permintaan bersyarat ke aset kampus yang sama.
+    \item Unduh halaman aplikasi dan aset kampus tanpa header bersyarat, catat
+          status dan jumlah bytenya.
+    \item Muat ulang \texttt{http://localhost:8000/} dua kali di browser, catat
+          kolom \emph{Status} dan \emph{Size}.
+  \end{enumerate}
+  \vspace{6pt}
+  {\footnotesize Dua permintaan terakhir dibandingkan dengan permintaan
+  bersyarat pada langkah sebelumnya: statusnya, dan jumlah byte yang
+  diterima.}
 \end{frame}
 
 \begin{frame}[fragile]{{\Large Membaca Header}}
@@ -1369,7 +1396,7 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
   {\footnotesize
   \begin{tabularx}{\textwidth}{lYlll}
     \hline
-    \textbf{Sumber} & \textbf{\texttt{Cache-Control}} & \textbf{Masa segar} & \textbf{Biasa} & \textbf{Bersyarat} \\
+    \textbf{Sumber} & \textbf{\texttt{Cache-Control}} & \textbf{Masa \textit{fresh}} & \textbf{Biasa} & \textbf{Bersyarat} \\
     \hline
     Halaman aplikasi & \texttt{no-cache} & 0 detik & 200, 331 byte & 304, 0 byte \\
     \hline
@@ -1392,7 +1419,7 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
   \vspace{8pt}
   {\footnotesize Server kampus menurunkan tanda versinya dari waktu ubah dan
   ukuran berkas, sedangkan \texttt{aplikasi.py} menurunkannya dari isi berkas.
-  Masa segar tebakan bergantung pada tanggal pemeriksaan.}
+  Masa \textit{fresh} tebakan bergantung pada tanggal pemeriksaan.}
 \end{frame}
 
 \begin{frame}{{\Large Lembar Isian Latihan 1}}
@@ -1401,7 +1428,7 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
   {\footnotesize
   \begin{tabularx}{\textwidth}{lXlll}
     \hline
-    \textbf{Sumber} & \textbf{\texttt{Cache-Control}} & \textbf{Masa segar} & \textbf{Biasa} & \textbf{Bersyarat} \\
+    \textbf{Sumber} & \textbf{\texttt{Cache-Control}} & \textbf{Masa \textit{fresh}} & \textbf{Biasa} & \textbf{Bersyarat} \\
     \hline
     Halaman aplikasi & \dots & \dots & \dots & \dots \\
     \hline
@@ -1481,7 +1508,7 @@ python ukur-ttfb.py http://localhost:8000/api/terlaris-cache 50
   \vspace{8pt}
   {\footnotesize Dalam milidetik. Baris ketiga tampak janggal: \textit{cache}
   yang seharusnya mempercepat justru membuat jawaban dua setengah kali lebih
-  lambat, karena dua kali penantian 50 milidetik ditambah kueri yang tetap
+  lambat, karena dua kali penantian 50 milidetik ditambah \textit{query} yang tetap
   dijalankan.}
 \end{frame}
 
@@ -1520,7 +1547,7 @@ python ukur-ttfb.py http://localhost:8000/api/terlaris-cache 50
   \begin{enumerate}
     \item Jalankan \texttt{stampede.py} tanpa argumen, yaitu 50 permintaan
           serentak.
-    \item Catat jumlah kueri, p50, p95, dan nilai terbesar untuk ketiga cara.
+    \item Catat jumlah \textit{query}, p50, p95, dan nilai terbesar untuk ketiga cara.
     \item Ulangi dengan 10 dan 100 permintaan serentak.
     \item Jalankan sekali lagi dengan satu permintaan saja, lalu bandingkan
           baris \texttt{stale\_while\_revalidate}.
@@ -1538,7 +1565,7 @@ python stampede.py
 # Keluarannya:
 # 50 permintaan serentak tepat setelah kunci kedaluwarsa
 #
-#   Cara                    Kueri    p50 (ms)    p95 (ms)   Maks (ms)
+#   Cara                    Query    p50 (ms)    p95 (ms)   Maks (ms)
 #   tanpa_pengaman             50       895.7      1529.3      1564.3
 #   single_flight               1       137.5       143.2       143.7
 #   stale_while_revalidate      1         8.8        12.6        14.0
@@ -1555,7 +1582,7 @@ python stampede.py
   {\small
   \begin{tabularx}{\textwidth}{Xrrrr}
     \hline
-    \textbf{Cara} & \textbf{Kueri, 50} & \textbf{p50, 50} & \textbf{p95, 50} & \textbf{p50, 1} \\
+    \textbf{Cara} & \textbf{\textit{Query}, 50} & \textbf{p50, 50} & \textbf{p95, 50} & \textbf{p50, 1} \\
     \hline
     \texttt{tanpa\_pengaman} & 50 & 895,7 & 1.529,3 & 135,2 \\
     \hline
@@ -1567,7 +1594,7 @@ python stampede.py
 
   \vspace{8pt}
   {\footnotesize Angka pada judul kolom adalah jumlah permintaan serentak, waktu
-  dalam milidetik. Dengan satu permintaan, nilai basi terbaca dalam 0,6
+  dalam milidetik. Dengan satu permintaan, nilai \textit{stale} terbaca dalam 0,6
   milidetik. Dengan 50 permintaan, angka itu naik menjadi 8,8 milidetik karena
   50 utas program uji bergantian berjalan.}
 \end{frame}
@@ -1576,37 +1603,37 @@ python stampede.py
   \vspace{6pt}
   \centering
   {\small
-  \begin{tabularx}{\textwidth}{Xrrrr}
+  \begin{tabularx}{\textwidth}{Xrrrrr}
     \hline
-    \textbf{Cara} & \textbf{Kueri, 100} & \textbf{p95, 10} & \textbf{p95, 50} & \textbf{p95, 100} \\
+    \textbf{Cara} & \textbf{\textit{Query}, 100} & \textbf{p95, 10} & \textbf{p95, 50} & \textbf{p95, 100} & \textbf{p50, 1} \\
     \hline
-    \texttt{tanpa\_pengaman} & \dots & \dots & \dots & \dots \\
+    \texttt{tanpa\_pengaman} & \dots & \dots & \dots & \dots & \dots \\
     \hline
-    \texttt{single\_flight} & \dots & \dots & \dots & \dots \\
+    \texttt{single\_flight} & \dots & \dots & \dots & \dots & \dots \\
     \hline
-    \texttt{stale\_while\_revalidate} & \dots & \dots & \dots & \dots \\
+    \texttt{stale\_while\_revalidate} & \dots & \dots & \dots & \dots & \dots \\
     \hline
   \end{tabularx}}
 
   \vspace{8pt}
   {\footnotesize Pertanyaan: mengapa p50 \texttt{tanpa\_pengaman} jauh lebih
-  besar daripada satu kueri padahal kuerinya sama, mengapa \texttt{single\_flight}
-  tetap satu kueri berapa pun jumlah permintaannya, dan apa yang dikorbankan
+  besar daripada satu \textit{query} padahal \textit{query}-nya sama, mengapa \texttt{single\_flight}
+  tetap satu \textit{query} berapa pun jumlah permintaannya, dan apa yang dikorbankan
   \texttt{stale\_while\_revalidate}?}
 \end{frame}
 
-\section{Latihan 4: Data Basi}
+\section{Latihan 4: Data Stale}
 
 \begin{frame}{\hfill}
   \centering
-  \Huge{\textbf{Latihan 4\\Data Basi Setelah Perubahan}}
+  \Huge{\textbf{Latihan 4\\Data \textit{Stale} Setelah Perubahan}}
 \end{frame}
 
 \begin{frame}{{\Large Langkah Kerja}}
   \vspace{6pt}
   \begin{enumerate}
-    \item Jalankan \texttt{invalidasi.py}, lalu catat jumlah pembacaan basi
-          dan lama basinya untuk keempat cara.
+    \item Jalankan \texttt{invalidasi.py}, lalu catat jumlah pembacaan \textit{stale}
+          dan lama \textit{stale}-nya untuk keempat cara.
     \item Ubah \texttt{TTL\_DETIK} menjadi 10, jalankan ulang, lalu
           bandingkan.
     \item Kembalikan \texttt{TTL\_DETIK} menjadi 5, ubah
@@ -1616,7 +1643,7 @@ python stampede.py
   \end{enumerate}
 \end{frame}
 
-\begin{frame}[fragile]{{\Large Mengukur Lama Data Basi}}
+\begin{frame}[fragile]{{\Large Mengukur Lama Data Stale}}
   \vspace{4pt}
 \begin{lstlisting}[language=bash]
 cd sources/chapter04
@@ -1626,11 +1653,11 @@ python invalidasi.py
 # Keluarannya:
 # Harga 50000 menjadi 55000, TTL 5 detik, dibaca tiap 0.1 detik
 #
-#   Cara                  Baca basi  Lama basi (s)
-#   ttl_saja                     50            5.1
-#   hapus_saat_menulis            0            0.0
-#   hapus_kalah_race             50            5.1
-#   hapus_dua_kali                5            0.5
+#   Cara                  Baca stale Lama stale (s)
+#   ttl_saja                      50            5.1
+#   hapus_saat_menulis             0            0.0
+#   hapus_kalah_race              50            5.1
+#   hapus_dua_kali                 5            0.5
 \end{lstlisting}
 \end{frame}
 
@@ -1640,7 +1667,7 @@ python invalidasi.py
   {\small
   \begin{tabularx}{\textwidth}{Xrr}
     \hline
-    \textbf{Cara} & \textbf{Pembacaan basi} & \textbf{Lama basi (detik)} \\
+    \textbf{Cara} & \textbf{Pembacaan \textit{stale}} & \textbf{Lama \textit{stale} (detik)} \\
     \hline
     \texttt{ttl\_saja} & 50 & 5,1 \\
     \hline
@@ -1802,14 +1829,14 @@ python resilience.py            # terminal lain
 
 \begin{frame}{{\Large Ringkasan}}
   \begin{itemize}
-    \item Salinan segar dipakai tanpa jaringan. Jawaban 304 menghemat isi,
+    \item \textit{Copy} yang masih \textit{fresh} dipakai tanpa jaringan. Jawaban 304 menghemat isi,
           tetapi tidak menghemat RTT.
-    \item Tanpa kebijakan, browser menebak: aset kampus dianggap segar sekitar
+    \item Tanpa kebijakan, browser menebak: aset kampus dianggap \textit{fresh} sekitar
           54 hari.
     \item \textit{Cache-aside} menurunkan p50 dari 70,44 menjadi 0,31
           milidetik. Redis yang macet menaikkannya menjadi 184,72 milidetik.
     \item Penghapusan yang kalah dalam \textit{race condition} bertahan 5,1
-          detik. \textit{Single-flight} mengubah 50 kueri serentak menjadi satu.
+          detik. \textit{Single-flight} mengubah 50 \textit{query} serentak menjadi satu.
     \item \textit{Retry} tanpa \textit{circuit breaker}: 300 panggilan tanpa
           satu pun berhasil. \textit{Circuit breaker}: 10 panggilan, 0,4 detik.
   \end{itemize}

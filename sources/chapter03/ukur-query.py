@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Menjalankan satu kueri berulang kali, lalu melaporkan sebarannya.
+"""Menjalankan satu query berulang kali, lalu melaporkan sebarannya.
 
 Satu kali EXPLAIN ANALYZE tidak cukup dijadikan angka laporan. Jalankan
 pertama menanggung pengisian cache, sedangkan jalankan berikutnya lebih
 cepat. Karena itu yang dilaporkan adalah p50 dan p95, bukan satu angka.
 
-Kueri dibaca dari berkas, satu kueri per berkas.
+Query dibaca dari berkas, satu query per berkas.
 
 Pemakaian:
     source ../.venv/bin/activate
-    python ukur-query.py kueri/q1.sql [jumlah_ulangan]
+    python ukur-query.py query/q1.sql [jumlah_ulangan]
 """
 
 import sys
@@ -34,7 +34,7 @@ def persentil(daftar_angka, peringkat):
 
 
 def ambil_rencana(koneksi, sql):
-  """Menjalankan kueri lewat EXPLAIN ANALYZE, mengembalikan rencananya.
+  """Menjalankan query lewat EXPLAIN ANALYZE, mengembalikan rencananya.
 
   Format JSON dipilih karena hasilnya dapat dibaca program, sedangkan format
   teks harus diurai sendiri.
@@ -59,7 +59,7 @@ def simpul_pemindaian(simpul, ditemukan=None):
 
 
 def main():
-  """Mengukur satu berkas kueri, lalu mencetak sebaran waktunya."""
+  """Mengukur satu berkas query, lalu mencetak sebaran waktunya."""
   if len(sys.argv) < 2:
     sys.exit("Pemakaian: python ukur-query.py <berkas.sql> [ulangan]")
   berkas = Path(sys.argv[1])

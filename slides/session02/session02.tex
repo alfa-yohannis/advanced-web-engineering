@@ -337,7 +337,7 @@ curl -o /dev/null -s -w @format-curl.txt https://www.pradita.ac.id/
           diperoleh dengan pengurangan.
     \item Cara menekan biayanya: pakai ulang koneksi, pasang
           \texttt{preconnect}, pilih TLS 1.3, batasi jumlah domain.
-    \item CDN menempatkan salinan aset di \textit{edge server} terdekat,
+    \item CDN menempatkan \textit{copy} aset di \textit{edge server} terdekat,
           sehingga jarak ke \textit{origin} tidak lagi dibayar tiap permintaan.
   \end{itemize}
 \end{frame}
@@ -973,7 +973,8 @@ cd sources/chapter02
 \end{frame}
 
 \begin{frame}{{\Large Ringkasan}}
-  \vspace{10pt}
+  \vspace{6pt}
+  {\small
   \begin{itemize}
     \item Browser berjalan sebagai banyak proses, tetapi hampir seluruh
           pekerjaan satu halaman ditanggung satu \textit{main thread}.
@@ -988,7 +989,7 @@ cd sources/chapter02
           \textit{parsing}.
     \item Core Web Vitals dibaca pada persentil ke-75, dan optimasi tanpa
           \textit{baseline} tidak dapat dibuktikan.
-  \end{itemize}
+  \end{itemize}}
 \end{frame}
 
 \end{document}

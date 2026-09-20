@@ -93,7 +93,7 @@ Tiga jalur penelitian dijalankan bergantian. Tujuannya agar tim yang mengerjakan
 
 **Praktikum.** Men-*deploy* aplikasi ke produksi. Menginstrumentasi aplikasi tersebut. Membuat *dashboard* operasional. Mengonfigurasi minimal satu *alert* yang bermakna.
 
-> **Topik 6** lengkap. Pembacaan *query plan* dari Pertemuan 03. Uji integrasi dan gerbang CI dari Pertemuan 06. Instrumentasi *query* dari Pertemuan 09.
+> **Topik 6** lengkap. Pembacaan *query plan* dari Pertemuan 03. Uji integrasi dan *gate* CI dari Pertemuan 06. Instrumentasi *query* dari Pertemuan 09.
 
 #### Pertemuan 10 · Identity, Authentication & Authorization, *jalur T2*
 
@@ -149,7 +149,7 @@ Sasarannya adalah artikel jurnal terindeks Q3 sampai Q4. Kebaruan yang dikejar b
 
 **Solusi A: *cache-aside* dengan Redis.** *Hit ratio* tinggi, latensi baca turun drastis, dan beban basis data berkurang.
 
-**Efek samping A.** Ada tiga. Pertama, data basi selama rentang TTL, dan ini tidak dapat diterima untuk entitas yang sering berubah. Kedua, TTL yang serentak kedaluwarsa memicu *cache stampede*. Ketiga, memperpendek TTL demi kesegaran justru mengembalikan beban ke *origin*, sehingga manfaat A ikut hilang.
+**Efek samping A.** Ada tiga. Pertama, data *stale* selama rentang TTL, dan ini tidak dapat diterima untuk entitas yang sering berubah. Kedua, TTL yang serentak kedaluwarsa memicu *cache stampede*. Ketiga, memperpendek TTL demi kesegaran justru mengembalikan beban ke *origin*, sehingga manfaat A ikut hilang.
 
 **Komponen B: invalidasi berbasis *event*, TTL *jitter*, dan *refresh* probabilistik.** Perubahan data dipublikasikan lewat pola *transactional outbox*, sehingga entri *cache* dibatalkan pada saat penulisan, bukan menunggu TTL. TTL diberi *jitter* agar kedaluwarsa tidak serentak. *Probabilistic early refresh* (XFetch) dan *single-flight lock* memperbarui entri panas sebelum kedaluwarsa. Kesegaran naik tanpa memperpendek TTL, sehingga efek samping ditekan sambil *hit ratio* A justru meningkat.
 
@@ -207,7 +207,7 @@ Sasarannya adalah artikel jurnal terindeks Q3 sampai Q4. Kebaruan yang dikejar b
 
 **Komponen B: *semantic cache* berbasis *embedding* dengan pencarian tetangga terdekat, ditambah lapisan verifikasi ringan sebelum jawaban dipakai ulang.** Kemiripan makna membuat *hit ratio* melonjak dibanding kecocokan persis. Verifikasi berupa pemeriksa murah atau uji kecocokan ulang menekan *false hit*, yaitu jawaban mirip yang sebenarnya tidak sesuai. *False hit* adalah risiko utama pendekatan ini. Biaya dan latensi turun tanpa menurunkan mutu jawaban yang menjadi alasan memakai A.
 
-**Rancangan evaluasi.** Dataset kueri pengguna dengan parafrasa terkontrol. Baseline: tanpa *cache*, *cache* kecocokan persis, *semantic cache* tanpa verifikasi, lalu *semantic cache* terverifikasi. Ambang kemiripan divariasikan untuk memetakan kurvanya.
+**Rancangan evaluasi.** Dataset *query* pengguna dengan parafrasa terkontrol. Baseline: tanpa *cache*, *cache* kecocokan persis, *semantic cache* tanpa verifikasi, lalu *semantic cache* terverifikasi. Ambang kemiripan divariasikan untuk memetakan kurvanya.
 
 **Metrik.** *Hit ratio* semantik. Penghematan biaya token. *Time-to-first-token* dan latensi total pada persentil 95. Laju *false hit*. Mutu jawaban memakai rubrik penilai manusia, dengan penilai LLM sebagai pembanding. Jejak penyimpanan indeks vektor. Catatan privasi atas isi yang disimpan di *cache*.
 
@@ -231,7 +231,7 @@ Sasarannya adalah artikel jurnal terindeks Q3 sampai Q4. Kebaruan yang dikejar b
 
 **Klaim kontribusi.** Pemetaan empiris hubungan antara granularitas hidrasi, biaya server, dan Core Web Vitals pada kelas perangkat yang berbeda. Termasuk di dalamnya titik ketika penambahan *islands* berhenti memberi manfaat dan mulai menambah kerumitan.
 
-### Topik 6 · Gerbang Kualitas Kinerja di CI: Deteksi Otomatis N+1 dan Regresi Rencana Query
+### Topik 6 · Gate Kualitas Kinerja di CI: Deteksi Otomatis N+1 dan Regresi Rencana Query
 
 *Kaitan materi: Pertemuan 3, 6, dan 9, yaitu data engineering, testing dan CI, serta observability.*
 
@@ -241,13 +241,13 @@ Sasarannya adalah artikel jurnal terindeks Q3 sampai Q4. Kebaruan yang dikejar b
 
 **Efek samping A.** Abstraksi menyembunyikan biaya eksekusi. Relasi malas memicu N+1. Indeks yang hilang tidak terlihat sampai data membesar. Perubahan kecil pada kode dapat mengubah rencana eksekusi tanpa satu pun uji yang gagal. Regresi baru ketahuan di produksi, yaitu persis pengetahuan yang dihapus oleh A.
 
-**Komponen B: gerbang kualitas kinerja di CI.** Isinya tiga bagian: instrumentasi *query* saat uji integrasi berjalan, deteksi pola N+1, dan pembandingan rencana eksekusi terhadap *baseline* yang tersimpan. *Merge* diblokir ketika jumlah *query* per *endpoint* melonjak, atau ketika rencana berubah dari *index scan* menjadi *sequential scan*. Produktivitas ORM tetap utuh, tetapi biaya eksekusi kembali terlihat sejak sebelum kode digabungkan.
+**Komponen B: *gate* kualitas kinerja di CI.** Isinya tiga bagian: instrumentasi *query* saat uji integrasi berjalan, deteksi pola N+1, dan pembandingan rencana eksekusi terhadap *baseline* yang tersimpan. *Merge* diblokir ketika jumlah *query* per *endpoint* melonjak, atau ketika rencana berubah dari *index scan* menjadi *sequential scan*. Produktivitas ORM tetap utuh, tetapi biaya eksekusi kembali terlihat sejak sebelum kode digabungkan.
 
-**Rancangan evaluasi.** Korpus perubahan kode nyata, berisi cacat N+1 dan indeks hilang yang disuntikkan secara terkendali, ditambah perubahan tak berbahaya sebagai kontrol negatif. Baseline berjenjang: tanpa gerbang, hanya batas waktu uji, hanya deteksi N+1, lalu deteksi N+1 digabung pembandingan rencana.
+**Rancangan evaluasi.** Korpus perubahan kode nyata, berisi cacat N+1 dan indeks hilang yang disuntikkan secara terkendali, ditambah perubahan tak berbahaya sebagai kontrol negatif. Baseline berjenjang: tanpa *gate*, hanya batas waktu uji, hanya deteksi N+1, lalu deteksi N+1 digabung pembandingan rencana.
 
-**Metrik.** Presisi dan *recall* deteksi. Proporsi regresi yang tertangkap sebelum *merge*. Laju alarm palsu, yang menentukan apakah tim akan mematikan gerbang ini. Tambahan durasi *pipeline* CI. Korelasi antara temuan CI dan latensi persentil 95 yang teramati saat uji beban.
+**Metrik.** Presisi dan *recall* deteksi. Proporsi regresi yang tertangkap sebelum *merge*. Laju alarm palsu, yang menentukan apakah tim akan mematikan *gate* ini. Tambahan durasi *pipeline* CI. Korelasi antara temuan CI dan latensi persentil 95 yang teramati saat uji beban.
 
-**Klaim kontribusi.** Rancangan gerbang kinerja yang praktis dipakai tim kecil, beserta bukti seberapa banyak regresi basis data yang benar-benar tertangkap dan berapa biaya CI yang harus dibayar untuk itu.
+**Klaim kontribusi.** Rancangan *gate* kinerja yang praktis dipakai tim kecil, beserta bukti seberapa banyak regresi basis data yang benar-benar tertangkap dan berapa biaya CI yang harus dibayar untuk itu.
 
 ### Urutan Pengerjaan yang Disarankan
 
@@ -256,7 +256,7 @@ Diurutkan dari yang paling mudah dieksekusi sampai yang paling menuntut.
 | Urutan | Topik | Beban implementasi | Risiko metodologis |
 | --- | --- | --- | --- |
 | 1 | T1, cache hibrida | Rendah | Rendah |
-| 2 | T6, gerbang kualitas kinerja di CI | Rendah sampai sedang | Rendah |
+| 2 | T6, *gate* kualitas kinerja di CI | Rendah sampai sedang | Rendah |
 | 3 | T2, pencabutan token | Sedang | Sedang |
 | 4 | T5, hidrasi selektif | Tinggi | Rendah |
 | 5 | T3, transport real-time adaptif | Tinggi | Sedang |
@@ -288,6 +288,7 @@ Diurutkan dari yang paling mudah dieksekusi sampai yang paling menuntut.
 | --- | --- |
 | ABAC | Attribute-Based Access Control |
 | ACID | Atomicity, Consistency, Isolation, Durability |
+| ACK | Acknowledge |
 | API | Application Programming Interface |
 | AWS | Amazon Web Services |
 | BFF | Backend for Frontend |
@@ -310,6 +311,7 @@ Diurutkan dari yang paling mudah dieksekusi sampai yang paling menuntut.
 | IaC | Infrastructure as Code |
 | INP | Interaction to Next Paint |
 | ISR | Incremental Static Regeneration |
+| JSON | JavaScript Object Notation |
 | JWT | JSON Web Token |
 | LCP | Largest Contentful Paint |
 | LLM | Large Language Model |

@@ -1,4 +1,4 @@
--- Empat kueri yang dipakai sepanjang Bab 3.
+-- Empat query yang dipakai sepanjang Bab 3.
 -- Dijalankan sebelum indeks tambahan dipasang, sehingga rencana yang
 -- terekam di sini menjadi baseline.
 --

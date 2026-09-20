@@ -5,12 +5,12 @@
 | `docker-compose.yml` | PostgreSQL 16 untuk seluruh latihan, dibatasi `max_connections=25` |
 | `01-skema.sql` | Skema toko buku kampus, sengaja tanpa indeks tambahan |
 | `02-data-uji.sql` | Mengisi 20 kategori, 50.000 buku, 20.000 pelanggan, 200.000 pesanan, 600.000 item |
-| `03-query-baseline.sql` | Empat kueri acuan beserta `EXPLAIN (ANALYZE, BUFFERS)` |
+| `03-query-baseline.sql` | Empat *query* acuan beserta `EXPLAIN (ANALYZE, BUFFERS)` |
 | `04-indeks.sql` | Indeks perbaikan: gabungan, parsial, kunci asing, dan trigram |
-| `kueri/q1.sql` sampai `q4.sql` | Keempat kueri acuan sebagai berkas terpisah, dipakai `ukur-query.py` |
+| `query/q1.sql` sampai `q4.sql` | Keempat *query* acuan sebagai berkas terpisah, dipakai `ukur-query.py` |
 | `tiga-lapis-akses.py` | Menulis satu kebutuhan yang sama sebagai ORM, query builder, dan SQL langsung |
-| `ukur-query.py` | Menjalankan satu kueri berulang kali, melaporkan p50, p95, dan simpul pemindaiannya |
-| `n-plus-1.py` | Membandingkan pola N+1 dengan kueri yang jumlahnya tetap |
+| `ukur-query.py` | Menjalankan satu *query* berulang kali, melaporkan p50, p95, dan simpul pemindaiannya |
+| `n-plus-1.py` | Membandingkan pola N+1 dengan *query* yang jumlahnya tetap |
 | `transaksi-konkuren.py` | Memperagakan lost update dan tiga cara mencegahnya |
 | `pool-koneksi.py` | Mengukur biaya membuka koneksi dan manfaat *connection pool* |
 | `migrasi/001_skema_awal.sql` | Migrasi pertama, dijalankan di dalam satu transaksi |
@@ -47,7 +47,7 @@ source ../.venv/bin/activate
 python n-plus-1.py 25
 python transaksi-konkuren.py 8 50
 python pool-koneksi.py 10 50
-python ukur-query.py kueri/q1.sql 20
+python ukur-query.py query/q1.sql 20
 python tiga-lapis-akses.py
 ```
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Membandingkan pengambilan data berpola N+1 dengan kueri yang jumlahnya tetap.
+"""Membandingkan pengambilan data berpola N+1 dengan query yang jumlahnya tetap.
 
 Kedua cara menghasilkan data yang sama persis. Yang berbeda hanya jumlah
 perjalanan ke basis data, dan selisih itulah yang diukur di sini.
@@ -50,27 +50,27 @@ def cari_pelanggan_tersibuk(koneksi):
 
 
 def ambil_dengan_n_plus_1(koneksi, id_pelanggan, batas):
-  """Mengambil daftar pesanan, lalu itemnya satu kueri untuk tiap pesanan.
+  """Mengambil daftar pesanan, lalu itemnya satu query untuk tiap pesanan.
 
-  Inilah pola N+1: satu kueri untuk daftar, ditambah N kueri untuk isinya.
-  Mengembalikan pasangan (daftar hasil, jumlah kueri yang dijalankan).
+  Inilah pola N+1: satu query untuk daftar, ditambah N query untuk isinya.
+  Mengembalikan pasangan (daftar hasil, jumlah query yang dijalankan).
   """
   with koneksi.cursor() as kursor:
     kursor.execute(SQL_DAFTAR_PESANAN, (id_pelanggan, batas))
     daftar_pesanan = kursor.fetchall()
-    jumlah_kueri = 1
+    jumlah_query = 1
 
     hasil = []
     for id_pesanan, total, waktu in daftar_pesanan:
       kursor.execute(SQL_ITEM_SATU_PESANAN, (id_pesanan,))
       hasil.append((id_pesanan, total, waktu, kursor.fetchall()))
-      jumlah_kueri += 1
+      jumlah_query += 1
 
-  return hasil, jumlah_kueri
+  return hasil, jumlah_query
 
 
-def ambil_dengan_dua_kueri(koneksi, id_pelanggan, batas):
-  """Mengambil data yang sama dengan jumlah kueri yang tidak bergantung N.
+def ambil_dengan_dua_query(koneksi, id_pelanggan, batas):
+  """Mengambil data yang sama dengan jumlah query yang tidak bergantung N.
 
   Seluruh id pesanan dikirim sekali sebagai larik, lalu hasilnya
   dikelompokkan di sisi aplikasi. Mengembalikan pasangan yang sama bentuknya
@@ -103,13 +103,13 @@ def sidik_jari(hasil):
 
 
 def ukur(nama, cara, koneksi, id_pelanggan, batas):
-  """Menjalankan satu cara, mencetak jumlah kueri dan waktunya."""
+  """Menjalankan satu cara, mencetak jumlah query dan waktunya."""
   mulai = time.perf_counter()
-  hasil, jumlah_kueri = cara(koneksi, id_pelanggan, batas)
+  hasil, jumlah_query = cara(koneksi, id_pelanggan, batas)
   durasi_ms = (time.perf_counter() - mulai) * 1000
   jumlah_item = sum(len(pesanan[3]) for pesanan in hasil)
   print(
-      f"  {nama:<24} {jumlah_kueri:>4} kueri {jumlah_item:>5} item "
+      f"  {nama:<24} {jumlah_query:>4} query {jumlah_item:>5} item "
       f"{durasi_ms:8.2f} ms"
   )
   return hasil
@@ -125,15 +125,15 @@ def main():
         f"Pelanggan {id_pelanggan} punya {jumlah_pesanan} pesanan, "
         f"diambil {diambil}.\n"
     )
-    print(f"  {'Cara':<24} {'Kueri':>10} {'Item':>10} {'Waktu':>11}")
+    print(f"  {'Cara':<24} {'Query':>10} {'Item':>10} {'Waktu':>11}")
     hasil_n_plus_1 = ukur(
         "N+1", ambil_dengan_n_plus_1, koneksi, id_pelanggan, batas
     )
-    hasil_dua_kueri = ukur(
-        "Dua kueri tetap", ambil_dengan_dua_kueri, koneksi, id_pelanggan, batas
+    hasil_dua_query = ukur(
+        "Dua query tetap", ambil_dengan_dua_query, koneksi, id_pelanggan, batas
     )
 
-  sama = sidik_jari(hasil_n_plus_1) == sidik_jari(hasil_dua_kueri)
+  sama = sidik_jari(hasil_n_plus_1) == sidik_jari(hasil_dua_query)
   print(f"\nHasil kedua cara identik: {sama}")
 
 

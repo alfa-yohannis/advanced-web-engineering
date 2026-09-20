@@ -1,0 +1,24 @@
+<!-- Halaman demo Bab 5: memuat katalog lalu melaporkan Core Web Vitals. -->
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Katalog Toko Buku</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 2rem; max-width: 46rem; }
+  h1 { font-size: 2.5rem; }
+  #daftar { margin-top: 1rem; }
+  .baris { padding: 0.35rem 0; border-bottom: 1px solid #ddd; }
+</style>
+</head>
+<body>
+<h1>Katalog Toko Buku</h1>
+<p>Halaman ini memuat satu halaman katalog, lalu melaporkan Core Web Vitals
+ke <code>/api/vitals</code> saat halaman ditinggalkan.</p>
+<button id="muat">Muat katalog</button>
+<div id="daftar"></div>
+<script type="module" src="/aset/web-vitals.js"></script>
+<script type="module" src="/aset/katalog.js"></script>
+</body>
+</html>

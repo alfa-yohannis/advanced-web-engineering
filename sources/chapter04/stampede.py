@@ -2,7 +2,7 @@
 """Memperagakan cache stampede dan dua cara meredamnya.
 
 Kunci yang sering dibaca baru saja kedaluwarsa, lalu banyak permintaan datang
-bersamaan. Tanpa pengaman, seluruhnya meleset dan menjalankan kueri yang sama
+bersamaan. Tanpa pengaman, seluruhnya meleset dan menjalankan query yang sama
 ke basis data. Tiga cara dibandingkan pada beban yang sama persis:
   tanpa_pengaman          tiap permintaan yang meleset menghitung sendiri
   single_flight           hanya satu yang menghitung, sisanya menunggu hasilnya
@@ -34,10 +34,10 @@ PERMINTAAN_SERENTAK_BAWAAN = 50
 KUNCI_TERLARIS = "peragaan:terlaris:30hari"
 KUNCI_GEMBOK = "peragaan:gembok:terlaris:30hari"
 # Setelah TTL keras, Redis membuang nilainya. Setelah TTL lunak, nilainya
-# dianggap basi, tetapi masih boleh dipakai sambil di-refresh.
+# dianggap stale, tetapi masih boleh dipakai sambil di-refresh.
 TTL_KERAS_DETIK = 300
 TTL_LUNAK_DETIK = 60
-# Gembok dilepas otomatis bila pemegangnya mati sebelum sempat melepasnya.
+# Gembok dilepas otomatis bila pemegangnya down sebelum sempat melepasnya.
 UMUR_GEMBOK_MS = 2000
 JEDA_PERIKSA_ULANG_DETIK = 0.01
 BATAS_MENUNGGU_DETIK = 2.0
@@ -57,7 +57,7 @@ SQL_TERLARIS = """
 
 
 class PenghitungKueri:
-  """Menghitung kueri yang sampai ke basis data, aman dipakai banyak utas.
+  """Menghitung query yang sampai ke basis data, aman dipakai banyak utas.
 
   Tanpa gembok, dua utas yang menambah bersamaan dapat kehilangan satu
   tambahan, persis seperti lost update pada Bab 3.
@@ -85,25 +85,25 @@ def hitung_persentil(daftar_angka, peringkat):
   return nilai_bawah + (nilai_atas - nilai_bawah) * (posisi - indeks_bawah)
 
 
-def jalankan_kueri_terlaris(pool_koneksi, penghitung_kueri):
-  """Menjalankan kueri mahal ke basis data, sekaligus mencatat jumlahnya."""
-  penghitung_kueri.tambah_satu()
+def jalankan_query_terlaris(pool_koneksi, penghitung_query):
+  """Menjalankan query mahal ke basis data, sekaligus mencatat jumlahnya."""
+  penghitung_query.tambah_satu()
   with pool_koneksi.connection() as koneksi:
     daftar_baris = koneksi.execute(SQL_TERLARIS).fetchall()
   return json.dumps([[judul, terjual] for judul, terjual in daftar_baris])
 
 
-def tanpa_pengaman(pool_koneksi, cache, penghitung_kueri):
+def tanpa_pengaman(pool_koneksi, cache, penghitung_query):
   """Cache-aside biasa: permintaan yang meleset langsung menghitung sendiri."""
   nilai_tersimpan = cache.get(KUNCI_TERLARIS)
   if nilai_tersimpan is not None:
     return nilai_tersimpan
-  isi_json = jalankan_kueri_terlaris(pool_koneksi, penghitung_kueri)
+  isi_json = jalankan_query_terlaris(pool_koneksi, penghitung_query)
   cache.set(KUNCI_TERLARIS, isi_json, ex=TTL_KERAS_DETIK)
   return isi_json
 
 
-def single_flight(pool_koneksi, cache, penghitung_kueri):
+def single_flight(pool_koneksi, cache, penghitung_query):
   """Hanya pemegang gembok yang menghitung, sisanya menunggu hasilnya muncul.
 
   SET NX berhasil bagi tepat satu klien. Klien lain memeriksa ulang cache
@@ -113,7 +113,7 @@ def single_flight(pool_koneksi, cache, penghitung_kueri):
   if nilai_tersimpan is not None:
     return nilai_tersimpan
   if cache.set(KUNCI_GEMBOK, "1", nx=True, px=UMUR_GEMBOK_MS):
-    isi_json = jalankan_kueri_terlaris(pool_koneksi, penghitung_kueri)
+    isi_json = jalankan_query_terlaris(pool_koneksi, penghitung_query)
     cache.set(KUNCI_TERLARIS, isi_json, ex=TTL_KERAS_DETIK)
     cache.delete(KUNCI_GEMBOK)
     return isi_json
@@ -124,44 +124,44 @@ def single_flight(pool_koneksi, cache, penghitung_kueri):
     if nilai_tersimpan is not None:
       return nilai_tersimpan
   # Pemegang gembok terlalu lama, jadi hitung sendiri daripada gagal.
-  return jalankan_kueri_terlaris(pool_koneksi, penghitung_kueri)
+  return jalankan_query_terlaris(pool_koneksi, penghitung_query)
 
 
-def bungkus_dengan_batas_segar(isi_json):
-  """Menyimpan batas kesegaran bersama isinya, dalam satu nilai JSON."""
-  batas_segar = time.time() + TTL_LUNAK_DETIK
-  return json.dumps({"isi": isi_json, "segar_sampai": batas_segar})
+def bungkus_dengan_batas_fresh(isi_json):
+  """Menyimpan batas freshness bersama isinya, dalam satu nilai JSON."""
+  batas_fresh = time.time() + TTL_LUNAK_DETIK
+  return json.dumps({"isi": isi_json, "fresh_sampai": batas_fresh})
 
 
-def refresh_di_latar(pool_koneksi, cache, penghitung_kueri):
+def refresh_di_latar(pool_koneksi, cache, penghitung_query):
   """Menghitung ulang nilai lalu menyimpannya. Dijalankan di utas terpisah."""
   try:
-    isi_json = jalankan_kueri_terlaris(pool_koneksi, penghitung_kueri)
-    nilai_baru = bungkus_dengan_batas_segar(isi_json)
+    isi_json = jalankan_query_terlaris(pool_koneksi, penghitung_query)
+    nilai_baru = bungkus_dengan_batas_fresh(isi_json)
     cache.set(KUNCI_TERLARIS, nilai_baru, ex=TTL_KERAS_DETIK)
   finally:
     cache.delete(KUNCI_GEMBOK)
 
 
-def stale_while_revalidate(pool_koneksi, cache, penghitung_kueri):
-  """Nilai basi langsung dipakai, sementara satu utas me-refresh-nya.
+def stale_while_revalidate(pool_koneksi, cache, penghitung_query):
+  """Nilai stale langsung dipakai, sementara satu utas me-refresh-nya.
 
-  Tidak ada klien yang menunggu kueri. Biayanya, sebagian klien menerima
-  nilai yang sudah lewat masa segarnya.
+  Tidak ada klien yang menunggu query. Biayanya, sebagian klien menerima
+  nilai yang sudah lewat masa fresh-nya.
   """
   nilai_tersimpan = cache.get(KUNCI_TERLARIS)
   if nilai_tersimpan is None:
     # Belum ada nilai sama sekali, jadi tidak ada yang dapat dipakai sementara.
-    isi_json = jalankan_kueri_terlaris(pool_koneksi, penghitung_kueri)
-    nilai_baru = bungkus_dengan_batas_segar(isi_json)
+    isi_json = jalankan_query_terlaris(pool_koneksi, penghitung_query)
+    nilai_baru = bungkus_dengan_batas_fresh(isi_json)
     cache.set(KUNCI_TERLARIS, nilai_baru, ex=TTL_KERAS_DETIK)
     return isi_json
   nilai_terbungkus = json.loads(nilai_tersimpan)
-  sudah_basi = nilai_terbungkus["segar_sampai"] < time.time()
-  if sudah_basi and cache.set(KUNCI_GEMBOK, "1", nx=True, px=UMUR_GEMBOK_MS):
+  sudah_stale = nilai_terbungkus["fresh_sampai"] < time.time()
+  if sudah_stale and cache.set(KUNCI_GEMBOK, "1", nx=True, px=UMUR_GEMBOK_MS):
     threading.Thread(
         target=refresh_di_latar,
-        args=(pool_koneksi, cache, penghitung_kueri),
+        args=(pool_koneksi, cache, penghitung_query),
         name=NAMA_UTAS_REFRESH,
     ).start()
   return nilai_terbungkus["isi"]
@@ -171,26 +171,26 @@ def siapkan_keadaan_kedaluwarsa(cara, pool_koneksi, cache):
   """Menyiapkan keadaan tepat setelah kunci kedaluwarsa, sebelum tiap cara.
 
   Untuk stale_while_revalidate, nilai lama sengaja ditinggalkan dengan masa
-  segar yang sudah lewat. Kueri penyiapan ini tidak ikut dihitung.
+  fresh yang sudah lewat. Query penyiapan ini tidak ikut dihitung.
   """
   cache.delete(KUNCI_TERLARIS, KUNCI_GEMBOK)
   if cara is stale_while_revalidate:
-    isi_lama = jalankan_kueri_terlaris(pool_koneksi, PenghitungKueri())
-    nilai_basi = json.dumps({"isi": isi_lama, "segar_sampai": time.time() - 1})
-    cache.set(KUNCI_TERLARIS, nilai_basi, ex=TTL_KERAS_DETIK)
+    isi_lama = jalankan_query_terlaris(pool_koneksi, PenghitungKueri())
+    nilai_stale = json.dumps({"isi": isi_lama, "fresh_sampai": time.time() - 1})
+    cache.set(KUNCI_TERLARIS, nilai_stale, ex=TTL_KERAS_DETIK)
 
 
-def kirim_satu_permintaan(cara, pool_koneksi, cache, penghitung_kueri,
+def kirim_satu_permintaan(cara, pool_koneksi, cache, penghitung_query,
                           aba_aba_mulai, daftar_lama_ms):
   """Satu klien: menunggu aba-aba bersama, lalu mencatat lama jawabannya."""
   aba_aba_mulai.wait()
   waktu_mulai = time.perf_counter()
-  cara(pool_koneksi, cache, penghitung_kueri)
+  cara(pool_koneksi, cache, penghitung_query)
   daftar_lama_ms.append((time.perf_counter() - waktu_mulai) * 1000)
 
 
 def tunggu_utas_refresh():
-  """Menunggu utas refresh selesai, agar kuerinya ikut terhitung."""
+  """Menunggu utas refresh selesai, agar query-nya ikut terhitung."""
   for utas in threading.enumerate():
     if utas.name == NAMA_UTAS_REFRESH:
       utas.join()
@@ -199,14 +199,14 @@ def tunggu_utas_refresh():
 def jalankan_satu_cara(cara, jumlah_permintaan, pool_koneksi, cache):
   """Melepas seluruh permintaan serentak, lalu mencetak satu baris hasil."""
   siapkan_keadaan_kedaluwarsa(cara, pool_koneksi, cache)
-  penghitung_kueri = PenghitungKueri()
+  penghitung_query = PenghitungKueri()
   # Barrier menahan semua utas sampai lengkap, lalu melepasnya bersamaan.
   aba_aba_mulai = threading.Barrier(jumlah_permintaan)
   daftar_lama_ms = []
   daftar_utas = [
       threading.Thread(
           target=kirim_satu_permintaan,
-          args=(cara, pool_koneksi, cache, penghitung_kueri,
+          args=(cara, pool_koneksi, cache, penghitung_query,
                 aba_aba_mulai, daftar_lama_ms),
       )
       for _ in range(jumlah_permintaan)
@@ -217,7 +217,7 @@ def jalankan_satu_cara(cara, jumlah_permintaan, pool_koneksi, cache):
     utas.join()
   tunggu_utas_refresh()
   print(
-      f"  {cara.__name__:<23} {penghitung_kueri.jumlah:>5} "
+      f"  {cara.__name__:<23} {penghitung_query.jumlah:>5} "
       f"{hitung_persentil(daftar_lama_ms, 50):>11.1f} "
       f"{hitung_persentil(daftar_lama_ms, 95):>11.1f} "
       f"{max(daftar_lama_ms):>11.1f}"
@@ -233,13 +233,13 @@ def main():
       DSN, min_size=UKURAN_POOL, max_size=UKURAN_POOL, open=True
   )
   cache = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
-  # Pemanasan: satu kueri di awal agar halaman data sudah ada di memori
+  # Pemanasan: satu query di awal agar halaman data sudah ada di memori
   # PostgreSQL, sehingga cara pertama tidak menanggung pembacaan disk.
-  jalankan_kueri_terlaris(pool_koneksi, PenghitungKueri())
+  jalankan_query_terlaris(pool_koneksi, PenghitungKueri())
 
   print(f"{jumlah_permintaan} permintaan serentak tepat setelah kunci kedaluwarsa\n")
   print(
-      f"  {'Cara':<23} {'Kueri':>5} {'p50 (ms)':>11} {'p95 (ms)':>11} "
+      f"  {'Cara':<23} {'Query':>5} {'p50 (ms)':>11} {'p95 (ms)':>11} "
       f"{'Maks (ms)':>11}"
   )
   for cara in (tanpa_pengaman, single_flight, stale_while_revalidate):

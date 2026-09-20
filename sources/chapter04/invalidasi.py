@@ -61,20 +61,20 @@ def kembalikan_keadaan_awal(koneksi, cache):
   cache.delete(KUNCI_HARGA)
 
 
-def amati_harga_basi(koneksi, cache):
+def amati_harga_stale(koneksi, cache):
   """Membaca berulang sampai harga baru terlihat, atau sampai TTL habis.
 
   Mengembalikan jumlah pembacaan yang masih melihat harga lama, dan lama
   harga lama itu bertahan sejak basis data diubah.
   """
   waktu_ubah = time.monotonic()
-  jumlah_baca_basi = 0
+  jumlah_baca_stale = 0
   while time.monotonic() - waktu_ubah < TTL_DETIK + 1:
     if baca_harga_lewat_cache(koneksi, cache) == HARGA_BARU:
       break
-    jumlah_baca_basi += 1
+    jumlah_baca_stale += 1
     time.sleep(SELANG_BACA_DETIK)
-  return jumlah_baca_basi, time.monotonic() - waktu_ubah
+  return jumlah_baca_stale, time.monotonic() - waktu_ubah
 
 
 def isi_ulang_cache_terlambat(cache, sudah_membaca, penulis_selesai):
@@ -131,19 +131,19 @@ def hapus_dua_kali(koneksi, cache):
 
 
 def main():
-  """Menjalankan keempat cara berurutan, lalu mencetak lama harga basi."""
+  """Menjalankan keempat cara berurutan, lalu mencetak lama harga stale."""
   cache = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
   print(
       f"Harga {HARGA_AWAL} menjadi {HARGA_BARU}, TTL {TTL_DETIK} detik, "
       f"dibaca tiap {SELANG_BACA_DETIK} detik\n"
   )
-  print(f"  {'Cara':<21} {'Baca basi':>9} {'Lama basi (s)':>14}")
+  print(f"  {'Cara':<21} {'Baca stale':>10} {'Lama stale (s)':>14}")
   with psycopg.connect(DSN, autocommit=True) as koneksi:
     for cara in (ttl_saja, hapus_saat_menulis, hapus_kalah_race, hapus_dua_kali):
       kembalikan_keadaan_awal(koneksi, cache)
       cara(koneksi, cache)
-      jumlah_baca_basi, lama_basi = amati_harga_basi(koneksi, cache)
-      print(f"  {cara.__name__:<21} {jumlah_baca_basi:>9} {lama_basi:>14.1f}")
+      jumlah_baca_stale, lama_stale = amati_harga_stale(koneksi, cache)
+      print(f"  {cara.__name__:<21} {jumlah_baca_stale:>10} {lama_stale:>14.1f}")
     kembalikan_keadaan_awal(koneksi, cache)
 
 

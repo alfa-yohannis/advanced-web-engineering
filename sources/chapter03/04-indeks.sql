@@ -1,4 +1,4 @@
--- Indeks perbaikan untuk kueri pada 03-query-baseline.sql.
+-- Indeks perbaikan untuk query pada 03-query-baseline.sql.
 -- Dijalankan setelah rencana baseline direkam, lalu 03-query-baseline.sql
 -- dijalankan ulang untuk membandingkan.
 --

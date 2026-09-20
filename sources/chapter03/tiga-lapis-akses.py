@@ -75,7 +75,7 @@ class ItemPesanan(Dasar):
 
 
 def lewat_orm(mesin):
-  """Menyusun kueri dari kelas hasil pemetaan, tanpa menulis SQL sama sekali.
+  """Menyusun query dari kelas hasil pemetaan, tanpa menulis SQL sama sekali.
 
   Paling ringkas, tetapi SQL yang benar-benar dikirim tidak terlihat dari
   kodenya. Itulah yang membuat masalah N+1 mudah lolos.
@@ -95,8 +95,8 @@ def lewat_orm(mesin):
 def lewat_query_builder(mesin):
   """Menyusun SQL dari objek tabel dan kolom, tanpa memetakan tabel ke kelas.
 
-  Bentuknya masih terbaca sebagai SQL, sehingga kuerinya dapat diperkirakan
-  dari kodenya, dan nama kolom yang salah ketahuan sebelum kueri dikirim.
+  Bentuknya masih terbaca sebagai SQL, sehingga query-nya dapat diperkirakan
+  dari kodenya, dan nama kolom yang salah ketahuan sebelum query dikirim.
   """
   pesanan = Pesanan.__table__
   item = ItemPesanan.__table__
@@ -116,7 +116,7 @@ def lewat_sql_langsung():
   """Mengirim SQL apa adanya lewat psycopg.
 
   Paling banyak kodenya, tetapi yang dijalankan basis data persis seperti
-  yang tertulis. Dipakai untuk kueri laporan dan kueri yang perlu disetel.
+  yang tertulis. Dipakai untuk query laporan dan query yang perlu disetel.
   """
   with psycopg.connect(DSN) as koneksi:
     baris = koneksi.execute(SQL_LANGSUNG, (ID_PELANGGAN, BATAS)).fetchall()

@@ -25,13 +25,16 @@ sebagai satu suara.
   `\textit{range}`, `\textit{dashboard}`, `\textit{social network}`,
   `\textit{constraint}`, `\textit{generate}`, `\textit{error}`,
   `\textit{worker}`, `\textit{conflict}`, `\textit{disk}`, `\textit{node}`,
-  `\textit{noise}`, `\textit{refresh}`, `\textit{throttling}`, bukan kolam,
+  `\textit{noise}`, `\textit{refresh}`, `\textit{throttling}`, `\textit{gate}`, `\textit{query}`,
+  `\textit{stale}`, `\textit{fresh}`, `\textit{copy}`, `\textit{down}`,
+  `\textit{tradeoff}`, `\textit{crash}`, `\textit{slow}`, bukan kolam,
   pemutus sirkuit, pengulangan, balapan, sumber kebenaran, pemanggilan,
   kunci-nilai, dimampatkan, papan pemantauan, jaringan pertemanan,
   dibangkitkan, galat, pekerja, benturan, cakram, simpul, derau,
-  menyegarkan, pembatasan, batasan
+  menyegarkan, pembatasan, gerbang, kueri, basi, segar, salinan, mati,
+  harga dalam arti untung rugi, menjatuhkan, batasan
   dalam arti \textit{constraint} basis data, atau rentang dalam arti
-  \textit{range} pada kueri dan penyimpanan. Judul slide dan
+  \textit{range} pada query dan penyimpanan. Judul slide dan
   judul seksi menulis istilah Inggris tegak, tanpa cetak miring. Imbuhan bahasa Indonesia pada
   istilah Inggris ditulis dengan tanda hubung, misalnya di-`\textit{commit}`
   dan di-`\textit{compress}`. Nama variabel dan fungsi di kode memakai istilah
@@ -108,7 +111,7 @@ konsekuensi praktis. Pertama, ... Kedua, ...".
 
 - Bahasa kode untuk contoh sisi server dan skrip adalah **Python**. Kode sisi
   browser tetap JavaScript atau TypeScript, karena memang berjalan di browser.
-  Perintah terminal memakai `bash`, kueri memakai SQL.
+  Perintah terminal memakai `bash`, query memakai SQL.
 
 ### 5.1 Aturan penulisan kode
 
@@ -136,7 +139,7 @@ didahulukan di atas keringkasan.
 - **Kode diperiksa sebelum dikutip.** Skrip Python lolos `pyflakes`, dan
   berkas TypeScript lolos `tsc --noEmit --strict`.
 - **Angka ajaib diberi nama** sebagai konstanta di puncak modul.
-- Kueri SQL yang panjang diangkat menjadi konstanta bernama di puncak modul,
+- Query SQL yang panjang diangkat menjadi konstanta bernama di puncak modul,
   sehingga alur fungsinya terbaca tanpa terpotong teks SQL.
 - Baris maksimum 88 karakter, agar potongannya muat di halaman B5 tanpa
   terpenggal. Baris yang dikutip ke dalam listing naskah maksimum 78 karakter,

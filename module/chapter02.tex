@@ -116,7 +116,7 @@ teks, ukuran, dan posisi tiap kolom. GPU adalah mesin cetak yang mengubah
 rancangan tersebut menjadi lembaran jadi. Pembagian ini juga menjelaskan dua hal
 lain. Pertama, jumlah proses Renderer bertambah mengikuti situs yang dibuka,
 sedangkan proses GPU cukup satu untuk seluruh browser. Kedua, kegagalan pada
-driver kartu grafis hanya menjatuhkan proses GPU. Browser tinggal menjalankan
+driver kartu grafis hanya meng-\textit{crash} proses GPU. Browser tinggal menjalankan
 ulang proses GPU tersebut, lalu meminta tiap Renderer menggambar ulang isinya.
 Halaman berkedip sesaat, tetapi seluruh tab tetap terbuka dan isian form yang
 belum dikirim tidak hilang.
@@ -159,7 +159,7 @@ dalam halaman yang sama. Gambar \ref{fig:tab-proses} menunjukkan contohnya.
 \end{figure}
 
 Aturan ini punya dua konsekuensi praktis. Pertama, jumlah tab yang banyak
-menaikkan pemakaian memori secara nyata, karena tiap proses membawa salinan
+menaikkan pemakaian memori secara nyata, karena tiap proses membawa \textit{copy}
 mesin JavaScript dan struktur datanya sendiri. Kedua, tiap proses
 \textit{renderer} punya \textit{main thread} sendiri, sehingga halaman berat di
 satu tab tidak memperlambat tab lain, selama keduanya berasal dari situs yang
@@ -310,10 +310,10 @@ Cara kerja CDN sederhana. Penyedia CDN menempatkan server titipan di banyak
 kota, termasuk Jakarta dan Singapura. Server titipan itu disebut \textit{edge
 server}, sedangkan server asli milik aplikasi disebut \textit{origin}. Nama
 domain aplikasi diarahkan ke jaringan CDN, sehingga permintaan pengguna mendarat
-di \textit{edge server} terdekat, bukan langsung ke \textit{origin}. Bila salinan
+di \textit{edge server} terdekat, bukan langsung ke \textit{origin}. Bila \textit{copy}
 berkas yang diminta sudah ada di sana, berkas langsung dikirim. Bila belum ada,
 \textit{edge server} mengambilnya sekali ke \textit{origin}, menyimpannya, lalu
-melayani permintaan berikutnya dari salinan tersebut.
+melayani permintaan berikutnya dari \textit{copy} tersebut.
 
 Analoginya seperti gudang cabang. Pembeli di Jakarta tidak perlu memesan
 langsung ke pabrik di Jerman, karena barang yang sama sudah dititipkan di gudang
@@ -1382,7 +1382,7 @@ kampus tidak mengirim header \texttt{Cache-Control} maupun \texttt{Expires}.
 Yang dikirim hanya \texttt{Last-Modified} dan \texttt{ETag}, seperti terlihat
 pada Listing \ref{lst:header-aset}. Dalam keadaan itu browser memakai
 \textit{heuristic caching}, yaitu menebak masa berlaku dari umur berkas. Berkas
-yang terakhir diubah lebih dari setahun lalu dianggap masih segar untuk waktu
+yang terakhir diubah lebih dari setahun lalu dianggap masih \textit{fresh} untuk waktu
 yang lama, sehingga permintaan berikutnya dilayani dari \textit{cache} tanpa
 menghubungi server. Perilaku ini dibahas lebih dalam pada bab \textit{caching},
 dan untuk latihan ini cukup dimatikan lewat \emph{Disable cache}.

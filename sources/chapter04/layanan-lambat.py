@@ -70,8 +70,8 @@ class PenanganOngkir(BaseHTTPRequestHandler):
     if bagian_alamat.path != "/ongkir":
       self.send_error(404)
       return
-    parameter_kueri = parse_qs(bagian_alamat.query)
-    peluang_lambat = float(parameter_kueri.get("peluang_lambat", ["0"])[0])
+    parameter_query = parse_qs(bagian_alamat.query)
+    peluang_lambat = float(parameter_query.get("peluang_lambat", ["0"])[0])
     if self.server.undi_apakah_lambat(peluang_lambat):
       time.sleep(JEDA_LAMBAT_DETIK)
     else:
