@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Menjalankan seluruh pemeriksaan mutu Bab 6, lalu memberi satu vonis.
+"""Menjalankan seluruh pemeriksaan mutu Bab 6, lalu memberi satu verdict.
 
 Lima jenis pemeriksaan dijalankan berurutan, dari yang paling murah:
 
@@ -139,7 +139,7 @@ def nyalakan_aplikasi():
 
 
 def hitung_query_alamat(alamat_server, jalur):
-  """Meminta satu alamat, lalu membaca jumlah querynya dari header jawaban.
+  """Meminta satu alamat, lalu membaca jumlah querynya dari header response.
 
   Angka ini diambil dari luar aplikasi, bukan dari membaca kodenya, sehingga
   cacat N+1 tetap terbaca walaupun kodenya sudah ditulis ulang.
@@ -147,9 +147,9 @@ def hitung_query_alamat(alamat_server, jalur):
   host, port = alamat_server
   koneksi = HTTPConnection(host, port, timeout=BATAS_WAKTU_HTTP_DETIK)
   koneksi.request("GET", jalur)
-  jawaban = koneksi.getresponse()
-  jawaban.read()
-  jumlah = int(jawaban.getheader("X-Query-Count"))
+  response = koneksi.getresponse()
+  response.read()
+  jumlah = int(response.getheader("X-Query-Count"))
   koneksi.close()
   return jumlah
 
@@ -177,20 +177,20 @@ def nilai_seluruh_alamat(daftar_batas):
 
 
 def cetak_baris(baris):
-  """Mencetak satu baris penilaian, lengkap dengan vonisnya."""
+  """Mencetak satu baris penilaian, lengkap dengan verdict-nya."""
   nama, batas, terukur, satuan, lolos = baris
   teks_terukur = "gagal jalan" if terukur is None else f"{terukur} {satuan}"
-  vonis = "lolos" if lolos else "LANGGAR"
+  verdict = "lolos" if lolos else "LANGGAR"
   print(f"  {nama:<{LEBAR_NAMA}} {batas:>8} {satuan:<3} "
-        f"{teks_terukur:>14}  {vonis}")
+        f"{teks_terukur:>14}  {verdict}")
 
 
 def main():
-  """Menjalankan seluruh pemeriksaan, mencetak tabelnya, lalu memberi vonis."""
+  """Menjalankan seluruh pemeriksaan, mencetak tabelnya, lalu memberi verdict."""
   nama_file = sys.argv[1] if len(sys.argv) > 1 else FILE_MUTU_BAWAAN
   mutu = baca_mutu(nama_file)
   print(f"  {'Pemeriksaan':<{LEBAR_NAMA}} {'Batas':>8}     {'Terukur':>14}"
-        "  Vonis")
+        "  Verdict")
 
   daftar_baris = []
   for lapisan in mutu["lapisan_pengujian"]:

@@ -451,3 +451,7 @@ videos
 
 # Pengaturan lokal Claude Code, berisi jalur absolut komputer sendiri
 .claude/
+
+# Hasil sementara Playwright
+test-results/
+playwright-report/

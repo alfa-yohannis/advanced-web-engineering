@@ -45,8 +45,8 @@ class KlienBiayaKirim:
     koneksi = HTTPConnection(self.host, self.port, timeout=BATAS_WAKTU_DETIK)
     jalur = f"/tarif?kode_pos={kode_pos}&berat_gram={berat_gram}"
     koneksi.request("GET", jalur)
-    jawaban = koneksi.getresponse()
-    isi = json.loads(jawaban.read())
+    response = koneksi.getresponse()
+    isi = json.loads(response.read())
     koneksi.close()
     return int(isi["tarif_rupiah"])
 

@@ -117,7 +117,7 @@ def ambil_pesanan_n_plus_1(koneksi, id_pesanan, penghitung):
   Judul tiap buku diambil lewat query tersendiri, sehingga jumlah querynya
   satu ditambah sebanyak itemnya. Hasilnya sama persis dengan ambil_pesanan,
   dan justru itulah masalahnya: pengujian yang hanya membandingkan isi
-  jawaban tidak akan menangkap cacat ini.
+  response tidak akan menangkap cacat ini.
   """
   baris_pesanan = jalankan_query(koneksi, SQL_PESANAN, (id_pesanan,),
                                  penghitung)
