@@ -13,7 +13,7 @@
 const ALAMAT_KATALOG = "/api/katalog?halaman=1&ukuran=20";
 /**
  * Membuat satu baris katalog sebagai elemen, tanpa menyentuh dokumen.
- * @param buku satu baris jawaban katalog
+ * @param buku satu baris response katalog
  * @returns elemen baris yang siap dimasukkan ke fragment
  */
 function buatBaris(buku) {
@@ -30,8 +30,8 @@ async function muatKatalog() {
     if (wadah === null) {
         return;
     }
-    const jawaban = await fetch(ALAMAT_KATALOG);
-    const daftarBuku = (await jawaban.json());
+    const response = await fetch(ALAMAT_KATALOG);
+    const daftarBuku = (await response.json());
     const fragment = document.createDocumentFragment();
     for (const buku of daftarBuku) {
         fragment.appendChild(buatBaris(buku));

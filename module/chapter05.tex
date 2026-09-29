@@ -3,15 +3,15 @@
 
 \section*{Tujuan Pembelajaran}
 \begin{itemize}
-  \item Menetapkan anggaran performa berupa angka, yaitu p95 tiap alamat,
-        ukuran jawaban, dan ambang Core Web Vitals, lalu menegakkannya sebagai
+  \item Menetapkan \textit{budget} performa berupa angka, yaitu p95 tiap alamat,
+        \textit{response size}, dan ambang Core Web Vitals, lalu menegakkannya sebagai
         \textit{gate} otomatis.
   \item Mengukur aplikasi di bawah beban memakai \textit{load generator},
         lalu membaca titik jenuh dari hubungan antara konkurensi,
-        \textit{throughput}, dan latensi.
+        \textit{throughput}, dan \textit{latency}.
   \item Menemukan bagian termahal lewat \textit{profiling}, lalu membedakan
         perbaikan yang menyentuh sebabnya dari perbaikan yang hanya menyentuh
-        gejalanya.
+        \textit{symptom}-nya.
 \end{itemize}
 
 \section{Pendahuluan}
@@ -23,47 +23,49 @@ menyatakan kapan sebuah aplikasi dinyatakan cukup cepat. Tanpa aturan itu,
 perbaikan performa berhenti ketika seseorang merasa sudah cukup, bukan ketika
 angkanya tercapai.
 
-Anggaran performa mengisi kekosongan tersebut. Anggaran adalah sekumpulan
+\textit{Budget} performa mengisi kekosongan tersebut. \textit{Budget} adalah sekumpulan
 angka yang disepakati lebih dahulu, misalnya p95 satu alamat tidak boleh
-melewati 60 milidetik dan jawabannya tidak boleh melewati 8 kibibyte.
+melewati 60 milidetik dan \textit{response}-nya tidak boleh melewati 8 kibibyte.
 Sesudahnya, pertanyaan "apakah perubahan ini boleh digabungkan" dijawab oleh
-pengukuran, bukan oleh pendapat. Bab ini memasang anggaran itu sebagai
+pengukuran, bukan oleh pendapat. Bab ini memasang \textit{budget} itu sebagai
 \textit{gate} yang benar-benar memblokir, lengkap dengan status keluar yang
 dapat dibaca \textit{Continuous Integration}.
 
-Pembahasan berjalan dalam satu putaran yang berulang: menetapkan anggaran,
+Pembahasan berjalan dalam satu siklus yang berulang: menetapkan \textit{budget},
 mengukur di bawah beban, mencari bagian termahal lewat \textit{profiling},
 memperbaiki, lalu mengukur ulang. Referensi utamanya adalah ambang Core Web
-Vitals dari Google \cite{webdev-vitals}, praktik anggaran performa
+Vitals dari Google \cite{webdev-vitals}, praktik \textit{budget} performa
 \cite{webdev-budget}, serta metode pengukuran sistem dari Gregg
 \cite{gregg2020systems} untuk membaca hubungan antara beban, \textit{throughput},
 dan waktu tunggu.
 
-\section{Anggaran Performa}
+\section{Budget Performa}
 
-Anggaran performa adalah daftar angka yang tidak boleh dilewati, ditulis di
-satu berkas dan diperlakukan seperti kode. Isinya tiga jenis batas. Pertama,
-latensi sisi server pada persentil tertentu, biasanya p95, karena rata-rata
-menyembunyikan pengalaman terburuk. Kedua, ukuran jawaban di kabel, karena
+\textit{Budget} performa adalah daftar angka yang tidak boleh dilewati, ditulis di
+satu file dan diperlakukan seperti kode. Isinya tiga jenis batas. Pertama,
+\textit{latency} sisi server pada persentil tertentu, biasanya p95, karena rata-rata
+menyembunyikan pengalaman terburuk. Kedua, \textit{response size} di kabel, karena
 byte yang dikirim menentukan waktu di jaringan yang lambat. Ketiga, ambang
 Core Web Vitals, karena itulah yang benar-benar dirasakan pengguna di browser
-\cite{webdev-vitals}.
+\cite{webdev-vitals}. Core Web Vitals berisi tiga ukuran, yaitu Largest
+Contentful Paint (LCP), Interaction to Next Paint (INP), dan Cumulative
+Layout Shift (CLS).
 
-Analoginya seperti anggaran belanja kepanitiaan. Angkanya ditetapkan sebelum
+Analoginya seperti \textit{budget} belanja kepanitiaan. Angkanya ditetapkan sebelum
 belanja dimulai, bukan sesudah nota menumpuk. Setiap pengeluaran baru harus
 muat di dalam pagu, dan bila tidak muat, ada pengeluaran lain yang harus
-dipangkas. Anggaran performa bekerja dengan cara yang sama: fitur baru boleh
+dipangkas. \textit{Budget} performa bekerja dengan cara yang sama: fitur baru boleh
 menambah waktu, asalkan masih muat, atau ada bagian lain yang dipercepat
 lebih dahulu.
 
-Tabel \ref{tab:anggaran} memuat anggaran yang dipakai bab ini, apa adanya
-seperti tertulis di \berkas{sources/chapter05/anggaran.json}.
+Tabel \ref{tab:budget} memuat \textit{budget} yang dipakai bab ini, apa adanya
+seperti tertulis di \berkas{sources/chapter05/budget.json}.
 
 \begin{table}[!htb]
   \centering
-  \caption{Anggaran performa Bab 5, dinilai pada 8 \textit{worker} dengan 25
+  \caption{\textit{Budget} performa Bab 5, dinilai pada 8 \textit{worker} dengan 25
            permintaan tiap \textit{worker}}
-  \label{tab:anggaran}
+  \label{tab:budget}
   \begin{tabularx}{\textwidth}{lXrr}
     \hline
     \textbf{Alamat} & \textbf{Isinya} & \textbf{p95} & \textbf{Ukuran} \\
@@ -79,7 +81,7 @@ seperti tertulis di \berkas{sources/chapter05/anggaran.json}.
   \end{tabularx}
 \end{table}
 
-Dua hal pada anggaran sering tertukar. Pembagiannya begini. Angka lab diukur
+Dua hal pada \textit{budget} sering tertukar. Pembagiannya begini. Angka lab diukur
 di komputer sendiri dengan beban buatan, sehingga dapat diulang dan dipakai
 sebagai \textit{gate} sebelum kode digabungkan. Angka lapangan dikumpulkan dari
 kunjungan nyata, sehingga memuat perangkat dan jaringan pengguna yang
@@ -87,7 +89,7 @@ sesungguhnya. Core Web Vitals dinilai pada persentil 75 dari kunjungan nyata
 \cite{webdev-vitals}, dan karena itu bab ini mengumpulkannya lewat
 \textit{JavaScript} di halaman, bukan lewat alat ukur di sisi server.
 
-Gambar \ref{fig:gate} memperlihatkan tempat anggaran bekerja di dalam alur
+Gambar \ref{fig:gate} memperlihatkan tempat \textit{budget} bekerja di dalam alur
 pengembangan.
 
 \begin{figure}[!htb]
@@ -100,7 +102,7 @@ pengembangan.
   ]
     \node[kotak, fill=blue!8] (ubah) at (0,0) {Perubahan\\kode};
     \node[kotak, fill=blue!8] (ukur) at (3.1,0) {Ukur beban\\{\tiny\mdseries beban.py}};
-    \node[kotak, fill=orange!12] (nilai) at (6.2,0) {Nilai anggaran\\{\tiny\mdseries anggaran.json}};
+    \node[kotak, fill=orange!12] (nilai) at (6.2,0) {Nilai budget\\{\tiny\mdseries budget.json}};
     \node[kotak, fill=green!10] (gabung) at (9.6,0.9) {Status 0\\{\tiny\mdseries boleh digabung}};
     \node[kotak, fill=red!22] (tolak) at (9.6,-0.9) {Status 1\\{\tiny\mdseries merge diblokir}};
 
@@ -111,7 +113,7 @@ pengembangan.
     \node[font=\tiny, gray, anchor=east] at (7.7,0.72) {seluruh batas muat};
     \node[font=\tiny, gray, anchor=east] at (7.7,-0.72) {ada batas terlampaui};
   \end{tikzpicture}
-  \caption{Anggaran dinilai pada tiap perubahan, dan vonisnya dibaca
+  \caption{\textit{Budget} dinilai pada tiap perubahan, dan \textit{verdict}-nya dibaca
            \textit{Continuous Integration} sebagai status keluar}
   \label{fig:gate}
 \end{figure}
@@ -138,6 +140,24 @@ function kirimLaporan(): void {
 }
 \end{lstlisting}
 
+Nama \texttt{startTime} mudah disalahpahami sebagai waktu penggambaran
+dimulai. Nama itu diwarisi dari \texttt{PerformanceEntry}, antarmuka yang
+dipakai seluruh jenis entri, sehingga namanya sengaja umum: tiap entri hanya
+punya \texttt{startTime} dan \texttt{duration}. Pada LCP, \texttt{duration}
+selalu nol karena peristiwanya sesaat, dan \texttt{startTime} berisi waktu
+elemen terbesar tergambar, dihitung sejak navigasi dimulai. Spesifikasinya
+menyediakan nama yang lebih jelas, yaitu \texttt{renderTime} dan
+\texttt{loadTime}, tetapi \texttt{renderTime} bernilai nol untuk gambar lintas
+domain tanpa header \texttt{Timing-Allow-Origin}, sedangkan \texttt{startTime}
+otomatis memilih salah satunya \cite{w3c-lcp}. Header
+\texttt{Timing-Allow-Origin} dikirim oleh server pemilik gambar, dan isinya
+menyatakan halaman mana yang boleh membaca rincian waktu gambar tersebut.
+Tanpa header itu browser menyembunyikan rinciannya, karena waktu memuat
+sumber milik domain lain dapat dipakai menebak keadaan di domain tersebut.
+INP menempuh jalan berbeda
+karena memang berupa selisih dua titik waktu, sehingga dibaca dari
+\texttt{duration}.
+
 Laporan dikirim saat halaman ditinggalkan, bukan saat selesai dimuat. Alasannya
 satu: INP baru diketahui setelah pengguna sempat berinteraksi, dan CLS masih
 dapat bertambah sampai halaman ditutup. Pengiriman memakai
@@ -147,8 +167,9 @@ tabnya sudah ditutup.
 \section{Metodologi Profiling}
 
 Aturan pertama \textit{profiling} adalah mengukur lebih dahulu, baru
-memperbaiki. Tanpa itu, yang diperbaiki adalah bagian yang paling mudah
-ditebak, bukan bagian yang paling mahal. Aturan kedua, ukur pada tempat yang
+memperbaiki. Tanpa pengukuran, bagian yang diperbaiki biasanya bagian yang
+dianggap penyebab turunnya performa. Anggapan itu tidak selalu benar, dan
+bila keliru, kodenya berubah sedangkan waktunya tetap. Aturan kedua, ukur pada tempat yang
 tepat. Angka yang dirasakan klien dan angka yang terlihat di dalam server
 dapat berbeda jauh, dan selisihnya justru sering menjadi petunjuk terpenting.
 
@@ -162,42 +183,65 @@ def kerjakan_katalog_penuh(pool_koneksi):
   return json.dumps(ambil_katalog_penuh(pool_koneksi)).encode()
 
 
+PEKERJAAN_PER_NAMA = {
+    "katalog-penuh": kerjakan_katalog_penuh,
+    "katalog": kerjakan_katalog,
+    "terlaris": kerjakan_terlaris,
+}
+
+
 def ulangi_pekerjaan(pekerjaan, pool_koneksi, jumlah_ulangan):
   """Menjalankan satu pekerjaan berulang kali, lalu melaporkan ukuran akhirnya.
 
   Diulang agar waktu tiap fungsi terkumpul cukup banyak untuk dibandingkan,
   bukan tenggelam oleh derajat ketelitian pengukur waktunya.
   """
-  isi_jawaban = b""
+  isi_response = b""
   for _ in range(jumlah_ulangan):
-    isi_jawaban = pekerjaan(pool_koneksi)
-  return isi_jawaban
+    isi_response = pekerjaan(pool_koneksi)
+  return isi_response
 \end{lstlisting}
 
+Fungsi \texttt{kerjakan\_katalog\_penuh} tidak pernah disebut namanya di dalam
+\texttt{ulangi\_pekerjaan}. Fungsi itu dikirim sebagai argumen bernama
+\texttt{pekerjaan}, diambil dari \texttt{PEKERJAAN\_PER\_NAMA} menurut argumen
+baris perintah, lalu dijalankan \texttt{profil.runcall}. Cara ini membuat
+ketiga alamat diprofil oleh kode yang sama persis.
+
+Alamat yang diprofil pertama adalah \texttt{/api/katalog-penuh}, yaitu alamat
+yang dipanggil browser ketika pengunjung membuka halaman katalog, dan yang
+menjawab dengan seluruh 50.000 baris buku sekaligus.
 Tabel \ref{tab:profil} memuat hasilnya untuk alamat katalog penuh, 20 ulangan,
 diurutkan menurut waktu kumulatif.
 
 \begin{table}[!htb]
   \centering
-  \caption{Fungsi termahal pada alamat katalog penuh, 20 ulangan, hasil
-           \texttt{cProfile}}
+  \caption{Profil alamat \texttt{/api/katalog-penuh}, diurutkan menurut
+           jalannya program, 20 ulangan atas 50.000 baris}
   \label{tab:profil}
-  \begin{tabularx}{\textwidth}{Xrr}
+  \begin{tabularx}{\textwidth}{cXlrr}
     \hline
-    \textbf{Fungsi} & \textbf{Kumulatif} & \textbf{Bagian} \\
+    \textbf{Urutan} & \textbf{Fungsi} & \textbf{Habis di} & \textbf{Kumulatif} & \textbf{Bagian} \\
     \hline
-    Seluruh pekerjaan satu alamat & 7,52 s & 100\% \\
+    1 & Seluruh pekerjaan satu alamat & keduanya & 7,52 s & 100\% \\
     \hline
-    \texttt{ambil\_katalog\_penuh}, \textit{query} dan pembentukan kamus & 5,10 s & 68\% \\
+    2 & \texttt{ambil\_katalog\_penuh}, \textit{query} dan pembentukan kamus & keduanya & 5,10 s & 68\% \\
     \hline
-    \texttt{json.dumps}, serialisasi jawaban & 1,99 s & 26\% \\
+    2a & \quad \texttt{fetchall}, memindahkan baris ke memori & basis data & 1,28 s & 17\% \\
     \hline
-    \texttt{baris\_menjadi\_kamus}, dipanggil 1.000.000 kali & 1,61 s & 21\% \\
+    2b & \quad \texttt{baris\_menjadi\_kamus}, dipanggil 1.000.000 kali & aplikasi & 1,61 s & 21\% \\
     \hline
-    \texttt{fetchall}, memindahkan baris ke memori & 1,28 s & 17\% \\
+    3 & \texttt{json.dumps}, serialisasi \textit{response} & aplikasi & 1,99 s & 26\% \\
     \hline
   \end{tabularx}
 \end{table}
+
+Tabel tersebut dibaca menurut urutan jalannya program, bukan menurut
+besarnya angka. Baris 2a dan 2b berada di dalam baris 2, sehingga waktunya
+sudah ikut terhitung pada 5,10 detik. Karena itu persentasenya tidak
+berjumlah 100 persen: angka kumulatif memang menghitung waktu fungsi beserta
+seluruh isinya. Angka 1.000.000 panggilan berasal dari 20 ulangan dikalikan
+50.000 baris.
 
 Angka tersebut menjawab pertanyaan yang benar. Waktu tidak habis di \textit{query}-nya,
 melainkan di memindahkan dan mengubah 50.000 baris menjadi teks. \textit{Query} yang
@@ -205,26 +249,101 @@ lebih pintar tidak akan menolong, karena yang mahal adalah jumlah barisnya.
 Perbaikan yang menyentuh sebabnya hanya satu, yaitu mengirim lebih sedikit
 baris.
 
-Profil alamat agregat memberi gambaran yang berbeda. Dari 3,89 detik untuk 20
-ulangan, 3,84 detik atau 99 persen dihabiskan di \texttt{connection.wait},
-yaitu menunggu jawaban basis data. Di sana tidak ada yang dapat diperbaiki di
-kode aplikasi. Yang tersisa adalah memperbaiki \textit{query}-nya seperti Bab 3, atau
-menyimpan hasilnya seperti Bab 4.
+Alamat kedua adalah \texttt{/api/terlaris}, yaitu alamat halaman buku
+terlaris yang menghitung penjualan 30 hari terakhir dan menjawab dengan
+sepuluh baris saja. Profilnya memberi gambaran yang berbeda, seperti pada
+Tabel \ref{tab:profil-agregat}. Di sana tidak ada yang dapat diperbaiki di kode
+aplikasi, karena kode aplikasinya hanya kebagian satu persen. Yang tersisa
+adalah memperbaiki \textit{query}-nya seperti Bab 3, atau menyimpan hasilnya
+seperti Bab 4.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Profil alamat agregat, 20 ulangan atas 10 baris hasil, hasil
+           \texttt{cProfile}}
+  \label{tab:profil-agregat}
+  \begin{tabularx}{\textwidth}{Xlrr}
+    \hline
+    \textbf{Fungsi} & \textbf{Waktunya habis di} & \textbf{Kumulatif} & \textbf{Bagian} \\
+    \hline
+    Seluruh pekerjaan satu alamat & keduanya & 3,89 s & 100\% \\
+    \hline
+    \texttt{connection.wait}, menunggu \textit{response} & basis data & 3,84 s & 99\% \\
+    \hline
+    Sisanya, seluruh kode aplikasi & aplikasi & 0,05 s & 1\% \\
+    \hline
+  \end{tabularx}
+\end{table}
 
 \subsection*{Ketika klien dan server tidak sepakat}
 
 Profil sisi server untuk alamat katalog berhalaman menunjukkan pekerjaan yang
 sangat ringan, di bawah satu milidetik. Namun \textit{load generator} justru
 mencatat 43,06 milidetik pada satu \textit{worker}. Selisih sebesar itu tidak
-mungkin berasal dari kode yang sudah diprofil.
+mungkin berasal dari kode yang sudah diprofil. Gambar \ref{fig:nagle}
+memperlihatkan di mana selisih itu berada.
 
-Penyebabnya ada di lapisan transport. Header dan isi jawaban ditulis sebagai
-dua segmen TCP yang terpisah. Algoritma Nagle \cite{rfc896} menahan segmen
+\begin{figure}[!htb]
+  \centering
+  \begin{tikzpicture}[font=\scriptsize]
+    \node[anchor=east, font=\scriptsize\bfseries] at (-0.15,1.1) {Klien};
+    \draw[fill=blue!8] (0,0.8) rectangle (10,1.4);
+    \node at (5,1.1) {menunggu \textit{response}: 43,06 ms};
+
+    \node[anchor=east, font=\scriptsize\bfseries] at (-0.15,0.15) {Server};
+    \draw[fill=orange!25] (0,-0.15) rectangle (0.7,0.45);
+    \draw[fill=red!22] (0.7,-0.15) rectangle (9.3,0.45);
+    \draw[fill=green!10] (9.3,-0.15) rectangle (10,0.45);
+    \node[font=\tiny, align=center] at (5,0.15)
+      {segmen kedua tertahan Nagle sampai ACK tiba, sekitar 40 ms};
+
+    \node[font=\tiny, anchor=north] at (0.35,-0.25) {kerja};
+    \node[font=\tiny, anchor=north] at (0.35,-0.62) {0,58 ms};
+    \node[font=\tiny, anchor=north] at (9.65,-0.25) {isi};
+    \node[font=\tiny, anchor=north] at (9.65,-0.62) {terkirim};
+    \draw[-{Stealth[length=2mm]}, thick] (0.35,-1.15) -- (0.35,-0.85);
+    \node[font=\tiny, anchor=north, align=center] at (2.2,-1.15)
+      {hanya kotak ini yang terlihat \texttt{cProfile}};
+  \end{tikzpicture}
+  \caption{Profiler hanya melihat kerja aplikasi, sedangkan klien ikut
+           menunggu tambahan tetap dari lapisan transport}
+  \label{fig:nagle}
+\end{figure}
+
+Penyebabnya ada di lapisan transport, dan berasal dari dua aturan yang
+sendiri-sendiri masuk akal. Algoritma Nagle \cite{rfc896} mencegah jaringan
+dibanjiri paket kerdil: data satu byte tetap menanggung sekitar 40 byte
+header, sehingga tulisan kecil ditahan sampai data sebelumnya menerima tanda
+terima, atau sampai terkumpul satu segmen penuh. Delayed ACK
+\cite{rfc1122} menekan jumlah paket tanda terima: penerima menunda ACK sampai
+sekitar 40 milidetik, berharap dapat menumpangkannya pada data balasan.
+Keduanya lahir di zaman jaringan lambat dan memang menghemat, sampai
+keduanya bertemu.
+
+Pada aplikasi ini, header dan isi \textit{response} ditulis sebagai
+dua segmen Transmission Control Protocol (TCP) yang terpisah. Nagle menahan segmen
 kecil kedua sampai segmen pertama menerima ACK (\textit{acknowledge}),
 yaitu tanda terima dari penerima, sedangkan penerima menunda
 ACK-nya. Keduanya bertemu pada tambahan tetap sekitar 40 milidetik untuk tiap
-jawaban kecil. Tabel \ref{tab:nagle} memuat pengukuran sebelum dan sesudah
-soketnya disetel dengan \texttt{TCP\_NODELAY}.
+\textit{response} kecil. Angka 40 milidetik itu bukan angka HTTP dan bukan angka
+aplikasi, melainkan timer \textit{delayed ACK} milik sistem operasi. Di Linux
+batas terkecilnya 40 milidetik dan batas terbesarnya 200 milidetik, sedangkan
+standarnya hanya menetapkan paling lama 500 milidetik \cite{rfc1122}. Karena
+pengirim menunggu ACK dan penerima menahan ACK selama timer itu, \textit{response}
+kecil menanggung persis selama timernya.
+
+Penundaan tersebut disengaja penerima, bukan akibat jaringan yang lambat.
+Buktinya ada pada penyiapan pengukurannya sendiri: klien dan server berjalan
+di komputer yang sama lewat \textit{localhost}, yang perjalanan
+pulang-perginya hanya 0,049 milidetik pada komputer uji. Jaringan secepat itu
+tidak mungkin menyumbang 40 milidetik, sehingga yang tersisa hanya timer di
+sisi penerima. \texttt{TCP\_NODELAY} adalah opsi soket yang mematikan Nagle untuk satu
+koneksi, sehingga tulisan kecil langsung dikirim tanpa menunggu ACK. Pada
+Python, opsi itu dipasang dengan menyetel \texttt{disable\_nagle\_algorithm}
+menjadi \texttt{True} pada kelas penangan permintaan. Obat lainnya bersifat
+struktural, yaitu menulis header dan isi sekali jalan sehingga segmennya
+memang hanya satu. Tabel \ref{tab:nagle} memuat pengukuran sebelum dan
+sesudah soketnya disetel.
 
 \begin{table}[!htb]
   \centering
@@ -247,27 +366,27 @@ soketnya disetel dengan \texttt{TCP\_NODELAY}.
 \end{table}
 
 Baris terakhir sengaja dibiarkan apa adanya. Alamat katalog penuh tidak
-membaik, dan memang tidak seharusnya membaik, karena jawabannya besar sehingga
+membaik, dan memang tidak seharusnya membaik, karena \textit{response}-nya besar sehingga
 segmennya tidak pernah kecil. Tambahan tetap 40 milidetik hanya terasa pada
-jawaban kecil, dan justru di sanalah ia paling merusak: alamat yang
+\textit{response} kecil, dan justru di sanalah ia paling merusak: alamat yang
 seharusnya di bawah satu milidetik menjadi puluhan kali lipat lebih lambat.
 
-\section{Ukuran Jawaban dan Analisis Bundle}
+\section{Ukuran Response dan Analisis Bundle}
 
 Waktu yang dirasakan pengguna tidak hanya ditentukan kecepatan server, tetapi
 juga banyaknya byte yang harus melintas. Pada jaringan 4G yang lambat, satu
 megabyte tambahan berarti detik tambahan, berapa pun cepatnya basis data.
-Karena itu anggaran memuat batas ukuran, bukan hanya batas waktu.
+Karena itu \textit{budget} memuat batas ukuran, bukan hanya batas waktu.
 
-Tabel \ref{tab:ukuran-jawaban} memuat ukuran jawaban ketiga alamat, diukur
+Tabel \ref{tab:ukuran-response} memuat \textit{response size} ketiga alamat, diukur
 dengan \texttt{curl}, dalam dua keadaan: tanpa \textit{compress} dan dengan
 \texttt{Accept-Encoding: gzip}.
 
 \begin{table}[!htb]
   \centering
-  \caption{Ukuran jawaban di kabel, hasil pengukuran nyata dengan
+  \caption{\textit{Response size} di kabel, hasil pengukuran nyata dengan
            \texttt{curl}}
-  \label{tab:ukuran-jawaban}
+  \label{tab:ukuran-response}
   \begin{tabularx}{\textwidth}{Xrrr}
     \hline
     \textbf{Alamat} & \textbf{Tanpa gzip} & \textbf{Dengan gzip} & \textbf{Rasio} \\
@@ -281,28 +400,28 @@ dengan \texttt{curl}, dalam dua keadaan: tanpa \textit{compress} dan dengan
   \end{tabularx}
 \end{table}
 
-Baris tengah tampak janggal, dan memang disengaja. Jawaban 557 byte tidak
+Baris tengah tampak janggal, dan memang disengaja. \textit{Response} 557 byte tidak
 di-\textit{compress} sama sekali, karena aplikasi hanya meng-\textit{compress}
-jawaban yang lebih besar dari 1.024 byte. Pada jawaban sekecil itu, gzip
+\textit{response} yang lebih besar dari 1.024 byte. Pada \textit{response} sekecil itu, gzip
 menambah header dan waktu pemrosesan, sementara byte yang dihemat tidak
 seberapa. Listing \ref{lst:compress} memperlihatkan aturannya.
 
-\begin{lstlisting}[style=PythonStyle, caption={Aturan kapan jawaban di-compress, tersedia di \berkas{sources/chapter05/aplikasi.py}}, label={lst:compress}]
-def compress_bila_diminta(isi_jawaban, nilai_accept_encoding):
-  """Meng-compress isi jawaban bila klien menerima gzip dan isinya cukup besar.
+\begin{lstlisting}[style=PythonStyle, caption={Aturan kapan response di-compress, tersedia di \berkas{sources/chapter05/aplikasi.py}}, label={lst:compress}]
+def compress_bila_diminta(isi_response, nilai_accept_encoding):
+  """Meng-compress isi response bila klien menerima gzip dan isinya cukup besar.
 
-  Mengembalikan pasangan (isi, nilai Content-Encoding atau None). Jawaban
+  Mengembalikan pasangan (isi, nilai Content-Encoding atau None). Response
   kecil dibiarkan apa adanya, karena gzip justru menambah byte dan waktu.
   """
   menerima_gzip = "gzip" in (nilai_accept_encoding or "")
-  if not menerima_gzip or len(isi_jawaban) < BATAS_COMPRESS_BYTE:
-    return isi_jawaban, None
-  return gzip.compress(isi_jawaban), "gzip"
+  if not menerima_gzip or len(isi_response) < BATAS_COMPRESS_BYTE:
+    return isi_response, None
+  return gzip.compress(isi_response), "gzip"
 \end{lstlisting}
 
 Baris terakhir tabel memberi pelajaran yang lebih keras. Rasio 15 kali lipat
 memang mengesankan, tetapi 281.905 byte tetap 34 kali lipat lebih besar
-daripada anggaran 8 kibibyte. \textit{Compress} memperkecil gejala, sedangkan
+daripada \textit{budget} 8 kibibyte. \textit{Compress} memperkecil \textit{symptom}, sedangkan
 sebabnya adalah jumlah baris yang dikirim. Perbaikan yang benar memotong
 jumlah barisnya, dan itulah yang dilakukan alamat katalog berhalaman.
 
@@ -312,11 +431,24 @@ Aturan yang sama berlaku untuk kode yang dikirim ke browser. Tiap kilobyte
 JavaScript harus diunduh, di-\textit{parse}, lalu dijalankan, dan ketiganya
 menunda interaksi pertama. Karena itu ukuran \textit{bundle} ikut dianggarkan.
 
-Tiga cara menekan ukurannya dipakai bersama. \textit{Tree shaking} membuang
-kode yang tidak pernah dipanggil saat \textit{bundle} disusun. \textit{Code
-splitting} memecah \textit{bundle} menurut halaman atau fitur, sehingga
-halaman katalog tidak ikut mengunduh kode halaman laporan. \textit{Lazy
-loading} menunda pengunduhan potongan itu sampai benar-benar dibutuhkan.
+Tiga cara menekan ukurannya dipakai bersama, dan masing-masing punya bentuk
+yang mudah dikenali di kode:
+
+\begin{enumerate}
+  \item \textit{Tree shaking} membuang kode yang tidak pernah dipanggil saat
+        \textit{bundle} disusun. Menulis
+        \texttt{import \{ format \} from "date-fns"} hanya memasukkan fungsi
+        \texttt{format}, sedangkan ratusan fungsi lain di pustaka itu tidak
+        ikut terbawa.
+  \item \textit{Code splitting} memecah \textit{bundle} menurut halaman atau
+        fitur. Kode halaman katalog dan kode halaman laporan dibangun menjadi
+        dua file terpisah, sehingga pengunjung katalog tidak ikut mengunduh
+        kode grafik laporan.
+  \item \textit{Lazy loading} menunda pengunduhan potongan itu sampai
+        benar-benar dibutuhkan. Baris
+        \texttt{await import("./grafik.js")} dijalankan ketika tombol Lihat
+        grafik ditekan, bukan ketika halaman dimuat.
+\end{enumerate}
 
 Halaman demo bab ini memuat dua modul terpisah, dan Tabel
 \ref{tab:ukuran-bundle} memuat ukurannya. Pemisahan itu sendiri sudah
@@ -325,27 +457,27 @@ tidak punya katalog cukup memuat modul pengukurnya saja.
 
 \begin{table}[!htb]
   \centering
-  \caption{Ukuran berkas halaman demo sesudah dikompilasi, hasil pengukuran
+  \caption{Ukuran file halaman demo sesudah dikompilasi, hasil pengukuran
            nyata}
   \label{tab:ukuran-bundle}
   \begin{tabularx}{\textwidth}{Xrr}
     \hline
-    \textbf{Berkas} & \textbf{Apa adanya} & \textbf{Dengan gzip} \\
+    \textbf{File} & \textbf{Apa adanya} & \textbf{Dengan gzip} \\
     \hline
     \berkas{statis/index.html} & 832 B & 482 B \\
     \hline
-    \berkas{statis/web-vitals.js} & 2.615 B & 1.156 B \\
+    \berkas{statis/web-vitals.js} & 2.610 B & 1.152 B \\
     \hline
-    \berkas{statis/katalog.js} & 1.591 B & 817 B \\
+    \berkas{statis/katalog.js} & 1.594 B & 817 B \\
     \hline
-    Seluruh JavaScript halaman & 4.206 B & 1.697 B \\
+    Seluruh JavaScript halaman & 4.204 B & 1.698 B \\
     \hline
   \end{tabularx}
 \end{table}
 
 Angka tersebut kecil karena halamannya memang kecil. Yang perlu dibawa bukan
 angkanya, melainkan kebiasaannya: ukuran \textit{bundle} diukur pada tiap
-perubahan, lalu dibandingkan dengan anggaran, persis seperti latensi.
+perubahan, lalu dibandingkan dengan \textit{budget}, persis seperti \textit{latency}.
 
 \section{Lazy Loading serta Optimasi Gambar dan Font}
 
@@ -360,11 +492,11 @@ murah:
   \item Ukuran gambar disesuaikan dengan ukuran tampilnya. Gambar 2.000 piksel
         yang ditampilkan selebar 400 piksel membuang sekitar 96 persen
         pikselnya.
-  \item Format modern dipakai, misalnya WebP atau AVIF, yang pada mutu setara
-        menghasilkan berkas jauh lebih kecil daripada JPEG
-        \cite{webdev-gambar}.
+  \item Format modern dipakai, misalnya WebP atau AV1 Image File Format (AVIF), yang pada mutu setara
+        menghasilkan file jauh lebih kecil daripada Joint Photographic Experts
+        Group (JPEG) \cite{webdev-gambar}.
   \item Gambar di luar layar pertama ditunda dengan atribut
-        \texttt{loading="lazy"}, sehingga tidak ikut berebut pita dengan
+        \texttt{loading="lazy"}, sehingga tidak ikut berebut \textit{bandwidth} dengan
         gambar yang menentukan LCP.
   \item Font diberi \texttt{font-display: swap} agar teks tampil memakai font
         cadangan lebih dahulu, dan hanya varian yang dipakai yang diunduh.
@@ -388,7 +520,7 @@ seluruh datanya siap. Akibatnya pengguna menatap layar kosong selama server
 bekerja. \textit{Streaming} mengubah urutannya: bagian yang sudah siap
 dikirim lebih dahulu, sedangkan bagian yang masih dihitung menyusul dalam
 potongan berikutnya. Mekanismenya adalah \textit{chunked transfer encoding}
-milik HTTP/1.1 \cite{rfc9112}.
+milik HyperText Transfer Protocol (HTTP) versi 1.1 \cite{rfc9112}.
 
 Analoginya seperti menyajikan makanan di kantin. Cara pertama menunggu seluruh
 pesanan matang, baru semuanya diantar sekaligus. Cara kedua mengantar yang
@@ -445,7 +577,7 @@ pengalaman menunggu, sedangkan pekerjaannya tetap sama.
 Bab 3 menyetel \textit{query} lewat indeks, dan Bab 4 menghindari perhitungan berulang
 lewat \textit{cache}. Bab ini menambahkan satu penyetelan yang sering
 terlewat, yaitu memutuskan berapa banyak baris yang pantas dikirim dalam satu
-jawaban.
+\textit{response}.
 
 Tabel \ref{tab:katalog} membandingkan dua alamat yang menjawab kebutuhan yang
 sama, yaitu menampilkan katalog. Yang pertama mengirim satu halaman berisi 20
@@ -466,7 +598,7 @@ baris, yang kedua mengirim seluruh 50.000 baris.
     \hline
     \textit{Throughput}, permintaan per detik & 811,8 & 3,5 & 232$\times$ \\
     \hline
-    Ukuran jawaban di kabel & 0,3 KB & 275,3 KB & 918$\times$ \\
+    \textit{Response size} di kabel & 0,3 KB & 275,3 KB & 918$\times$ \\
     \hline
   \end{tabularx}
 \end{table}
@@ -500,7 +632,7 @@ def baca_parameter_halaman(query_alamat):
 
 Alamat agregat menempuh jalan yang berbeda. Jumlah barisnya sudah kecil,
 hanya sepuluh, tetapi p95-nya 930,99 milidetik pada 8 \textit{worker},
-sehingga tetap melewati anggaran 400 milidetik. Profilnya menunjukkan 99
+sehingga tetap melewati \textit{budget} 400 milidetik. Profilnya menunjukkan 99
 persen waktu dihabiskan menunggu basis data, jadi memperbaiki kode aplikasi
 tidak akan menolong. Yang tersisa adalah menyimpan hasilnya seperti Bab 4,
 atau menambah kapasitas basis datanya.
@@ -510,12 +642,12 @@ atau menambah kapasitas basis datanya.
 Mengukur satu permintaan pada saat sepi menjawab pertanyaan yang salah.
 Pengguna datang bersamaan, dan perilaku sistem saat ramai tidak dapat
 ditebak dari perilakunya saat sepi. \textit{Load testing} memberi beban yang
-terkendali, lalu mencatat apa yang terjadi pada latensi dan
+terkendali, lalu mencatat apa yang terjadi pada \textit{latency} dan
 \textit{throughput}.
 
 Listing \ref{lst:beban} memperlihatkan inti \textit{load generator} yang
 dipakai bab ini. Bentuknya disebut \textit{closed loop}: tiap \textit{worker}
-menunggu jawaban sebelum mengirim permintaan berikutnya, persis seperti satu
+menunggu \textit{response} sebelum mengirim permintaan berikutnya, persis seperti satu
 pengguna yang sabar.
 
 \begin{lstlisting}[style=PythonStyle, caption={Satu worker mengirim permintaan berurutan lewat koneksi yang dipakai ulang, tersedia di \berkas{sources/chapter05/beban.py}}, label={lst:beban}]
@@ -536,12 +668,14 @@ agregat, dari satu sampai 32, dengan 15 permintaan tiap \textit{worker}.
 
 \begin{table}[!htb]
   \centering
-  \caption{Pengaruh konkurensi pada latensi dan \textit{throughput} alamat
-           agregat, hasil pengukuran nyata}
+  \caption{Pengaruh konkurensi pada \textit{latency} dan \textit{throughput}
+           alamat agregat. Kolom \textit{throughput} berisi banyaknya
+           permintaan yang selesai tiap detik, dihitung dari seluruh
+           \textit{worker} sekaligus}
   \label{tab:ramp}
   \begin{tabularx}{\textwidth}{rrrrX}
     \hline
-    \textbf{Worker} & \textbf{p50} & \textbf{p95} & \textbf{Per detik} & \textbf{Yang terjadi} \\
+    \textbf{Worker} & \textbf{p50} & \textbf{p95} & \textbf{Throughput} & \textbf{Yang terjadi} \\
     \hline
     1 & 156,83 & 214,61 & 6,0 & Tidak ada antrean \\
     \hline
@@ -553,7 +687,7 @@ agregat, dari satu sampai 32, dengan 15 permintaan tiap \textit{worker}.
     \hline
     16 & 1.210,84 & 2.153,35 & 11,6 & \textit{Throughput} turun \\
     \hline
-    32 & 2.794,87 & 3.945,97 & 11,0 & Latensi meledak, hasil tetap \\
+    32 & 2.794,87 & 3.945,97 & 11,0 & \textit{Latency} meledak, hasil tetap \\
     \hline
   \end{tabularx}
 \end{table}
@@ -561,7 +695,7 @@ agregat, dari satu sampai 32, dengan 15 permintaan tiap \textit{worker}.
 Pola pada tabel tersebut adalah pola yang paling sering ditemui pada sistem
 yang jenuh. Sampai dua \textit{worker}, menambah beban menambah hasil.
 Sesudahnya \textit{throughput} mentok di kisaran 12 sampai 14 permintaan per
-detik, sedangkan latensi terus naik hampir lurus mengikuti jumlah
+detik, sedangkan \textit{latency} terus naik hampir lurus mengikuti jumlah
 \textit{worker}. Pada 32 \textit{worker}, p95 menjadi 18 kali lipat p95 pada
 satu \textit{worker}, sementara hasilnya justru sedikit lebih rendah. Gambar \ref{fig:jenuh}
 menggambarkan keduanya dalam satu sumbu.
@@ -598,18 +732,26 @@ menggambarkan keduanya dalam satu sumbu.
 \end{figure}
 
 Titik itu disebut titik jenuh, dan membacanya memberi tiga kesimpulan
-sekaligus. Kapasitas sistem ini sekitar 13 permintaan per detik untuk alamat
-tersebut. Menambah \textit{worker} di atas titik jenuh tidak menambah
+sekaligus. Kapasitas alamat ini sekitar 13 permintaan per detik. Yang
+dimaksud kapasitas adalah \textit{throughput} tertinggi yang masih dapat
+dipertahankan sebelum \textit{latency}-nya meledak, dan angkanya ditentukan
+bagian terlambat di jalur permintaan, yaitu basis data yang menghitung
+agregat. Menambah \textit{worker} di atas titik jenuh tidak menambah
 kapasitas, hanya memindahkan waktu tunggu ke dalam antrean. Perbaikan yang
-benar harus menaikkan kapasitasnya, misalnya lewat \textit{cache} Bab 4,
-bukan menaikkan konkurensi.
+benar harus menaikkan angka 13 tersebut, misalnya dengan menyimpan hasil
+agregat seperti Bab 4 sehingga basis datanya tidak dipanggil pada tiap
+permintaan.
 
 Hubungan ketiga angka itu dapat diperiksa dengan hukum Little
 \cite{gregg2020systems}. Jumlah permintaan yang sedang dikerjakan sama dengan
-\textit{throughput} dikalikan waktu tinggalnya. Pada baris 8 \textit{worker},
-13,6 permintaan per detik dikalikan 0,515 detik menghasilkan 7,0, dan angka
-itu memang mendekati 8. Kecocokan tersebut menjadi pemeriksaan kewarasan:
-bila ketiganya tidak konsisten, yang salah biasanya pengukurannya.
+\textit{throughput} dikalikan waktu tinggalnya. Kedua angkanya diambil dari
+baris 8 \textit{worker} pada Tabel \ref{tab:ramp}, yaitu \textit{throughput}
+13,6 permintaan per detik dan p50 514,98 milidetik, yang sama dengan 0,515
+detik. Hasil kalinya 7,0, dan angka itu memang mendekati 8, yaitu jumlah
+\textit{worker} yang menembaknya. Hasilnya tidak persis 8 karena p50 hanya
+pendekatan bagi waktu tinggal rata-rata. Kecocokan sedekat ini sudah cukup
+sebagai \textit{sanity check}: bila ketiganya tidak konsisten, yang salah
+biasanya pengukurannya.
 
 \subsection*{Menjaga pengukuran tetap jujur}
 
@@ -617,49 +759,90 @@ Pengukuran beban mudah tercemar oleh pengukuran sebelumnya. Alamat katalog
 penuh membaca seluruh tabel ratusan kali, sehingga halaman tabel lain
 terdorong keluar dari \textit{shared buffers} PostgreSQL. Pengukuran alamat
 agregat yang dijalankan tepat sesudahnya mencatat p95 sekitar 1.000
-milidetik, padahal pengukuran yang sama dengan pemanasan lebih dahulu
-mencatat 831 sampai 931 milidetik.
+milidetik, padahal pengukuran yang sama dengan \textit{warmup} lebih dahulu
+mencatat 831 sampai 931 milidetik. Ketiga angka tersebut adalah p95 alamat
+\texttt{/api/terlaris} pada 8 \textit{worker} dengan 25 permintaan tiap
+\textit{worker}, yaitu beban yang sama dengan yang dipakai \textit{gate}.
+Rentang 831 sampai 931 milidetik berasal dari pengukuran berulang yang
+didahului \textit{warmup}, dan baris \texttt{/api/terlaris} pada keluaran
+\textit{gate} di Listing \ref{lst:gate-jalan}, yaitu 830,95 milidetik, berada
+di ujung bawah rentang itu.
 
-Karena itu \textit{gate} anggaran memakai tiga aturan. Tiap alamat dipanaskan
+Gambar \ref{fig:warmup} memperlihatkan bentuk penurunannya pada basis data
+yang baru dinyalakan, diukur dengan \texttt{curl} berurutan ke alamat
+agregat.
+
+\begin{figure}[!htb]
+  \centering
+  \begin{tikzpicture}[font=\scriptsize]
+    \begin{axis}[
+      width=0.82\textwidth, height=4.8cm,
+      xlabel={Permintaan ke-}, ylabel={Waktu (ms)},
+      xmin=0.5, xmax=20.5, ymin=0, ymax=155,
+      xtick={1,5,10,15,20}, ytick={0,50,100,150},
+      axis y line*=left, axis x line*=bottom,
+    ]
+      \addplot[praditagreen, thick, mark=*, mark size=1.1]
+        coordinates {(1,125.0) (2,116.6) (3,114.8) (4,103.5) (5,99.3) (6,119.3) (7,121.1)
+                     (8,139.3) (9,111.1) (10,108.5) (11,90.0) (12,99.2)
+                     (13,74.5) (14,72.9) (15,95.1) (16,78.8) (17,77.0)
+                     (18,87.5) (19,87.2) (20,86.4)};
+      \addplot[red!65!black, dashed, thick, forget plot]
+        coordinates {(0.5,83.4) (20.5,83.4)};
+      \node[font=\tiny, red!65!black, anchor=south east] at (axis cs:20.4,104)
+        {rata-rata lima terakhir: 83,4 ms};
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Permintaan pertama pada basis data yang baru dinyalakan menanggung
+           pembacaan ulang dari \textit{disk}, dan waktunya baru tenang
+           sesudah belasan permintaan}
+  \label{fig:warmup}
+\end{figure}
+
+Lonjakan pada permintaan kedelapan dibiarkan apa adanya, karena begitulah
+bentuk pengukuran sungguhan: kecenderungannya turun, tetapi tiap titiknya
+tetap bergoyang.
+
+Karena itu \textit{gate} \textit{budget} memakai tiga aturan. Tiap alamat di-\textit{warmup}
 dengan 30 permintaan sebelum diukur. Ada jeda tiga detik sebelum tiap
 pengukuran agar sisa beban sebelumnya reda. Alamat terberat diukur paling
 akhir, sehingga tidak mencemari alamat lain.
 
 \subsection*{Gate yang benar-benar memblokir}
 
-Anggaran baru berarti bila ada yang menegakkannya. Listing \ref{lst:gate}
-memperlihatkan bagian penutup \textit{gate}-nya: begitu ada satu anggaran yang
+\textit{Budget} baru berarti bila ada yang menegakkannya. Listing \ref{lst:gate}
+memperlihatkan bagian penutup \textit{gate}-nya: begitu ada satu \textit{budget} yang
 terlampaui, prosesnya keluar dengan status 1, dan \textit{Continuous
 Integration} membaca status itu sebagai kegagalan.
 
-\begin{lstlisting}[style=PythonStyle, caption={Status keluar yang memblokir merge, tersedia di \berkas{sources/chapter05/gate-anggaran.py}}, label={lst:gate}]
+\begin{lstlisting}[style=PythonStyle, caption={Status keluar yang memblokir merge, tersedia di \berkas{sources/chapter05/gate-budget.py}}, label={lst:gate}]
   jumlah_lewat = sum(1 for baris in daftar_baris if not baris[-1])
   if jumlah_lewat:
-    print(f"\nGagal: {jumlah_lewat} anggaran terlampaui.")
+    print(f"\nGagal: {jumlah_lewat} budget terlampaui.")
     sys.exit(1)
-  print("\nLolos: seluruh anggaran terpenuhi.")
+  print("\nLolos: seluruh budget terpenuhi.")
 \end{lstlisting}
 
 Listing \ref{lst:gate-jalan} memuat keluarannya apa adanya pada aplikasi
 bab ini.
 
-\begin{lstlisting}[language=bash, caption={Menjalankan \textit{gate} anggaran, tersedia di \berkas{sources/chapter05/gate-anggaran.py}}, label={lst:gate-jalan}]
+\begin{lstlisting}[language=bash, caption={Menjalankan \textit{gate} budget, tersedia di \berkas{sources/chapter05/gate-budget.py}}, label={lst:gate-jalan}]
 source ../.venv/bin/activate
-python gate-anggaran.py
+python gate-budget.py
 
 # Keluarannya:
-#   Ukuran                              Anggaran           Terukur  Vonis
-#   /api/katalog?halaman=1&ukuran=20 p95    60 ms         12.59 ms  lolos
-#   /api/katalog?halaman=1&ukuran=20 ukuran  8 KB          0.29 KB  lolos
-#   /api/terlaris p95                      400 ms        830.95 ms  LEWAT
-#   /api/terlaris ukuran                     2 KB          0.54 KB  lolos
-#   /api/katalog-penuh p95                  60 ms       2262.70 ms  LEWAT
-#   /api/katalog-penuh ukuran                8 KB        275.30 KB  LEWAT
-#   lcp_ms p75                            2500 ms   tidak ada data  LEWAT
-#   inp_ms p75                             200 ms   tidak ada data  LEWAT
-#   cls p75                                0.1      tidak ada data  LEWAT
+#   Ukuran                                    Budget          Terukur  Verdict
+#   /api/katalog?halaman=1&ukuran=20 p95          60 ms      12.59 ms  lolos
+#   /api/katalog?halaman=1&ukuran=20 ukuran        8 KB       0.29 KB  lolos
+#   /api/terlaris p95                            400 ms     830.95 ms  LEWAT
+#   /api/terlaris ukuran                           2 KB       0.54 KB  lolos
+#   /api/katalog-penuh p95                        60 ms    2262.70 ms  LEWAT
+#   /api/katalog-penuh ukuran                      8 KB     275.30 KB  LEWAT
+#   lcp_ms p75                                  2500 ms    tanpa data  LEWAT
+#   inp_ms p75                                   200 ms    tanpa data  LEWAT
+#   cls p75                                      0.1       tanpa data  LEWAT
 #
-# Gagal: 6 anggaran terlampaui.
+# Gagal: 6 budget terlampaui.
 \end{lstlisting}
 
 Tiga baris terakhir layak diperhatikan. Core Web Vitals tidak dinyatakan
@@ -670,9 +853,9 @@ perbaikan tanpa bukti pengukuran tidak dapat dihitung sebagai perbaikan.
 \section{Ringkasan}
 
 Performa berhenti menjadi perdebatan ketika angkanya ditulis lebih dahulu.
-Anggaran performa berisi tiga jenis batas, yaitu latensi pada persentil
-tertentu, ukuran jawaban di kabel, dan ambang Core Web Vitals. Ketiganya
-disimpan di satu berkas, diperlakukan seperti kode, dan dinilai oleh
+\textit{Budget} performa berisi tiga jenis batas, yaitu \textit{latency} pada persentil
+tertentu, \textit{response size} di kabel, dan ambang Core Web Vitals. Ketiganya
+disimpan di satu file, diperlakukan seperti kode, dan dinilai oleh
 \textit{gate} yang keluar dengan status 1 begitu ada satu batas yang
 terlampaui.
 
@@ -705,17 +888,17 @@ besarnya angka, melainkan adanya bukti pengukuran sebelum dan sesudahnya.
 
 \section{Latihan}
 
-Seluruh berkas yang dipakai pada latihan ini tersedia di
+Seluruh file yang dipakai pada latihan ini tersedia di
 \berkas{sources/chapter05/}, dihitung relatif terhadap akar repositori.
 Latihan membutuhkan Docker dengan Compose versi 2, Python 3, dan Node.js
-untuk mengompilasi berkas TypeScript. Listing penyiapan masuk ke direktori
+untuk mengompilasi file TypeScript. Listing penyiapan masuk ke direktori
 itu lebih dahulu, dan seluruh perintah sesudahnya dijalankan dari sana. Bila
 membuka terminal baru, masuk kembali dengan \texttt{cd sources/chapter05}
 dari akar repositori.
 
 Peringatan yang sama seperti bab sebelumnya berlaku di sini.
 \berkas{sources/chapter05/beban.py} dan
-\berkas{sources/chapter05/gate-anggaran.py} sengaja membebani, sehingga
+\berkas{sources/chapter05/gate-budget.py} sengaja membebani, sehingga
 keduanya hanya diarahkan ke aplikasi milik sendiri. Hasil tiap mahasiswa akan
 berbeda, karena angkanya bergantung pada perangkat keras, versi PostgreSQL,
 dan beban lain yang sedang berjalan di komputer yang sama. Yang dilaporkan
@@ -723,7 +906,7 @@ adalah pola perbandingannya beserta penjelasannya, bukan angka persisnya.
 
 Penyiapannya dilakukan sekali, seperti pada Listing \ref{lst:c5-siapkan}.
 
-\begin{lstlisting}[language=bash, caption={Menyiapkan basis data, data uji, dan berkas statis, memakai \berkas{sources/chapter05/siapkan-data.sh}}, label={lst:c5-siapkan}]
+\begin{lstlisting}[language=bash, caption={Menyiapkan basis data, data uji, dan file statis, memakai \berkas{sources/chapter05/siapkan-data.sh}}, label={lst:c5-siapkan}]
 cd sources/chapter05
 docker compose up -d
 ./siapkan-data.sh
@@ -744,22 +927,22 @@ python aplikasi.py
 # Melayani di http://127.0.0.1:8010/  (Ctrl+C untuk berhenti)
 \end{lstlisting}
 
-\subsection*{Latihan 1: Menegakkan Anggaran Performa}
+\subsection*{Latihan 1: Menegakkan Budget Performa}
 
-Latihan ini membuktikan bahwa anggaran hanya berguna bila ada yang
-menegakkannya, dan bahwa vonisnya dapat dibaca mesin.
+Latihan ini membuktikan bahwa \textit{budget} hanya berguna bila ada yang
+menegakkannya, dan bahwa \textit{verdict}-nya dapat dibaca mesin.
 
 \begin{enumerate}
-  \item Baca \berkas{sources/chapter05/anggaran.json}, lalu tulis dugaan
+  \item Baca \berkas{sources/chapter05/budget.json}, lalu tulis dugaan
         untuk tiap alamat: lolos atau tidak, dan mengapa. Dugaan ditulis
         lebih dahulu agar tidak menyesuaikan diri dengan hasilnya.
   \item Jalankan \textit{gate}-nya seperti pada Listing \ref{lst:c5-lat1-jalan},
-        lalu catat vonis tiap baris ke Tabel \ref{tab:c5-lat1-hasil}. Tabel
+        lalu catat \textit{verdict} tiap baris ke Tabel \ref{tab:c5-lat1-hasil}. Tabel
         \ref{tab:c5-lat1-contoh} memperlihatkan contoh yang sudah terisi.
   \item Catat status keluar prosesnya dengan \texttt{echo \$?} tepat sesudah
         \textit{gate} selesai. Angka itulah yang dibaca \textit{Continuous
         Integration}.
-  \item Ubah satu angka anggaran menjadi longgar, misalnya p95 alamat agregat
+  \item Ubah satu angka \textit{budget} menjadi longgar, misalnya p95 alamat agregat
         menjadi 2000 milidetik, lalu jalankan ulang \textit{gate}-nya dan catat
         status keluarnya.
   \item Jawab tiga pertanyaan berikut. Pertama, alamat mana yang gagal, dan
@@ -769,13 +952,13 @@ menegakkannya, dan bahwa vonisnya dapat dibaca mesin.
         keluar dengan status 0?
 \end{enumerate}
 
-\begin{lstlisting}[language=bash, caption={Menjalankan \textit{gate} anggaran dan membaca status keluarnya, tersedia di \berkas{sources/chapter05/gate-anggaran.py}}, label={lst:c5-lat1-jalan}]
+\begin{lstlisting}[language=bash, caption={Menjalankan \textit{gate} budget dan membaca status keluarnya, tersedia di \berkas{sources/chapter05/gate-budget.py}}, label={lst:c5-lat1-jalan}]
 source ../.venv/bin/activate
-python gate-anggaran.py
+python gate-budget.py
 echo $?
 
 # Keluarannya:
-# Gagal: 6 anggaran terlampaui.
+# Gagal: 6 budget terlampaui.
 # 1
 \end{lstlisting}
 
@@ -785,7 +968,7 @@ echo $?
   \label{tab:c5-lat1-contoh}
   \begin{tabularx}{\textwidth}{Xrrl}
     \hline
-    \textbf{Ukuran} & \textbf{Anggaran} & \textbf{Terukur} & \textbf{Vonis} \\
+    \textbf{Ukuran} & \textbf{\textit{Budget}} & \textbf{Terukur} & \textbf{\textit{Verdict}} \\
     \hline
     \texttt{/api/katalog} p95 & 60 & 12,59 & lolos \\
     \hline
@@ -797,7 +980,7 @@ echo $?
     \hline
     \texttt{/api/katalog-penuh} ukuran & 8 KB & 275,30 KB & LEWAT \\
     \hline
-    LCP p75 & 2500 & tidak ada data & LEWAT \\
+    LCP p75 & 2500 & tanpa data & LEWAT \\
     \hline
   \end{tabularx}
 \end{table}
@@ -808,7 +991,7 @@ echo $?
   \label{tab:c5-lat1-hasil}
   \begin{tabularx}{\textwidth}{Xrrl}
     \hline
-    \textbf{Ukuran} & \textbf{Anggaran} & \textbf{Terukur} & \textbf{Vonis} \\
+    \textbf{Ukuran} & \textbf{\textit{Budget}} & \textbf{Terukur} & \textbf{\textit{Verdict}} \\
     \hline
     \texttt{/api/katalog} p95 & \dots & \dots & \dots \\
     \hline
@@ -820,7 +1003,7 @@ echo $?
     \hline
     \texttt{/api/katalog-penuh} ukuran & \dots & \dots & \dots \\
     \hline
-    Status keluar sebelum dan sesudah anggaran dilonggarkan & \dots & \dots & \dots \\
+    Status keluar sebelum dan sesudah \textit{budget} dilonggarkan & \dots & \dots & \dots \\
     \hline
   \end{tabularx}
 \end{table}
@@ -838,7 +1021,7 @@ membutuhkan perbaikan yang sama sekali berbeda.
         \ref{tab:c5-lat2-hasil}. Tabel \ref{tab:c5-lat2-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Untuk tiap alamat, tulis satu kalimat perbaikan yang menyentuh
-        sebabnya, bukan gejalanya.
+        sebabnya, bukan \textit{symptom}-nya.
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa mempercepat \textit{query}
         tidak banyak menolong alamat katalog penuh? Kedua, mengapa
         mempercepat kode Python tidak menolong alamat agregat? Ketiga,
@@ -896,7 +1079,8 @@ Latihan ini mencari kapasitas satu alamat, yaitu jumlah permintaan per detik
 yang masih dapat dilayani sebelum latensinya meledak.
 
 \begin{enumerate}
-  \item Panaskan alamatnya dengan 30 permintaan pada satu \textit{worker},
+  \item Lakukan \textit{warmup} pada alamatnya dengan 30 permintaan pada
+        satu \textit{worker},
         agar \textit{cache} basis data hangat sebelum pengukuran dimulai.
   \item Jalankan beban untuk 1, 2, 4, 8, 16, dan 32 \textit{worker} seperti
         pada Listing \ref{lst:c5-lat3-jalan}, lalu isi Tabel
@@ -928,13 +1112,13 @@ python beban.py /api/terlaris 32 15
   \label{tab:c5-lat3-contoh}
   \begin{tabularx}{\textwidth}{rrrrX}
     \hline
-    \textbf{Worker} & \textbf{p50} & \textbf{p95} & \textbf{Per detik} & \textbf{Catatan} \\
+    \textbf{Worker} & \textbf{p50} & \textbf{p95} & \textbf{Throughput} & \textbf{Catatan} \\
     \hline
     1 & 156,83 & 214,61 & 6,0 & Tanpa antrean \\
     \hline
     8 & 514,98 & 835,65 & 13,6 & Sudah jenuh \\
     \hline
-    32 & 2.794,87 & 3.945,97 & 11,0 & Latensi meledak \\
+    32 & 2.794,87 & 3.945,97 & 11,0 & \textit{Latency} meledak \\
     \hline
   \end{tabularx}
 \end{table}
@@ -945,7 +1129,7 @@ python beban.py /api/terlaris 32 15
   \label{tab:c5-lat3-hasil}
   \begin{tabularx}{\textwidth}{rrrrX}
     \hline
-    \textbf{Worker} & \textbf{p50} & \textbf{p95} & \textbf{Per detik} & \textbf{Catatan} \\
+    \textbf{Worker} & \textbf{p50} & \textbf{p95} & \textbf{Throughput} & \textbf{Catatan} \\
     \hline
     1 & \dots & \dots & \dots & \dots \\
     \hline
@@ -968,7 +1152,7 @@ Latihan ini melengkapi angka lab dengan angka lapangan, yaitu Core Web Vitals
 dari kunjungan yang sungguhan.
 
 \begin{enumerate}
-  \item Pastikan berkas TypeScript sudah dikompilasi pada langkah penyiapan,
+  \item Pastikan file TypeScript sudah dikompilasi pada langkah penyiapan,
         lalu buka \texttt{http://localhost:8010/} di browser.
   \item Tekan tombol Muat katalog, tunggu daftarnya tampil, lalu tutup tab
         atau pindah ke tab lain. Laporan dikirim saat halaman ditinggalkan,
@@ -978,7 +1162,7 @@ dari kunjungan yang sungguhan.
         \ref{tab:c5-lat4-hasil}. Tabel \ref{tab:c5-lat4-contoh}
         memperlihatkan bentuk isian yang diharapkan.
   \item Ulangi kunjungan sebanyak lima kali, lalu jalankan ulang \textit{gate}
-        anggaran dan catat perubahan vonis ketiga baris Core Web Vitals.
+        \textit{budget} dan catat perubahan \textit{verdict} ketiga baris Core Web Vitals.
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa laporan dikirim saat
         halaman ditinggalkan? Kedua, mengapa Core Web Vitals dinilai pada
         persentil 75 dari banyak kunjungan, bukan dari satu kunjungan?
@@ -989,7 +1173,7 @@ dari kunjungan yang sungguhan.
 \begin{lstlisting}[language=bash, caption={Memeriksa laporan Core Web Vitals yang masuk, dihasilkan \berkas{sources/chapter05/web-vitals.ts}}, label={lst:c5-lat4-jalan}]
 cat vitals.jsonl
 source ../.venv/bin/activate
-python gate-anggaran.py
+python gate-budget.py
 \end{lstlisting}
 
 \begin{table}[!htb]

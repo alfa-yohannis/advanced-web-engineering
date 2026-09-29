@@ -1,0 +1,17 @@
+{
+  "//": "Pengaturan TypeScript untuk file E2E Bab 6. Dipakai analisis statis lewat: npx tsc --noEmit",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "target": "esnext",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "lib": ["esnext", "dom"],
+    "types": ["node"],
+    "skipLibCheck": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true
+  },
+  "include": ["e2e/**/*.ts"]
+}

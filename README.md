@@ -290,6 +290,7 @@ Diurutkan dari yang paling mudah dieksekusi sampai yang paling menuntut.
 | ACID | Atomicity, Consistency, Isolation, Durability |
 | ACK | Acknowledge |
 | API | Application Programming Interface |
+| AVIF | AV1 Image File Format |
 | AWS | Amazon Web Services |
 | BFF | Backend for Frontend |
 | CDN | Content Delivery Network |
@@ -311,7 +312,9 @@ Diurutkan dari yang paling mudah dieksekusi sampai yang paling menuntut.
 | IaC | Infrastructure as Code |
 | INP | Interaction to Next Paint |
 | ISR | Incremental Static Regeneration |
+| JS | JavaScript |
 | JSON | JavaScript Object Notation |
+| JPEG | Joint Photographic Experts Group |
 | JWT | JSON Web Token |
 | LCP | Largest Contentful Paint |
 | LLM | Large Language Model |

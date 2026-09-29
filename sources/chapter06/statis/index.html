@@ -1,0 +1,42 @@
+<!-- Halaman demo yang diuji Playwright pada Bab 6. Dilayani aplikasi.py di
+     http://127.0.0.1:8020/, dan seluruh logikanya ada di /aset/pesanan.js. -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pesanan &mdash; Bab 6</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 2rem;
+      max-width: 40rem;
+      line-height: 1.5;
+    }
+    fieldset { border: 1px solid #ccc; margin-bottom: 1rem; }
+    label { margin-right: 1rem; }
+    #ringkasan { font-weight: bold; }
+    #jumlah-query { color: #a33; }
+    li { margin-bottom: 0.25rem; }
+  </style>
+</head>
+<body>
+  <h1>Rincian Pesanan</h1>
+
+  <fieldset>
+    <legend>Permintaan</legend>
+    <label for="id-pesanan">Id pesanan</label>
+    <input id="id-pesanan" type="text" value="1" size="10">
+    <label for="pakai-n1">
+      <input id="pakai-n1" type="checkbox"> Pakai jalur N+1
+    </label>
+    <button id="muat" type="button">Muat pesanan</button>
+  </fieldset>
+
+  <p id="ringkasan">Belum ada pesanan yang dimuat.</p>
+  <p id="jumlah-query">Jumlah query: belum diketahui</p>
+  <ul id="daftar-item"></ul>
+
+  <script type="module" src="/aset/pesanan.js"></script>
+</body>
+</html>

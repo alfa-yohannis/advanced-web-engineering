@@ -1,5 +1,5 @@
 {
-  "keterangan": "Anggaran performa Bab 5. Angka p95 dalam milidetik, ukuran dalam kibibyte. Alamat terberat ditaruh terakhir agar tidak mencemari pengukuran alamat sesudahnya.",
+  "keterangan": "Budget performa Bab 5. Angka p95 dalam milidetik, ukuran dalam kibibyte. Alamat terberat ditaruh terakhir agar tidak mencemari pengukuran alamat sesudahnya.",
   "beban": {
     "jumlah_worker": 8,
     "permintaan_per_worker": 25

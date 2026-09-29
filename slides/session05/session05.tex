@@ -80,7 +80,7 @@
   showstringspaces=false
 }
 
-% Berkas anggaran ditampilkan apa adanya, sehingga butuh gaya JSON sendiri.
+% File \textit{budget} ditampilkan apa adanya, sehingga butuh gaya JSON sendiri.
 \lstdefinelanguage{json}{
   basicstyle=\ttfamily\scriptsize,
   stringstyle=\color{red},
@@ -129,15 +129,15 @@
 \begin{frame}{{\Large Tujuan Pembelajaran}}
   \vspace{10pt}
   \begin{itemize}
-    \item Menetapkan anggaran performa berupa angka, yaitu p95 tiap alamat,
-          ukuran jawaban, dan ambang Core Web Vitals, lalu menegakkannya
+    \item Menetapkan \textit{budget} performa berupa angka, yaitu p95 tiap alamat,
+          \textit{response size}, dan ambang Core Web Vitals, lalu menegakkannya
           sebagai \textit{gate} otomatis.
     \item Mengukur aplikasi di bawah beban memakai \textit{load generator},
           lalu membaca titik jenuh dari hubungan antara konkurensi,
-          \textit{throughput}, dan latensi.
+          \textit{throughput}, dan \textit{latency}.
     \item Menemukan bagian termahal lewat \textit{profiling}, lalu membedakan
           perbaikan yang menyentuh sebabnya dari perbaikan yang hanya
-          menyentuh gejalanya.
+          menyentuh \textit{symptom}-nya.
   \end{itemize}
 \end{frame}
 
@@ -155,7 +155,7 @@
   seseorang merasa sudah cukup, bukan ketika angkanya tercapai.}
 \end{frame}
 
-\begin{frame}{{\Large Satu Putaran yang Berulang}}
+\begin{frame}{{\Large Siklus yang Berulang}}
   \vspace{16pt}
   \centering
   \begin{tikzpicture}[
@@ -164,7 +164,7 @@
                   minimum width=1.9cm, align=center, font=\scriptsize\bfseries},
     panah/.style={-{Stealth[length=2mm]}, thick}
   ]
-    \node[kotak, fill=praditagreen!15] (anggar) at (0,0) {Tetapkan\\anggaran};
+    \node[kotak, fill=praditagreen!15] (anggar) at (0,0) {Tetapkan\\budget};
     \node[kotak, fill=blue!8] (ukur) at (2.6,0) {Ukur di\\bawah beban};
     \node[kotak, fill=orange!12] (profil) at (5.2,0) {Cari bagian\\termahal};
     \node[kotak, fill=blue!8] (perbaiki) at (7.8,0) {Perbaiki};
@@ -184,30 +184,34 @@
   memutuskan langkah berikutnya.}
 \end{frame}
 
-\section{Anggaran Performa}
+\section{Budget Performa}
 
 \begin{frame}{\hfill}
   \centering
-  \Huge{\textbf{Anggaran Performa}}
+  \Huge{\textbf{\textit{Budget} Performa}}
 \end{frame}
 
 \begin{frame}{{\Large Tiga Jenis Batas}}
   \vspace{10pt}
   \begin{itemize}
-    \item \textbf{Latensi} pada persentil tertentu, biasanya p95, karena
+    \item \textbf{\textit{Latency}} pada persentil tertentu, biasanya p95, karena
           rata-rata menyembunyikan pengalaman terburuk.
-    \item \textbf{Ukuran jawaban} di kabel, karena byte yang dikirim
+    \item \textbf{\textit{Response size}} di kabel, karena byte yang dikirim
           menentukan waktu di jaringan yang lambat.
     \item \textbf{Core Web Vitals}, karena itulah yang benar-benar dirasakan
-          pengguna di browser.
+          pengguna di browser. Isinya tiga: LCP (\textit{Largest Contentful
+          Paint}), waktu sampai elemen isi terbesar tampil; INP
+          (\textit{Interaction to Next Paint}), jeda antara interaksi dan
+          pembaruan layar; dan CLS (\textit{Cumulative Layout Shift}),
+          banyaknya tata letak yang bergeser sendiri.
   \end{itemize}
-  \vspace{8pt}
-  {\footnotesize Ketiganya ditulis di satu berkas dan diperlakukan seperti
+  \vspace{6pt}
+  {\footnotesize Ketiganya ditulis di satu file dan diperlakukan seperti
   kode: masuk repositori, ikut ditinjau, dan berubah lewat \textit{pull
   request}.}
 \end{frame}
 
-\begin{frame}{{\Large Analogi: Anggaran Belanja Kepanitiaan}}
+\begin{frame}{{\Large Analogi: Budget Belanja Kepanitiaan}}
   \vspace{14pt}
   \begin{itemize}
     \item Angkanya ditetapkan sebelum belanja dimulai, bukan sesudah nota
@@ -220,7 +224,7 @@
   ada bagian lain yang dipercepat lebih dahulu.}
 \end{frame}
 
-\begin{frame}{{\Large Anggaran Bab Ini}}
+\begin{frame}{{\Large Budget Bab Ini}}
   \vspace{6pt}
   \centering
   {\footnotesize
@@ -244,7 +248,7 @@
   \textit{worker}.}
 \end{frame}
 
-\begin{frame}[fragile]{{\Large Anggaran sebagai Berkas}}
+\begin{frame}[fragile]{{\Large Budget sebagai File}}
   \vspace{2pt}
 \begin{lstlisting}[language=json, basicstyle=\ttfamily\tiny]
   "beban": {
@@ -265,7 +269,7 @@
   }
 \end{lstlisting}
   \vspace{2pt}
-  {\footnotesize Dua bagian dari \texttt{anggaran.json}, dan dua alamat
+  {\footnotesize Dua bagian dari \texttt{budget.json}, dan dua alamat
   lainnya ditulis dengan pola yang sama. Alamat terberat ditaruh terakhir,
   agar pengukurannya tidak mencemari alamat sesudahnya.}
 \end{frame}
@@ -285,7 +289,7 @@
   ukur di sisi server.}
 \end{frame}
 
-\begin{frame}{{\Large Tempat Anggaran Bekerja}}
+\begin{frame}{{\Large Tempat Budget Bekerja}}
   \vspace{16pt}
   \centering
   \begin{tikzpicture}[
@@ -296,7 +300,7 @@
   ]
     \node[kotak, fill=blue!8] (ubah) at (0,0) {Perubahan\\kode};
     \node[kotak, fill=blue!8] (ukur) at (3.4,0) {Ukur beban\\{\tiny\mdseries beban.py}};
-    \node[kotak, fill=orange!12] (nilai) at (6.8,0) {Nilai anggaran\\{\tiny\mdseries anggaran.json}};
+    \node[kotak, fill=orange!12] (nilai) at (6.8,0) {Nilai budget\\{\tiny\mdseries budget.json}};
     \node[kotak, fill=green!10] (gabung) at (10.4,1.0) {Status 0\\{\tiny\mdseries boleh digabung}};
     \node[kotak, fill=red!22] (tolak) at (10.4,-1.0) {Status 1\\{\tiny\mdseries merge diblokir}};
 
@@ -309,7 +313,7 @@
   \end{tikzpicture}
 
   \vspace{12pt}
-  {\footnotesize Vonisnya dibaca \textit{Continuous Integration} sebagai
+  {\footnotesize \textit{Verdict}-nya dibaca \textit{Continuous Integration} sebagai
   status keluar.}
 \end{frame}
 
@@ -332,6 +336,34 @@ function kirimLaporan(): void {
   navigator.sendBeacon(ALAMAT_LAPORAN, JSON.stringify(laporan));
 }
 \end{lstlisting}
+  \vspace{2pt}
+  {\footnotesize \texttt{startTime} diwarisi dari \texttt{PerformanceEntry},
+  jadi namanya berlaku untuk semua jenis entri, bukan khusus LCP. Isinya kapan
+  elemen terbesar tergambar, dihitung sejak navigasi dimulai.}
+\end{frame}
+
+\begin{frame}{{\Large Isi startTime pada LCP}}
+  \vspace{8pt}
+  \centering
+  {\footnotesize
+  \begin{tabularx}{\textwidth}{Yl}
+    \hline
+    \textbf{Elemen LCP} & \textbf{Isi \texttt{startTime}} \\
+    \hline
+    Teks, atau gambar satu domain & \texttt{renderTime}, saat tergambar \\
+    \hline
+    Gambar lintas domain dengan \texttt{Timing-Allow-Origin} & \texttt{renderTime}, saat tergambar \\
+    \hline
+    Gambar lintas domain tanpa header itu & \texttt{loadTime}, saat unduhan selesai \\
+    \hline
+  \end{tabularx}}
+
+  \vspace{8pt}
+  {\footnotesize Waktu render gambar milik domain lain tidak dibuka demi
+  keamanan, sehingga \texttt{renderTime}-nya nol dan \texttt{startTime} jatuh
+  ke \texttt{loadTime} yang selalu lebih awal. LCP pun terbaca sedikit lebih
+  cepat daripada kenyataan, dan obatnya menambahkan \texttt{Timing-Allow-Origin}
+  di CDN.}
 \end{frame}
 
 \begin{frame}{{\Large Mengapa Dikirim Saat Halaman Ditinggalkan}}
@@ -357,9 +389,10 @@ function kirimLaporan(): void {
 \begin{frame}{{\Large Dua Aturan Profiling}}
   \vspace{14pt}
   \begin{itemize}
-    \item \textbf{Ukur lebih dahulu, baru perbaiki.} Tanpa itu, yang
-          diperbaiki adalah bagian yang paling mudah ditebak, bukan bagian
-          yang paling mahal.
+    \item \textbf{Ukur lebih dahulu, baru perbaiki.} Tanpa pengukuran,
+          bagian yang diperbaiki biasanya bagian yang dianggap penyebab
+          turunnya performa. Anggapan itu tidak selalu benar, dan bila
+          keliru, kodenya berubah sedangkan waktunya tetap.
     \item \textbf{Ukur pada tempat yang tepat.} Angka yang dirasakan klien
           dan angka yang terlihat di dalam server dapat berbeda jauh.
   \end{itemize}
@@ -372,48 +405,83 @@ function kirimLaporan(): void {
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
 def kerjakan_katalog_penuh(pool_koneksi):
-  """Mengerjakan seluruh pekerjaan alamat katalog penuh, sampai byte JSON."""
   return json.dumps(ambil_katalog_penuh(pool_koneksi)).encode()
 
+PEKERJAAN_PER_NAMA = {
+    "katalog-penuh": kerjakan_katalog_penuh,
+    "katalog": kerjakan_katalog,
+    "terlaris": kerjakan_terlaris,
+}
 
 def ulangi_pekerjaan(pekerjaan, pool_koneksi, jumlah_ulangan):
-  """Menjalankan satu pekerjaan berulang kali, lalu melaporkan ukuran akhirnya.
-
-  Diulang agar waktu tiap fungsi terkumpul cukup banyak untuk dibandingkan,
-  bukan tenggelam oleh derajat ketelitian pengukur waktunya.
-  """
-  isi_jawaban = b""
+  isi_response = b""
   for _ in range(jumlah_ulangan):
-    isi_jawaban = pekerjaan(pool_koneksi)
-  return isi_jawaban
+    isi_response = pekerjaan(pool_koneksi)
+  return isi_response
 \end{lstlisting}
   \vspace{2pt}
-  {\footnotesize Memakai \texttt{cProfile} dari pustaka standar Python, tanpa
-  melewati jaringan.}
+  {\footnotesize \texttt{kerjakan\_katalog\_penuh} dipanggil lewat parameter
+  \texttt{pekerjaan}. Fungsi \texttt{main} memilihnya dari
+  \texttt{PEKERJAAN\_PER\_NAMA}, lalu menjalankannya dengan
+  \texttt{profil.runcall}.}
 \end{frame}
 
-\begin{frame}{{\Large Fungsi Termahal: Katalog Penuh}}
+\begin{frame}{{\Large Fungsi Termahal: /api/katalog-penuh}}
+  \vspace{2pt}
+  {\small Pengunjung membuka halaman katalog. Browser meminta
+  \texttt{/api/katalog-penuh}, dan server menjawab dengan seluruh 50.000 baris
+  buku sekaligus. Tabel di bawah memperlihatkan ke mana waktu \textit{response} itu
+  habis.}
+  \vspace{4pt}
+  \centering
+  {\scriptsize
+  \begin{tabularx}{\textwidth}{clYlrr}
+    \hline
+    \textbf{Urutan} & & \textbf{Fungsi} & \textbf{Habis di} & \textbf{Kumulatif} & \textbf{Bagian} \\
+    \hline
+    1 & & Seluruh pekerjaan satu alamat & keduanya & 7,52 s & 100\% \\
+    \hline
+    2 & & \texttt{ambil\_katalog\_penuh} & keduanya & 5,10 s & 68\% \\
+    \hline
+    2a & \quad & \texttt{fetchall}, memindahkan baris & basis data & 1,28 s & 17\% \\
+    \hline
+    2b & \quad & \texttt{baris\_menjadi\_kamus}, 1.000.000 kali & aplikasi & 1,61 s & 21\% \\
+    \hline
+    3 & & \texttt{json.dumps}, serialisasi \textit{response} & aplikasi & 1,99 s & 26\% \\
+    \hline
+  \end{tabularx}}
+
+  \vspace{4pt}
+  {\small Diurutkan menurut jalannya program. Baris 2a dan 2b berada di dalam
+  baris 2, sehingga waktunya sudah ikut terhitung pada 5,10 detik, dan
+  persentasenya memang tidak berjumlah 100. Angka 1.000.000 berasal dari 20
+  ulangan dikalikan 50.000 baris.}
+\end{frame}
+
+\begin{frame}{{\Large Fungsi Termahal: /api/terlaris}}
+  \vspace{2pt}
+  {\small Pengunjung membuka halaman buku terlaris. Browser meminta
+  \texttt{/api/terlaris}, dan server menghitung penjualan 30 hari terakhir.
+  \textit{Response}-nya hanya 10 baris, jauh lebih kecil daripada slide sebelumnya.}
   \vspace{6pt}
   \centering
   {\footnotesize
-  \begin{tabularx}{\textwidth}{Yrr}
+  \begin{tabularx}{\textwidth}{Ylrr}
     \hline
-    \textbf{Fungsi} & \textbf{Kumulatif} & \textbf{Bagian} \\
+    \textbf{Fungsi} & \textbf{Waktunya habis di} & \textbf{Kumulatif} & \textbf{Bagian} \\
     \hline
-    Seluruh pekerjaan satu alamat & 7,52 s & 100\% \\
+    Seluruh pekerjaan satu alamat & keduanya & 3,89 s & 100\% \\
     \hline
-    \texttt{ambil\_katalog\_penuh}, \textit{query} dan pembentukan kamus & 5,10 s & 68\% \\
+    \texttt{connection.wait}, menunggu \textit{response} & basis data & 3,84 s & 99\% \\
     \hline
-    \texttt{json.dumps}, serialisasi jawaban & 1,99 s & 26\% \\
-    \hline
-    \texttt{baris\_menjadi\_kamus}, dipanggil 1.000.000 kali & 1,61 s & 21\% \\
-    \hline
-    \texttt{fetchall}, memindahkan baris ke memori & 1,28 s & 17\% \\
+    Sisanya, seluruh kode aplikasi & aplikasi & 0,05 s & 1\% \\
     \hline
   \end{tabularx}}
 
   \vspace{8pt}
-  {\footnotesize 20 ulangan, diurutkan menurut waktu kumulatif.}
+  {\small Alamat yang berbeda dari slide sebelumnya, diukur dengan cara yang
+  sama: 20 ulangan, hasilnya hanya 10 baris. Sama-sama lambat, tetapi waktunya
+  habis di tempat yang berbeda.}
 \end{frame}
 
 \begin{frame}{{\Large Dua Profil, Dua Kesimpulan}}
@@ -433,33 +501,89 @@ def ulangi_pekerjaan(pekerjaan, pool_koneksi, jumlah_ulangan):
 \end{frame}
 
 \begin{frame}{{\Large Ketika Klien dan Server Tidak Sepakat}}
-  \vspace{12pt}
+  \vspace{6pt}
   \begin{itemize}
     \item Profil sisi server alamat katalog berhalaman: di bawah satu
           milidetik.
     \item \textit{Load generator} mencatat 43,06 milidetik pada satu
           \textit{worker}.
-    \item Selisih sebesar itu tidak mungkin berasal dari kode yang sudah
-          diprofil.
   \end{itemize}
+  \vspace{4pt}
+  \centering
+  \begin{tikzpicture}[font=\scriptsize]
+    \node[anchor=east, font=\scriptsize\bfseries] at (-0.15,1.1) {Klien};
+    \draw[fill=blue!8] (0,0.8) rectangle (10,1.4);
+    \node at (5,1.1) {menunggu \textit{response}: 43,06 ms};
+
+    \node[anchor=east, font=\scriptsize\bfseries] at (-0.15,0.15) {Server};
+    \draw[fill=orange!25] (0,-0.15) rectangle (0.7,0.45);
+    \draw[fill=red!22] (0.7,-0.15) rectangle (9.3,0.45);
+    \draw[fill=green!10] (9.3,-0.15) rectangle (10,0.45);
+    \node[font=\tiny, align=center] at (5,0.15)
+      {segmen kedua tertahan Nagle sampai ACK tiba, sekitar 40 ms};
+
+    \node[font=\tiny, anchor=north] at (0.35,-0.25) {kerja};
+    \node[font=\tiny, anchor=north] at (0.35,-0.62) {0,58 ms};
+    \node[font=\tiny, anchor=north] at (9.65,-0.25) {isi};
+    \node[font=\tiny, anchor=north] at (9.65,-0.62) {terkirim};
+    \draw[-{Stealth[length=2mm]}, thick] (0.35,-1.15) -- (0.35,-0.85);
+    \node[font=\tiny, anchor=north, align=center] at (2.2,-1.15)
+      {hanya kotak ini yang terlihat \texttt{cProfile}};
+  \end{tikzpicture}
+
+  \vspace{6pt}
+  {\small Selisihnya terjadi di lapisan transport, bukan di kode aplikasi.}
+\end{frame}
+
+\begin{frame}{{\Large Dua Aturan yang Masing-Masing Masuk Akal}}
   \vspace{10pt}
-  {\footnotesize Penyebabnya ada di lapisan transport, bukan di aplikasi.}
+  \begin{itemize}
+    \item \textbf{Algoritma Nagle} mencegah jaringan dibanjiri paket kerdil.
+          Data satu byte tetap menanggung sekitar 40 byte header, jadi
+          tulisan kecil ditahan sampai data sebelumnya menerima ACK, atau
+          sampai terkumpul satu segmen penuh.
+    \item \textbf{Delayed ACK} menekan jumlah paket tanda terima. Penerima
+          menunda ACK sampai sekitar 40 milidetik, berharap dapat
+          menumpangkannya pada data balasan.
+  \end{itemize}
+  \vspace{8pt}
+  {\small Keduanya lahir di zaman jaringan lambat, dan sendiri-sendiri
+  keduanya memang menghemat. Masalahnya muncul ketika bertemu.}
 \end{frame}
 
 \begin{frame}{{\Large Nagle Bertemu Delayed ACK}}
-  \vspace{12pt}
+  \vspace{10pt}
   \begin{itemize}
-    \item Header dan isi jawaban ditulis sebagai dua segmen TCP yang terpisah.
-    \item Algoritma Nagle menahan segmen kecil kedua sampai segmen pertama
-          menerima ACK (\textit{acknowledge}), yaitu tanda terima dari
-          penerima.
-    \item Penerima justru menunda ACK-nya.
-    \item Keduanya bertemu pada tambahan tetap sekitar 40 milidetik untuk tiap
-          jawaban kecil.
+    \item Header dan isi \textit{response} ditulis sebagai dua segmen Transmission
+          Control Protocol (TCP) yang terpisah.
+    \item Nagle menahan segmen kecil kedua sampai ACK segmen pertama tiba,
+          sedangkan penerima sengaja menunda ACK itu. Penundaannya keputusan
+          penerima, bukan akibat jaringan.
+    \item Keduanya saling menunggu, dan tiap \textit{response} kecil menanggung
+          tambahan tetap sekitar 40 milidetik.
   \end{itemize}
   \vspace{8pt}
-  {\footnotesize Obatnya satu baris: \texttt{disable\_nagle\_algorithm = True}
-  pada penangan permintaan, yang menyalakan \texttt{TCP\_NODELAY}.}
+  {\small Angka 40 milidetik itu timer \textit{delayed ACK} milik sistem
+  operasi, bukan angka HTTP dan bukan angka aplikasi. Buktinya pengukuran ini
+  berjalan lewat \textit{localhost}, yang perjalanan pulang-perginya hanya
+  0,049 milidetik.}
+\end{frame}
+
+\begin{frame}{{\Large Obatnya: TCP\_NODELAY}}
+  \vspace{10pt}
+  \begin{itemize}
+    \item \texttt{TCP\_NODELAY} adalah opsi soket yang mematikan Nagle untuk
+          satu koneksi. Artinya tulisan kecil langsung dikirim tanpa menunggu
+          ACK.
+    \item Di Python, opsi itu dipasang dengan menyetel
+          \texttt{disable\_nagle\_algorithm = True} pada kelas penangan
+          permintaan.
+    \item Obat lainnya bersifat struktural: menulis header dan isi sekali
+          jalan, sehingga segmennya memang hanya satu.
+  \end{itemize}
+  \vspace{8pt}
+  {\small Keduanya menyelesaikan masalah yang sama. Yang pertama satu baris,
+  yang kedua menuntut penulisan ulang cara \textit{response} dikirim.}
 \end{frame}
 
 \begin{frame}{{\Large Sebelum dan Sesudah TCP\_NODELAY}}
@@ -482,15 +606,15 @@ def ulangi_pekerjaan(pekerjaan, pool_koneksi, jumlah_ulangan):
 
   \vspace{8pt}
   {\footnotesize p50 dalam milidetik. Baris terakhir sengaja dibiarkan apa
-  adanya: jawaban katalog penuh besar, sehingga segmennya tidak pernah kecil
+  adanya: \textit{response} katalog penuh besar, sehingga segmennya tidak pernah kecil
   dan tambahan 40 milidetik itu tidak pernah muncul.}
 \end{frame}
 
-\section{Ukuran Jawaban dan Analisis Bundle}
+\section{Ukuran Response dan Analisis Bundle}
 
 \begin{frame}{\hfill}
   \centering
-  \Huge{\textbf{Ukuran Jawaban\\dan Analisis Bundle}}
+  \Huge{\textbf{Ukuran \textit{Response}\\dan Analisis Bundle}}
 \end{frame}
 
 \begin{frame}{{\Large Byte Ikut Dianggarkan}}
@@ -502,11 +626,11 @@ def ulangi_pekerjaan(pekerjaan, pool_koneksi, jumlah_ulangan):
           tambahan, berapa pun cepatnya basis data.
   \end{itemize}
   \vspace{10pt}
-  {\footnotesize Karena itu anggaran memuat batas ukuran, bukan hanya batas
+  {\footnotesize Karena itu \textit{budget} memuat batas ukuran, bukan hanya batas
   waktu.}
 \end{frame}
 
-\begin{frame}{{\Large Ukuran Jawaban di Kabel}}
+\begin{frame}{{\Large Ukuran Response di Kabel}}
   \vspace{6pt}
   \centering
   {\footnotesize
@@ -527,31 +651,31 @@ def ulangi_pekerjaan(pekerjaan, pool_koneksi, jumlah_ulangan):
   \texttt{Accept-Encoding: gzip}. Baris tengah tidak berubah sama sekali.}
 \end{frame}
 
-\begin{frame}[fragile]{{\Large Jawaban Kecil Tidak Di-compress}}
+\begin{frame}[fragile]{{\Large Response Kecil Tidak Di-compress}}
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
-def compress_bila_diminta(isi_jawaban, nilai_accept_encoding):
-  """Meng-compress isi jawaban bila klien menerima gzip dan isinya cukup besar.
+def compress_bila_diminta(isi_response, nilai_accept_encoding):
+  """Meng-compress isi response bila klien menerima gzip dan isinya cukup besar.
 
-  Mengembalikan pasangan (isi, nilai Content-Encoding atau None). Jawaban
+  Mengembalikan pasangan (isi, nilai Content-Encoding atau None). Response
   kecil dibiarkan apa adanya, karena gzip justru menambah byte dan waktu.
   """
   menerima_gzip = "gzip" in (nilai_accept_encoding or "")
-  if not menerima_gzip or len(isi_jawaban) < BATAS_COMPRESS_BYTE:
-    return isi_jawaban, None
-  return gzip.compress(isi_jawaban), "gzip"
+  if not menerima_gzip or len(isi_response) < BATAS_COMPRESS_BYTE:
+    return isi_response, None
+  return gzip.compress(isi_response), "gzip"
 \end{lstlisting}
   \vspace{2pt}
-  {\footnotesize Batasnya 1.024 byte. Jawaban 557 byte itu lewat tanpa
+  {\footnotesize Batasnya 1.024 byte. \textit{Response} 557 byte itu lewat tanpa
   disentuh.}
 \end{frame}
 
-\begin{frame}{{\Large Compress Memperkecil Gejala}}
+\begin{frame}{{\Large Compress Memperkecil Symptom}}
   \vspace{14pt}
   \begin{itemize}
     \item Rasio 15 kali lipat pada katalog penuh memang mengesankan.
     \item Namun 281.905 byte tetap 34 kali lipat lebih besar daripada
-          anggaran 8 kibibyte.
+          \textit{budget} 8 kibibyte.
     \item Sebabnya jumlah baris yang dikirim, bukan cara mengemasnya.
   \end{itemize}
   \vspace{10pt}
@@ -559,44 +683,48 @@ def compress_bila_diminta(isi_jawaban, nilai_accept_encoding):
   yang dilakukan alamat katalog berhalaman.}
 \end{frame}
 
-\begin{frame}{{\Large Tiga Cara Menekan Ukuran Bundle}}
+\begin{frame}{{\Large Tiga Cara Menekan Ukuran Bundle JS}}
   \vspace{14pt}
   \begin{itemize}
     \item \textit{Tree shaking} membuang kode yang tidak pernah dipanggil saat
-          \textit{bundle} disusun.
+          \textit{bundle} disusun. Contoh: menulis
+          \texttt{import \{ format \} from "date-fns"} hanya memasukkan satu
+          fungsi itu, bukan seluruh pustakanya.
     \item \textit{Code splitting} memecah \textit{bundle} menurut halaman atau
-          fitur, sehingga halaman katalog tidak ikut mengunduh kode halaman
-          laporan.
+          fitur. Contoh: kode halaman katalog dan kode halaman laporan
+          dibangun menjadi dua file terpisah.
     \item \textit{Lazy loading} menunda pengunduhan potongan itu sampai
-          benar-benar dibutuhkan.
+          benar-benar dibutuhkan. Contoh:
+          \texttt{await import("./grafik.js")} dijalankan ketika tombol
+          Lihat grafik ditekan.
   \end{itemize}
-  \vspace{8pt}
+  \vspace{6pt}
   {\footnotesize Tiap kilobyte JavaScript harus diunduh, di-\textit{parse},
   lalu dijalankan, dan ketiganya menunda interaksi pertama.}
 \end{frame}
 
-\begin{frame}{{\Large Ukuran Berkas Halaman Demo}}
+\begin{frame}{{\Large Ukuran File Halaman Demo}}
   \vspace{6pt}
   \centering
   {\footnotesize
   \begin{tabularx}{\textwidth}{Yrr}
     \hline
-    \textbf{Berkas} & \textbf{Apa adanya} & \textbf{Dengan gzip} \\
+    \textbf{File} & \textbf{Apa adanya} & \textbf{Dengan gzip} \\
     \hline
     \texttt{statis/index.html} & 832 B & 482 B \\
     \hline
-    \texttt{statis/web-vitals.js} & 2.615 B & 1.156 B \\
+    \texttt{statis/web-vitals.js} & 2.610 B & 1.152 B \\
     \hline
-    \texttt{statis/katalog.js} & 1.591 B & 817 B \\
+    \texttt{statis/katalog.js} & 1.594 B & 817 B \\
     \hline
-    Seluruh JavaScript halaman & 4.206 B & 1.697 B \\
+    Seluruh JavaScript halaman & 4.204 B & 1.698 B \\
     \hline
   \end{tabularx}}
 
   \vspace{8pt}
   {\footnotesize Angkanya kecil karena halamannya memang kecil. Yang dibawa
   bukan angkanya, melainkan kebiasaannya: ukuran diukur pada tiap perubahan,
-  lalu dibandingkan dengan anggaran.}
+  lalu dibandingkan dengan \textit{budget}.}
 \end{frame}
 
 \section{Lazy Loading, Gambar, dan Font}
@@ -612,10 +740,11 @@ def compress_bila_diminta(isi_jawaban, nilai_accept_encoding):
     \item Ukuran gambar disesuaikan dengan ukuran tampilnya. Gambar 2.000
           piksel yang ditampilkan selebar 400 piksel membuang sekitar 96
           persen pikselnya.
-    \item Format modern dipakai, misalnya WebP atau AVIF, yang pada mutu
-          setara menghasilkan berkas jauh lebih kecil daripada JPEG.
+    \item Format modern dipakai, misalnya WebP atau AV1 Image File Format
+          (AVIF), yang pada mutu setara menghasilkan file jauh lebih kecil
+          daripada Joint Photographic Experts Group (JPEG).
     \item Gambar di luar layar pertama ditunda dengan
-          \texttt{loading="lazy"}, sehingga tidak ikut berebut pita dengan
+          \texttt{loading="lazy"}, sehingga tidak ikut berebut \textit{bandwidth} dengan
           gambar yang menentukan LCP.
     \item Font diberi \texttt{font-display: swap}, dan hanya varian yang
           dipakai yang diunduh.
@@ -666,7 +795,8 @@ def compress_bila_diminta(isi_jawaban, nilai_accept_encoding):
           datanya siap, sehingga pengguna menatap layar kosong.
     \item \textit{Streaming} mengubah urutannya: bagian yang siap dikirim
           lebih dahulu, sisanya menyusul dalam potongan berikutnya.
-    \item Mekanismenya \textit{chunked transfer encoding} milik HTTP/1.1.
+    \item Mekanismenya \textit{chunked transfer encoding} milik HyperText
+          Transfer Protocol (HTTP) versi 1.1.
   \end{itemize}
   \vspace{8pt}
   {\footnotesize Analoginya seperti menyajikan makanan di kantin. Total waktu
@@ -738,7 +868,7 @@ def compress_bila_diminta(isi_jawaban, nilai_accept_encoding):
     \item Bab 3 menyetel \textit{query} lewat indeks.
     \item Bab 4 menghindari perhitungan berulang lewat \textit{cache}.
     \item Bab ini menambahkan penyetelan yang sering terlewat, yaitu jumlah
-          baris dalam satu jawaban.
+          baris dalam satu \textit{response}.
   \end{itemize}
   \vspace{10pt}
   {\footnotesize Dua alamat berikut menjawab kebutuhan yang sama, yaitu
@@ -759,7 +889,7 @@ def compress_bila_diminta(isi_jawaban, nilai_accept_encoding):
     \hline
     \textit{Throughput}, permintaan per detik & 811,8 & 3,5 & 232$\times$ \\
     \hline
-    Ukuran jawaban di kabel & 0,3 KB & 275,3 KB & 918$\times$ \\
+    \textit{Response size} di kabel & 0,3 KB & 275,3 KB & 918$\times$ \\
     \hline
   \end{tabularx}}
 
@@ -795,7 +925,7 @@ def baca_parameter_halaman(query_alamat):
           menambah byte yang diubah dan dikirim.
     \item Alamat agregat menempuh jalan berbeda: barisnya hanya sepuluh,
           tetapi p95-nya 930,99 milidetik pada 8 \textit{worker}, jauh di
-          atas anggaran 400 milidetik.
+          atas \textit{budget} 400 milidetik.
   \end{itemize}
   \vspace{8pt}
   {\footnotesize Profilnya menunjukkan 99 persen waktu dihabiskan menunggu
@@ -816,9 +946,9 @@ def baca_parameter_halaman(query_alamat):
     \item Pengguna datang bersamaan, dan perilaku sistem saat ramai tidak
           dapat ditebak dari perilakunya saat sepi.
     \item \textit{Load testing} memberi beban terkendali, lalu mencatat
-          latensi dan \textit{throughput}-nya.
+          \textit{latency} dan \textit{throughput}-nya.
     \item Bentuk yang dipakai bab ini \textit{closed loop}: tiap
-          \textit{worker} menunggu jawaban sebelum mengirim permintaan
+          \textit{worker} menunggu \textit{response} sebelum mengirim permintaan
           berikutnya.
   \end{itemize}
   \vspace{8pt}
@@ -848,7 +978,7 @@ def jalankan_satu_worker(jalur, jumlah_permintaan, catatan):
   {\scriptsize
   \begin{tabularx}{\textwidth}{rrrrY}
     \hline
-    \textbf{Worker} & \textbf{p50} & \textbf{p95} & \textbf{Per detik} & \textbf{Yang terjadi} \\
+    \textbf{Worker} & \textbf{p50} & \textbf{p95} & \textbf{Throughput} & \textbf{Yang terjadi} \\
     \hline
     1 & 156,83 & 214,61 & 6,0 & Tidak ada antrean \\
     \hline
@@ -860,12 +990,12 @@ def jalankan_satu_worker(jalur, jumlah_permintaan, catatan):
     \hline
     16 & 1.210,84 & 2.153,35 & 11,6 & \textit{Throughput} turun \\
     \hline
-    32 & 2.794,87 & 3.945,97 & 11,0 & Latensi meledak, hasil tetap \\
+    32 & 2.794,87 & 3.945,97 & 11,0 & \textit{Latency} meledak, hasil tetap \\
     \hline
   \end{tabularx}}
 
   \vspace{6pt}
-  {\footnotesize Waktu dalam milidetik, 15 permintaan tiap \textit{worker}.}
+  {\footnotesize Waktu dalam milidetik, 15 permintaan tiap \textit{worker}. Kolom \textbf{Throughput} berisi banyaknya permintaan yang selesai dilayani tiap detik, dihitung dari seluruh \textit{worker} sekaligus.}
 \end{frame}
 
 \begin{frame}{{\Large Titik Jenuh dalam Satu Gambar}}
@@ -902,16 +1032,19 @@ def jalankan_satu_worker(jalur, jumlah_permintaan, catatan):
 \end{frame}
 
 \begin{frame}{{\Large Tiga Kesimpulan dari Titik Jenuh}}
-  \vspace{14pt}
+  \vspace{10pt}
   \begin{itemize}
-    \item Kapasitas sistem ini sekitar 13 permintaan per detik untuk alamat
-          tersebut.
-    \item Menambah \textit{worker} di atas titik jenuh tidak menambah
-          kapasitas, hanya memindahkan waktu tunggu ke dalam antrean.
-    \item Perbaikan yang benar menaikkan kapasitasnya, misalnya lewat
-          \textit{cache} Bab 4, bukan menaikkan konkurensi.
+    \item Kapasitas alamat ini sekitar 13 permintaan per detik, yaitu
+          \textit{throughput} tertinggi yang masih bertahan sebelum
+          \textit{latency}-nya meledak.
+    \item Angka itu ditentukan bagian terlambat di jalurnya, yaitu basis data
+          yang menghitung agregat, bukan jumlah \textit{worker}.
+    \item Menambah \textit{worker} di atas titik jenuh hanya memindahkan
+          waktu tunggu ke dalam antrean.
+    \item Perbaikan yang benar menaikkan angka 13 itu, misalnya dengan
+          menyimpan hasil agregat seperti Bab 4.
   \end{itemize}
-  \vspace{8pt}
+  \vspace{6pt}
   {\footnotesize Pada 32 \textit{worker}, p95 menjadi 18 kali lipat p95 pada
   satu \textit{worker}, sementara hasilnya justru sedikit lebih rendah.}
 \end{frame}
@@ -921,66 +1054,110 @@ def jalankan_satu_worker(jalur, jumlah_permintaan, catatan):
   \begin{itemize}
     \item Jumlah permintaan yang sedang dikerjakan sama dengan
           \textit{throughput} dikalikan waktu tinggalnya.
-    \item Pada baris 8 \textit{worker}: $13{,}6 \times 0{,}515 = 7{,}0$, dan
-          angka itu memang mendekati 8.
+    \item Kedua angkanya diambil dari baris 8 \textit{worker} pada tabel tadi:
+          \textit{throughput} 13,6 permintaan per detik, dan p50 514,98
+          milidetik yang sama dengan 0,515 detik.
+    \item $13{,}6 \times 0{,}515 = 7{,}0$, dan angka itu memang mendekati 8,
+          yaitu jumlah \textit{worker} yang menembaknya.
   \end{itemize}
-  \vspace{10pt}
-  {\footnotesize Kecocokan tersebut menjadi pemeriksaan kewarasan. Bila
-  ketiganya tidak konsisten, yang salah biasanya pengukurannya.}
+  \vspace{6pt}
+  {\footnotesize p50 dipakai sebagai pendekatan waktu tinggal rata-rata, jadi
+  hasilnya tidak persis 8. Kecocokan sedekat ini sudah cukup sebagai
+  \textit{sanity check}: bila ketiganya tidak konsisten, yang salah biasanya
+  pengukurannya.}
 \end{frame}
 
 \begin{frame}{{\Large Menjaga Pengukuran Tetap Jujur}}
-  \vspace{12pt}
-  \begin{itemize}
-    \item Alamat katalog penuh membaca seluruh tabel ratusan kali, sehingga
-          halaman tabel lain terdorong keluar dari \textit{shared buffers}.
-    \item Pengukuran alamat agregat tepat sesudahnya mencatat p95 sekitar
-          1.000 milidetik, padahal dengan pemanasan 831 sampai 931 milidetik.
-  \end{itemize}
-  \vspace{8pt}
-  Tiga aturan yang dipakai \textit{gate} anggaran:
+  \vspace{4pt}
+  {\small Alamat katalog penuh membaca seluruh tabel ratusan kali, sehingga
+  halaman tabel lain terdorong keluar dari \textit{shared buffers}. Permintaan
+  pertama sesudahnya menanggung pembacaan ulang dari \textit{disk}.}
+  \vspace{2pt}
+  \centering
+  \begin{tikzpicture}[font=\scriptsize]
+    \begin{axis}[
+      width=0.82\textwidth, height=4.4cm,
+      xlabel={Permintaan ke-}, ylabel={Waktu (ms)},
+      xmin=0.5, xmax=20.5, ymin=0, ymax=155,
+      xtick={1,5,10,15,20}, ytick={0,50,100,150},
+      axis y line*=left, axis x line*=bottom,
+    ]
+      \addplot[praditagreen, thick, mark=*, mark size=1.1]
+        coordinates {(1,125.0) (2,116.6) (3,114.8) (4,103.5) (5,99.3) (6,119.3) (7,121.1)
+                     (8,139.3) (9,111.1) (10,108.5) (11,90.0) (12,99.2)
+                     (13,74.5) (14,72.9) (15,95.1) (16,78.8) (17,77.0)
+                     (18,87.5) (19,87.2) (20,86.4)};
+      \addplot[red!65!black, dashed, thick, forget plot]
+        coordinates {(0.5,83.4) (20.5,83.4)};
+      \node[font=\tiny, red!65!black, anchor=south east] at (axis cs:20.4,104)
+        {rata-rata lima terakhir: 83,4 ms};
+    \end{axis}
+  \end{tikzpicture}
+
+  \vspace{2pt}
+  {\footnotesize Diukur dari basis data yang baru dinyalakan, \texttt{curl}
+  berurutan ke \texttt{/api/terlaris}. Lonjakan pada permintaan kedelapan
+  adalah \textit{noise}, dan memang dibiarkan apa adanya.}
+\end{frame}
+
+\begin{frame}{{\Large Tiga Aturan Gate Budget}}
+  \vspace{14pt}
   \begin{enumerate}
-    \item Tiap alamat dipanaskan dengan 30 permintaan sebelum diukur.
+    \item Tiap alamat di-\textit{warmup} dengan 30 permintaan sebelum diukur.
     \item Ada jeda tiga detik sebelum tiap pengukuran.
     \item Alamat terberat diukur paling akhir.
   \end{enumerate}
+  \vspace{10pt}
+  {\small Tanpa ketiganya, \textit{verdict} \textit{gate} menghukum urutan pengukuran,
+  bukan kode yang sedang dinilai.}
 \end{frame}
 
 \begin{frame}[fragile]{{\Large Gate yang Benar-Benar Memblokir}}
   \vspace{2pt}
+  {\footnotesize Sebelum baris ini, \texttt{gate-budget.py} sudah mengukur
+  tiap alamat yang terdaftar di \texttt{budget.json}, membandingkan hasilnya
+  dengan batasnya, lalu mengumpulkan satu baris \textit{verdict} untuk tiap ukuran.
+  Potongan berikut adalah penutupnya.}
+  \vspace{4pt}
 \begin{lstlisting}[style=PythonStyle]
   jumlah_lewat = sum(1 for baris in daftar_baris if not baris[-1])
   if jumlah_lewat:
-    print(f"\nGagal: {jumlah_lewat} anggaran terlampaui.")
+    print(f"\nGagal: {jumlah_lewat} budget terlampaui.")
     sys.exit(1)
-  print("\nLolos: seluruh anggaran terpenuhi.")
+  print("\nLolos: seluruh budget terpenuhi.")
 \end{lstlisting}
   \vspace{4pt}
-  {\footnotesize Begitu ada satu anggaran yang terlampaui, prosesnya keluar
-  dengan status 1, dan \textit{Continuous Integration} membaca status itu
-  sebagai kegagalan.}
+  {\footnotesize Begitu ada satu \textit{budget} yang terlampaui, prosesnya
+  keluar dengan status 1. \textit{Continuous Integration} membaca status itu,
+  bukan tulisan di layarnya, sehingga satu perintah
+  \texttt{python gate-budget.py} di dalam \textit{pipeline} sudah cukup untuk
+  menggagalkan \textit{job} dan memblokir \textit{merge}.}
 \end{frame}
 
-\begin{frame}[fragile]{{\Large Keluaran Gate Apa Adanya}}
+\begin{frame}[fragile]{{\Large Membaca Verdict Gate}}
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
 source ../.venv/bin/activate
-python gate-anggaran.py
+python gate-budget.py
 
 # Keluarannya:
-#   Ukuran                              Anggaran           Terukur  Vonis
-#   /api/katalog?halaman=1&ukuran=20 p95    60 ms         12.59 ms  lolos
-#   /api/katalog?halaman=1&ukuran=20 ukuran  8 KB          0.29 KB  lolos
-#   /api/terlaris p95                      400 ms        830.95 ms  LEWAT
-#   /api/terlaris ukuran                     2 KB          0.54 KB  lolos
-#   /api/katalog-penuh p95                  60 ms       2262.70 ms  LEWAT
-#   /api/katalog-penuh ukuran                8 KB        275.30 KB  LEWAT
-#   lcp_ms p75                            2500 ms   tidak ada data  LEWAT
-#   inp_ms p75                             200 ms   tidak ada data  LEWAT
-#   cls p75                                0.1      tidak ada data  LEWAT
+#   Ukuran                                    Budget          Terukur  Verdict
+#   /api/katalog?halaman=1&ukuran=20 p95          60 ms      12.59 ms  lolos
+#   /api/katalog?halaman=1&ukuran=20 ukuran        8 KB       0.29 KB  lolos
+#   /api/terlaris p95                            400 ms     830.95 ms  LEWAT
+#   /api/terlaris ukuran                           2 KB       0.54 KB  lolos
+#   /api/katalog-penuh p95                        60 ms    2262.70 ms  LEWAT
+#   /api/katalog-penuh ukuran                      8 KB     275.30 KB  LEWAT
+#   lcp_ms p75                                  2500 ms    tanpa data  LEWAT
+#   inp_ms p75                                   200 ms    tanpa data  LEWAT
+#   cls p75                                      0.1       tanpa data  LEWAT
 #
-# Gagal: 6 anggaran terlampaui.
+# Gagal: 6 budget terlampaui.
 \end{lstlisting}
+  \vspace{2pt}
+  {\footnotesize Tiap baris satu ukuran: namanya, batas yang disepakati,
+  hasil pengukuran, lalu \textit{verdict}-nya. Enam baris bervonis LEWAT, sehingga
+  prosesnya berhenti dengan status 1 dan \textit{merge} diblokir.}
 \end{frame}
 
 \begin{frame}{{\Large Tanpa Data Berarti Gagal}}
@@ -1003,7 +1180,7 @@ python gate-anggaran.py
   \Huge{\textbf{Persiapan Latihan}}
 \end{frame}
 
-\begin{frame}[fragile]{{\Large Basis Data, Data Uji, dan Berkas Statis}}
+\begin{frame}[fragile]{{\Large Basis Data, Data Uji, dan File Statis}}
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
 cd sources/chapter05
@@ -1030,47 +1207,47 @@ python aplikasi.py
 # Melayani di http://127.0.0.1:8010/  (Ctrl+C untuk berhenti)
 \end{lstlisting}
   \vspace{4pt}
-  {\footnotesize \texttt{beban.py} dan \texttt{gate-anggaran.py} sengaja
+  {\footnotesize \texttt{beban.py} dan \texttt{gate-budget.py} sengaja
   membebani, sehingga keduanya hanya diarahkan ke aplikasi milik sendiri.
   Hasil tiap mahasiswa akan berbeda, karena angkanya bergantung pada
   perangkat keras, versi PostgreSQL, dan beban lain di komputer yang sama.
   Yang dilaporkan adalah pola perbandingannya, bukan angka persisnya.}
 \end{frame}
 
-\section{Latihan 1: Menegakkan Anggaran}
+\section{Latihan 1: Menegakkan Budget}
 
 \begin{frame}{\hfill}
   \centering
-  \Huge{\textbf{Latihan 1\\Menegakkan Anggaran Performa}}
+  \Huge{\textbf{Latihan 1\\Menegakkan \textit{Budget} Performa}}
 \end{frame}
 
 \begin{frame}{{\Large Langkah Kerja}}
   \vspace{6pt}
   \begin{enumerate}
-    \item Baca \texttt{anggaran.json}, lalu tulis dugaan untuk tiap alamat:
+    \item Baca \texttt{budget.json}, lalu tulis dugaan untuk tiap alamat:
           lolos atau tidak, dan mengapa. Dugaan ditulis lebih dahulu agar
           tidak menyesuaikan diri dengan hasilnya.
-    \item Jalankan \textit{gate}-nya, lalu catat vonis tiap baris.
+    \item Jalankan \textit{gate}-nya, lalu catat \textit{verdict} tiap baris.
     \item Catat status keluar prosesnya dengan \texttt{echo \$?} tepat
           sesudah \textit{gate} selesai.
-    \item Ubah satu angka anggaran menjadi longgar, misalnya p95 alamat
+    \item Ubah satu angka \textit{budget} menjadi longgar, misalnya p95 alamat
           agregat menjadi 2000 milidetik, lalu jalankan ulang dan catat
           status keluarnya.
   \end{enumerate}
   \vspace{4pt}
-  {\footnotesize Latihan ini membuktikan bahwa anggaran hanya berguna bila
-  ada yang menegakkannya, dan bahwa vonisnya dapat dibaca mesin.}
+  {\footnotesize Latihan ini membuktikan bahwa \textit{budget} hanya berguna bila
+  ada yang menegakkannya, dan bahwa \textit{verdict}-nya dapat dibaca mesin.}
 \end{frame}
 
 \begin{frame}[fragile]{{\Large Menjalankan Gate}}
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
 source ../.venv/bin/activate
-python gate-anggaran.py
+python gate-budget.py
 echo $?
 
 # Keluarannya:
-# Gagal: 6 anggaran terlampaui.
+# Gagal: 6 budget terlampaui.
 # 1
 \end{lstlisting}
   \vspace{4pt}
@@ -1084,7 +1261,7 @@ echo $?
   {\footnotesize
   \begin{tabularx}{\textwidth}{Yrrl}
     \hline
-    \textbf{Ukuran} & \textbf{Anggaran} & \textbf{Terukur} & \textbf{Vonis} \\
+    \textbf{Ukuran} & \textbf{\textit{Budget}} & \textbf{Terukur} & \textbf{\textit{Verdict}} \\
     \hline
     \texttt{/api/katalog} p95 & 60 & 12,59 & lolos \\
     \hline
@@ -1096,7 +1273,7 @@ echo $?
     \hline
     \texttt{/api/katalog-penuh} ukuran & 8 KB & 275,30 KB & LEWAT \\
     \hline
-    LCP p75 & 2500 & tidak ada data & LEWAT \\
+    LCP p75 & 2500 & tanpa data & LEWAT \\
     \hline
   \end{tabularx}}
 
@@ -1110,7 +1287,7 @@ echo $?
   {\footnotesize
   \begin{tabularx}{\textwidth}{Yrrl}
     \hline
-    \textbf{Ukuran} & \textbf{Anggaran} & \textbf{Terukur} & \textbf{Vonis} \\
+    \textbf{Ukuran} & \textbf{\textit{Budget}} & \textbf{Terukur} & \textbf{\textit{Verdict}} \\
     \hline
     \texttt{/api/katalog} p95 & \dots & \dots & \dots \\
     \hline
@@ -1122,7 +1299,7 @@ echo $?
     \hline
     \texttt{/api/katalog-penuh} ukuran & \dots & \dots & \dots \\
     \hline
-    Status keluar sebelum dan sesudah anggaran dilonggarkan & \dots & \dots & \dots \\
+    Status keluar sebelum dan sesudah \textit{budget} dilonggarkan & \dots & \dots & \dots \\
     \hline
   \end{tabularx}}
 
@@ -1147,7 +1324,7 @@ echo $?
     \item Untuk tiap alamat, catat tiga fungsi teratas menurut waktu
           kumulatif beserta bagiannya terhadap waktu total.
     \item Untuk tiap alamat, tulis satu kalimat perbaikan yang menyentuh
-          sebabnya, bukan gejalanya.
+          sebabnya, bukan \textit{symptom}-nya.
   \end{enumerate}
   \vspace{8pt}
   {\footnotesize Latihan ini membuktikan bahwa dua alamat yang sama-sama
@@ -1223,7 +1400,8 @@ python profil-endpoint.py terlaris 20
 \begin{frame}{{\Large Langkah Kerja}}
   \vspace{6pt}
   \begin{enumerate}
-    \item Panaskan alamatnya dengan 30 permintaan pada satu \textit{worker},
+    \item Lakukan \textit{warmup} pada alamatnya dengan 30 permintaan pada
+          satu \textit{worker},
           agar \textit{cache} basis data hangat sebelum pengukuran dimulai.
     \item Jalankan beban untuk 1, 2, 4, 8, 16, dan 32 \textit{worker}.
     \item Tandai baris tempat \textit{throughput} berhenti bertambah. Itulah
@@ -1247,7 +1425,7 @@ python beban.py /api/terlaris 8 15
 python beban.py /api/terlaris 32 15
 \end{lstlisting}
   \vspace{4pt}
-  {\footnotesize Baris pertama adalah pemanasan, dan angkanya tidak dicatat.
+  {\footnotesize Baris pertama adalah \textit{warmup}, dan angkanya tidak dicatat.
   Jumlah \textit{worker} 2, 4, dan 16 dijalankan dengan pola yang sama.}
 \end{frame}
 
@@ -1257,13 +1435,13 @@ python beban.py /api/terlaris 32 15
   {\footnotesize
   \begin{tabularx}{\textwidth}{rrrrY}
     \hline
-    \textbf{Worker} & \textbf{p50} & \textbf{p95} & \textbf{Per detik} & \textbf{Catatan} \\
+    \textbf{Worker} & \textbf{p50} & \textbf{p95} & \textbf{Throughput} & \textbf{Catatan} \\
     \hline
     1 & 156,83 & 214,61 & 6,0 & Tanpa antrean \\
     \hline
     8 & 514,98 & 835,65 & 13,6 & Sudah jenuh \\
     \hline
-    32 & 2.794,87 & 3.945,97 & 11,0 & Latensi meledak \\
+    32 & 2.794,87 & 3.945,97 & 11,0 & \textit{Latency} meledak \\
     \hline
   \end{tabularx}}
 
@@ -1277,7 +1455,7 @@ python beban.py /api/terlaris 32 15
   {\footnotesize
   \begin{tabularx}{\textwidth}{rrrrY}
     \hline
-    \textbf{Worker} & \textbf{p50} & \textbf{p95} & \textbf{Per detik} & \textbf{Catatan} \\
+    \textbf{Worker} & \textbf{p50} & \textbf{p95} & \textbf{Throughput} & \textbf{Catatan} \\
     \hline
     1 & \dots & \dots & \dots & \dots \\
     \hline
@@ -1311,13 +1489,13 @@ python beban.py /api/terlaris 32 15
 \begin{frame}{{\Large Langkah Kerja}}
   \vspace{6pt}
   \begin{enumerate}
-    \item Pastikan berkas TypeScript sudah dikompilasi pada langkah
+    \item Pastikan file TypeScript sudah dikompilasi pada langkah
           penyiapan, lalu buka \texttt{http://localhost:8010/} di browser.
     \item Tekan tombol Muat katalog, tunggu daftarnya tampil, lalu tutup tab
           atau pindah ke tab lain.
     \item Periksa isi \texttt{vitals.jsonl}, lalu catat ketiga metriknya.
     \item Ulangi kunjungan sebanyak lima kali, jalankan ulang \textit{gate}
-          anggaran, dan catat perubahan vonis ketiga baris Core Web Vitals.
+          \textit{budget}, dan catat perubahan \textit{verdict} ketiga baris Core Web Vitals.
   \end{enumerate}
   \vspace{4pt}
   {\footnotesize Laporan dikirim saat halaman ditinggalkan, bukan saat
@@ -1329,10 +1507,10 @@ python beban.py /api/terlaris 32 15
 \begin{lstlisting}[language=bash]
 cat vitals.jsonl
 source ../.venv/bin/activate
-python gate-anggaran.py
+python gate-budget.py
 \end{lstlisting}
   \vspace{6pt}
-  {\footnotesize Tiap baris berkas itu satu kunjungan, sehingga laporan baru
+  {\footnotesize Tiap baris file itu satu kunjungan, sehingga laporan baru
   cukup ditambahkan di akhir tanpa membaca ulang isinya.}
 \end{frame}
 
@@ -1401,10 +1579,10 @@ docker compose down -v
   \Huge{\textbf{Ringkasan}}
 \end{frame}
 
-\begin{frame}{{\Large Ringkasan: Anggaran dan Profil}}
+\begin{frame}{{\Large Ringkasan: Budget dan Profil}}
   \vspace{10pt}
   \begin{itemize}
-    \item Anggaran berisi tiga batas: latensi p95, ukuran jawaban, dan ambang
+    \item \textit{Budget} berisi tiga batas: \textit{latency} p95, \textit{response size}, dan ambang
           Core Web Vitals. \textit{Gate}-nya keluar dengan status 1 begitu satu
           batas terlampaui.
     \item Dua profil, dua kesimpulan: katalog penuh habis di serialisasi

@@ -1,0 +1,13 @@
+{
+  "name": "awe-chapter06-e2e",
+  "private": true,
+  "description": "Playwright untuk pengujian E2E Bab 6. Dipasang dengan PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install, karena browsernya memakai Google Chrome yang sudah terpasang di sistem lewat channel chrome.",
+  "scripts": {
+    "e2e": "playwright test --config e2e/playwright.config.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@types/node": "^26.6.3",
+    "typescript": "^7.0.2"
+  }
+}

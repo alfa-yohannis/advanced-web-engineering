@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pradita.ac.id/awe/kontrak/pesanan.schema.json",
+  "title": "Response alamat pesanan",
+  "description": "Bentuk response GET /api/pesanan/<id> dan /api/pesanan-n1/<id>. File ini adalah kontraknya: klien membacanya untuk tahu apa yang boleh diandalkan, dan test_kontrak.py memakainya untuk memeriksa server.",
+  "type": "object",
+  "required": ["id", "status", "total", "pelanggan", "item"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "description": "Id pesanan, selalu bilangan bulat positif.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "description": "Status pesanan. Daftar nilainya ikut dikunci, sehingga menambah status baru terbaca sebagai perubahan kontrak.",
+      "type": "string",
+      "enum": ["baru", "dibayar", "dikirim", "batal"]
+    },
+    "total": {
+      "description": "Total pesanan dalam rupiah, bilangan bulat. Kolomnya numeric di basis data, dan pengubahannya menjadi integer adalah bagian dari kontrak.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "pelanggan": {
+      "description": "Nama pelanggan, tidak boleh kosong.",
+      "type": "string",
+      "minLength": 1
+    },
+    "item": {
+      "description": "Daftar item pesanan, minimal satu item.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["buku_id", "judul", "jumlah", "harga_satuan"],
+        "additionalProperties": false,
+        "properties": {
+          "buku_id": {
+            "description": "Id buku yang dipesan.",
+            "type": "integer",
+            "minimum": 1
+          },
+          "judul": {
+            "description": "Judul buku. Jalur N+1 mengambilnya lewat query tersendiri, dan kontraknya tetap sama.",
+            "type": "string",
+            "minLength": 1
+          },
+          "jumlah": {
+            "description": "Banyaknya unit buku itu, selalu lebih besar dari nol.",
+            "type": "integer",
+            "minimum": 1
+          },
+          "harga_satuan": {
+            "description": "Harga satu unit dalam rupiah, bilangan bulat.",
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""Aplikasi katalog kecil yang dipakai untuk mengukur anggaran performa.
+"""Aplikasi katalog kecil yang dipakai untuk mengukur budget performa.
 
 Tiap alamat mewakili satu bentuk beban:
   /                        halaman demo yang memuat pengukur Core Web Vitals
   /aset/web-vitals.js      hasil kompilasi web-vitals.ts, bila sudah dibuat
   /api/katalog             satu halaman katalog, jumlah barisnya dibatasi
-  /api/katalog-penuh       seluruh katalog dalam satu jawaban
+  /api/katalog-penuh       seluruh katalog dalam satu response
   /api/terlaris            agregat buku terlaris 30 hari, dihitung tiap kali
   /api/terlaris-streaming  agregat yang sama, header dikirim lebih dahulu
   /api/vitals              penerima laporan Core Web Vitals dari browser
 
-Jawaban di-compress dengan gzip bila klien mengirim Accept-Encoding: gzip.
+Response di-compress dengan gzip bila klien mengirim Accept-Encoding: gzip.
 
 Pemakaian (dari sources/chapter05, setelah docker compose up -d):
     source ../.venv/bin/activate
@@ -32,7 +32,7 @@ UKURAN_POOL = 10
 
 UKURAN_HALAMAN_BAWAAN = 20
 UKURAN_HALAMAN_MAKSIMUM = 100
-# Jawaban yang lebih kecil dari angka ini tidak di-compress, karena biaya
+# Response yang lebih kecil dari angka ini tidak di-compress, karena biaya
 # compress-nya tidak terbayar oleh byte yang dihemat.
 BATAS_COMPRESS_BYTE = 1024
 UKURAN_POTONGAN_STREAMING = 10
@@ -80,7 +80,7 @@ def baris_menjadi_kamus(baris):
 def ambil_halaman_katalog(pool_koneksi, halaman, ukuran):
   """Mengambil satu halaman katalog, yaitu sebanyak ukuran baris saja.
 
-  Inilah bentuk yang muat di dalam anggaran, karena jumlah barisnya tidak
+  Inilah bentuk yang muat di dalam budget, karena jumlah barisnya tidak
   tumbuh mengikuti besarnya tabel.
   """
   with pool_koneksi.connection() as koneksi:
@@ -93,7 +93,7 @@ def ambil_halaman_katalog(pool_koneksi, halaman, ukuran):
 def ambil_katalog_penuh(pool_koneksi):
   """Mengambil seluruh katalog sekaligus.
 
-  Dipakai sebagai pembanding yang sengaja melanggar anggaran, karena jawaban
+  Dipakai sebagai pembanding yang sengaja melanggar budget, karena response
   dan waktunya tumbuh mengikuti jumlah baris di tabel.
   """
   with pool_koneksi.connection() as koneksi:
@@ -124,20 +124,20 @@ def baca_parameter_halaman(query_alamat):
   return halaman, min(max(1, ukuran), UKURAN_HALAMAN_MAKSIMUM)
 
 
-def compress_bila_diminta(isi_jawaban, nilai_accept_encoding):
-  """Meng-compress isi jawaban bila klien menerima gzip dan isinya cukup besar.
+def compress_bila_diminta(isi_response, nilai_accept_encoding):
+  """Meng-compress isi response bila klien menerima gzip dan isinya cukup besar.
 
-  Mengembalikan pasangan (isi, nilai Content-Encoding atau None). Jawaban
+  Mengembalikan pasangan (isi, nilai Content-Encoding atau None). Response
   kecil dibiarkan apa adanya, karena gzip justru menambah byte dan waktu.
   """
   menerima_gzip = "gzip" in (nilai_accept_encoding or "")
-  if not menerima_gzip or len(isi_jawaban) < BATAS_COMPRESS_BYTE:
-    return isi_jawaban, None
-  return gzip.compress(isi_jawaban), "gzip"
+  if not menerima_gzip or len(isi_response) < BATAS_COMPRESS_BYTE:
+    return isi_response, None
+  return gzip.compress(isi_response), "gzip"
 
 
 class ServerKatalog(ThreadingHTTPServer):
-  """Server HTTP yang membawa connection pool dan berkas statisnya."""
+  """Server HTTP yang membawa connection pool dan file statisnya."""
 
   def __init__(self, alamat, kelas_penangan, pool_koneksi):
     """Menyimpan pool dan membaca halaman demo sekali di awal.
@@ -156,9 +156,9 @@ class PenanganKatalog(BaseHTTPRequestHandler):
   # Koneksi yang dipakai ulang membuat yang terukur adalah waktu server,
   # bukan waktu membuka koneksi baru.
   protocol_version = "HTTP/1.1"
-  # Header dan isi jawaban ditulis sebagai dua segmen TCP. Tanpa baris ini,
+  # Header dan isi response ditulis sebagai dua segmen TCP. Tanpa baris ini,
   # segmen kedua tertahan Nagle sampai ACK segmen pertama tiba, dan tiap
-  # jawaban kecil menanggung tambahan sekitar 40 milidetik.
+  # response kecil menanggung tambahan sekitar 40 milidetik.
   disable_nagle_algorithm = True
 
   def do_GET(self):
@@ -166,10 +166,10 @@ class PenanganKatalog(BaseHTTPRequestHandler):
     bagian_alamat = urlsplit(self.path)
     jalur = bagian_alamat.path
     if jalur == "/":
-      self.kirim_jawaban(200, self.server.isi_halaman,
+      self.kirim_response(200, self.server.isi_halaman,
                          "text/html; charset=utf-8", {})
     elif jalur.startswith("/aset/"):
-      self.layani_berkas_aset(jalur.removeprefix("/aset/"))
+      self.layani_file_aset(jalur.removeprefix("/aset/"))
     elif jalur == "/api/katalog":
       halaman, ukuran = baca_parameter_halaman(bagian_alamat.query)
       daftar_buku = ambil_halaman_katalog(self.server.pool_koneksi, halaman,
@@ -182,31 +182,31 @@ class PenanganKatalog(BaseHTTPRequestHandler):
     elif jalur == "/api/terlaris-streaming":
       self.layani_terlaris_streaming()
     else:
-      self.kirim_jawaban(404, b"tidak ditemukan\n", "text/plain", {})
+      self.kirim_response(404, b"tidak ditemukan\n", "text/plain", {})
 
   def do_POST(self):
     """Menerima laporan Core Web Vitals yang dikirim browser."""
     if urlsplit(self.path).path != "/api/vitals":
-      self.kirim_jawaban(404, b"tidak ditemukan\n", "text/plain", {})
+      self.kirim_response(404, b"tidak ditemukan\n", "text/plain", {})
       return
     panjang_isi = int(self.headers.get("Content-Length", "0"))
     isi_laporan = self.rfile.read(panjang_isi)
-    with BERKAS_VITALS.open("a", encoding="utf-8") as berkas:
-      berkas.write(isi_laporan.decode("utf-8").strip() + "\n")
-    self.kirim_jawaban(204, b"", "text/plain", {})
+    with BERKAS_VITALS.open("a", encoding="utf-8") as file:
+      file.write(isi_laporan.decode("utf-8").strip() + "\n")
+    self.kirim_response(204, b"", "text/plain", {})
 
-  def layani_berkas_aset(self, nama_berkas):
-    """Mengirim hasil kompilasi TypeScript, bila berkasnya sudah dibuat.
+  def layani_file_aset(self, nama_file):
+    """Mengirim hasil kompilasi TypeScript, bila filenya sudah dibuat.
 
-    Nama berkas dibersihkan lebih dahulu, sehingga alamat tidak dapat
-    menunjuk berkas di luar direktori statis.
+    Nama file dibersihkan lebih dahulu, sehingga alamat tidak dapat
+    menunjuk file di luar direktori statis.
     """
-    berkas_aset = DIREKTORI_STATIS / Path(nama_berkas).name
-    if berkas_aset.suffix != ".js" or not berkas_aset.exists():
-      pesan = b"// berkas belum dikompilasi, lihat README.md\n"
-      self.kirim_jawaban(404, pesan, "text/javascript", {})
+    file_aset = DIREKTORI_STATIS / Path(nama_file).name
+    if file_aset.suffix != ".js" or not file_aset.exists():
+      pesan = b"// file belum dikompilasi, lihat README.md\n"
+      self.kirim_response(404, pesan, "text/javascript", {})
       return
-    self.kirim_jawaban(200, berkas_aset.read_bytes(), "text/javascript", {})
+    self.kirim_response(200, file_aset.read_bytes(), "text/javascript", {})
 
   def layani_terlaris_streaming(self):
     """Mengirim header lebih dahulu, baru menghitung agregatnya.
@@ -233,26 +233,26 @@ class PenanganKatalog(BaseHTTPRequestHandler):
     self.wfile.write(isi_potongan + b"\r\n")
 
   def kirim_json(self, isi_python):
-    """Menyusun jawaban JSON, meng-compress-nya bila klien menerima gzip."""
-    isi_jawaban = json.dumps(isi_python).encode()
-    isi_jawaban, encoding = compress_bila_diminta(
-        isi_jawaban, self.headers.get("Accept-Encoding")
+    """Menyusun response JSON, meng-compress-nya bila klien menerima gzip."""
+    isi_response = json.dumps(isi_python).encode()
+    isi_response, encoding = compress_bila_diminta(
+        isi_response, self.headers.get("Accept-Encoding")
     )
     header_tambahan = {"Cache-Control": CACHE_CONTROL_API}
     if encoding is not None:
       header_tambahan["Content-Encoding"] = encoding
-    self.kirim_jawaban(200, isi_jawaban, "application/json", header_tambahan)
+    self.kirim_response(200, isi_response, "application/json", header_tambahan)
 
-  def kirim_jawaban(self, status, isi_jawaban, jenis_isi, header_tambahan):
-    """Menulis baris status, header, lalu isi jawaban."""
+  def kirim_response(self, status, isi_response, jenis_isi, header_tambahan):
+    """Menulis baris status, header, lalu isi response."""
     self.send_response(status)
     self.send_header("Content-Type", jenis_isi)
-    self.send_header("Content-Length", str(len(isi_jawaban)))
+    self.send_header("Content-Length", str(len(isi_response)))
     for nama_header, nilai_header in header_tambahan.items():
       self.send_header(nama_header, nilai_header)
     self.end_headers()
-    if isi_jawaban:
-      self.wfile.write(isi_jawaban)
+    if isi_response:
+      self.wfile.write(isi_response)
 
   def log_message(self, format_pesan, *argumen):
     """Mematikan catatan per permintaan agar keluaran pengukuran tetap bersih."""

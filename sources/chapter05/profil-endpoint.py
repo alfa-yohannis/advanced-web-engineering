@@ -55,10 +55,10 @@ def ulangi_pekerjaan(pekerjaan, pool_koneksi, jumlah_ulangan):
   Diulang agar waktu tiap fungsi terkumpul cukup banyak untuk dibandingkan,
   bukan tenggelam oleh derajat ketelitian pengukur waktunya.
   """
-  isi_jawaban = b""
+  isi_response = b""
   for _ in range(jumlah_ulangan):
-    isi_jawaban = pekerjaan(pool_koneksi)
-  return isi_jawaban
+    isi_response = pekerjaan(pool_koneksi)
+  return isi_response
 
 
 def main():
@@ -70,13 +70,13 @@ def main():
 
   pool_koneksi = ConnectionPool(DSN, min_size=1, max_size=2, open=True)
   profil = cProfile.Profile()
-  isi_jawaban = profil.runcall(ulangi_pekerjaan,
+  isi_response = profil.runcall(ulangi_pekerjaan,
                                PEKERJAAN_PER_NAMA[nama_pekerjaan],
                                pool_koneksi, jumlah_ulangan)
   pool_koneksi.close()
 
   print(f"Pekerjaan    : {nama_pekerjaan}, {jumlah_ulangan} ulangan")
-  print(f"Ukuran JSON  : {len(isi_jawaban) / 1024:.1f} KB\n")
+  print(f"Ukuran JSON  : {len(isi_response) / 1024:.1f} KB\n")
   laporan = pstats.Stats(profil)
   laporan.sort_stats(pstats.SortKey.CUMULATIVE)
   laporan.print_stats(JUMLAH_BARIS_LAPORAN)

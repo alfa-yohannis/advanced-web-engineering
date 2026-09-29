@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Mengisi basis data Bab 5 dengan skema, data uji, dan indeks milik Bab 3.
-# Pemakaian (dari sources/chapter05, setelah docker compose up -d):
+# Mengisi basis data Bab 6 dengan skema, data uji, dan indeks milik Bab 3.
+# Pemakaian (dari sources/chapter06, setelah docker compose up -d):
 #   ./siapkan-data.sh
 
 set -euo pipefail

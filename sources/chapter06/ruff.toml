@@ -1,0 +1,16 @@
+# Pengaturan ruff untuk analisis statis Bab 6.
+# Pemakaian (dari sources/chapter06): ruff check
+#
+# Aturan EXE002 sengaja tidak dipakai. Repositori ini tersimpan di filesystem
+# yang menandai seluruh file sebagai dapat dijalankan, sehingga aturan itu
+# melaporkan sepuluh temuan yang tidak menunjuk cacat apa pun. Aturan yang
+# selalu benar bagi sebuah repositori memang lebih baik dimatikan daripada
+# dibiasakan diabaikan.
+
+line-length = 88
+indent-width = 2
+exclude = ["node_modules", "playwright-report", "test-results"]
+
+[lint]
+# E dan W dari pycodestyle, F dari pyflakes, I untuk urutan import.
+select = ["E", "W", "F", "I"]

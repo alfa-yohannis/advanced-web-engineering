@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Mengukur latensi satu alamat di bawah beban, lalu melaporkan sebarannya.
+"""Mengukur latency satu alamat di bawah beban, lalu melaporkan sebarannya.
 
 Sejumlah worker mengirim permintaan berurutan lewat koneksi yang dipakai
-ulang. Bentuk beban ini disebut closed loop: tiap worker menunggu jawaban
+ulang. Bentuk beban ini disebut closed loop: tiap worker menunggu response
 sebelum mengirim permintaan berikutnya, persis seperti satu pengguna.
 
 Yang dilaporkan p50, p95, p99, jumlah permintaan per detik, dan ukuran
-jawaban di kabel. Ukuran itu diambil setelah compress, karena itulah yang
+response di kabel. Ukuran itu diambil setelah compress, karena itulah yang
 benar-benar diunduh browser.
 
 Peringatan: skrip ini sengaja membebani. Arahkan hanya ke aplikasi sendiri
@@ -56,8 +56,8 @@ def jalankan_satu_worker(jalur, jumlah_permintaan, catatan):
     waktu_mulai = time.perf_counter()
     try:
       koneksi.request("GET", jalur, headers=header)
-      jawaban = koneksi.getresponse()
-      isi_jawaban = jawaban.read()
+      response = koneksi.getresponse()
+      isi_response = response.read()
     except OSError:
       catatan["gagal"].append(1)
       koneksi.close()
@@ -65,9 +65,9 @@ def jalankan_satu_worker(jalur, jumlah_permintaan, catatan):
                                timeout=BATAS_WAKTU_DETIK)
       continue
     catatan["lama_ms"].append((time.perf_counter() - waktu_mulai) * 1000)
-    catatan["byte"].append(len(isi_jawaban))
-    catatan["encoding"].append(jawaban.getheader("Content-Encoding", "-"))
-    if jawaban.status != 200:
+    catatan["byte"].append(len(isi_response))
+    catatan["encoding"].append(response.getheader("Content-Encoding", "-"))
+    if response.status != 200:
       catatan["gagal"].append(1)
   koneksi.close()
 
@@ -75,7 +75,7 @@ def jalankan_satu_worker(jalur, jumlah_permintaan, catatan):
 def ukur_beban(jalur, jumlah_worker, permintaan_per_worker):
   """Melepas seluruh worker bersamaan, lalu merangkum hasil pengukurannya.
 
-  Mengembalikan kamus berisi p50, p95, p99, throughput, ukuran jawaban, dan
+  Mengembalikan kamus berisi p50, p95, p99, throughput, response size, dan
   jumlah permintaan yang gagal.
   """
   catatan = {"lama_ms": [], "byte": [], "encoding": [], "gagal": []}
@@ -94,7 +94,7 @@ def ukur_beban(jalur, jumlah_worker, permintaan_per_worker):
   durasi_detik = time.perf_counter() - waktu_mulai
 
   if not catatan["lama_ms"]:
-    raise RuntimeError(f"tidak ada jawaban yang berhasil dari {jalur}")
+    raise RuntimeError(f"tidak ada response yang berhasil dari {jalur}")
   jumlah_permintaan = len(catatan["lama_ms"])
   return {
       "jalur": jalur,

@@ -1,0 +1,32 @@
+{
+  "lapisan_pengujian": [
+    {
+      "nama": "unit",
+      "file": ["test_harga.py", "test_properti.py", "test_double.py"],
+      "maksimum_detik": 10
+    },
+    {
+      "nama": "integrasi",
+      "file": ["test_integrasi.py", "test_kontrak.py"],
+      "maksimum_detik": 30
+    }
+  ],
+  "coverage": {
+    "modul": "harga.py",
+    "file": ["test_harga.py", "test_properti.py"],
+    "minimum_persen": 95
+  },
+  "analisis_statis": {
+    "maksimum_temuan": 0
+  },
+  "query_per_alamat": [
+    {
+      "jalur": "/api/pesanan/1",
+      "maksimum": 2
+    },
+    {
+      "jalur": "/api/pesanan-n1/1",
+      "maksimum": 2
+    }
+  ]
+}

@@ -3,8 +3,8 @@
  * Mengukur Core Web Vitals pada kunjungan nyata, lalu melaporkannya ke server.
  *
  * Ketiga metrik diambil dari PerformanceObserver milik browser, bukan dari
- * alat ukur di luar. Angka yang terkumpul inilah yang dinilai gerbang
- * anggaran, karena angka lab saja tidak membuktikan pengalaman pengguna.
+ * alat ukur di luar. Angka yang terkumpul inilah yang dinilai gate
+ * budget, karena angka lab saja tidak membuktikan pengalaman pengguna.
  *
  * Kompilasi (dari sources/chapter05):
  *   npx -p typescript tsc --target es2022 --module es2022 --strict \

@@ -3,7 +3,7 @@
  *
  * Ketiga metrik diambil dari PerformanceObserver milik browser, bukan dari
  * alat ukur di luar. Angka yang terkumpul inilah yang dinilai gate
- * anggaran, karena angka lab saja tidak membuktikan pengalaman pengguna.
+ * budget, karena angka lab saja tidak membuktikan pengalaman pengguna.
  *
  * Kompilasi (dari sources/chapter05):
  *   npx -p typescript tsc --target es2022 --module es2022 --strict \
