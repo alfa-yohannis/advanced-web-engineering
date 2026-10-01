@@ -1,0 +1,14 @@
+{
+  "keterangan": "Kebijakan keamanan Bab 7. File ini satu-satunya tempat daftar syarat ditulis, dan periksa-keamanan.py menilai aplikasi terhadap isinya.",
+  "alamat_dasar": "http://127.0.0.1:8030",
+  "header_wajib": {
+    "Content-Security-Policy": "default-src 'self'",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "Permissions-Policy": "geolocation=(), camera=(), microphone=()"
+  },
+  "atribut_cookie_wajib": ["HttpOnly", "SameSite=Lax", "Path=/"],
+  "origin_boleh": ["http://127.0.0.1:8030", "https://toko.pradita.ac.id"],
+  "origin_ditolak": ["https://situs-lain.example"],
+  "alamat_diperiksa": ["/", "/api/cari?judul=Pengantar", "/api/profil"]
+}

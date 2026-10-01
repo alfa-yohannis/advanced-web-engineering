@@ -184,17 +184,19 @@
     \hline
     \textbf{Lapisan} & \textbf{Jumlah} & \textbf{Waktu} & \textbf{Yang tertangkap} \\
     \hline
-    Unit & 19 & 0,43 s & Salah hitung, salah batas, salah syarat \\
+    Unit & 19 & 0,99 s & Salah hitung, salah batas, salah syarat \\
     \hline
-    Integrasi dan kontrak & 15 & 0,91 s & Salah \textit{query}, bentuk \textit{response} berubah \\
+    Integrasi dan kontrak & 15 & 1,27 s & Salah \textit{query}, bentuk \textit{response} berubah \\
     \hline
-    E2E lewat Chrome & 5 & 2,00 s & Tombol tak terhubung, modul gagal dimuat \\
+    E2E lewat Chrome & 5 & 2,90 s & Tombol tak terhubung, modul gagal dimuat \\
     \hline
   \end{tabularx}}
 
   \vspace{8pt}
-  {\small Satu pengujian E2E memakan waktu lebih lama daripada seluruh 19
-  unit test digabung. Karena itu jumlah tiap lapisan tidak dibuat sama.}
+  {\small Satu pengujian E2E rata-rata 0,58 detik, sekitar sebelas kali
+  lipat rata-rata satu unit test yang hanya 0,05 detik. Waktu E2E juga paling
+  bergoyang: tiga kali jalan berurutan memberi 2,1, 2,9, dan 5,6 detik, karena
+  lapisan itu menyalakan browser sungguhan.}
 \end{frame}
 
 \begin{frame}{{\Large Piramida lawan Trophy}}
@@ -508,9 +510,9 @@ python gate-mutu.py
 # Keluarannya:
 #   Pemeriksaan                             Batas            Terukur  Verdict
 #   pytest unit                                 0                 0   lolos
-#   waktu unit                                 10 s           0.83 s  lolos
+#   waktu unit                                 10 s           1.89 s  lolos
 #   pytest integrasi                            0                 0   lolos
-#   waktu integrasi                            30 s            1.3 s  lolos
+#   waktu integrasi                            30 s           2.12 s  lolos
 #   coverage harga.py                          95 %            100 %  lolos
 #   temuan ruff                                 0                 0   lolos
 #   query /api/pesanan/1                        2                 2   lolos
@@ -598,11 +600,11 @@ npx playwright test --config e2e/playwright.config.ts
     \hline
     \textbf{Lapisan} & \textbf{Jumlah} & \textbf{Waktu} & \textbf{Catatan} \\
     \hline
-    Unit & 19 & 0,43 s & Tanpa basis data dan tanpa jaringan \\
+    Unit & 19 & 0,99 s & Tanpa basis data dan tanpa jaringan \\
     \hline
-    Integrasi dan kontrak & 15 & 0,91 s & Basis data di container \\
+    Integrasi dan kontrak & 15 & 1,27 s & Basis data di container \\
     \hline
-    E2E & 5 & 2,00 s & Chrome sungguhan, satu \textit{worker} \\
+    E2E & 5 & 2,90 s & Chrome sungguhan, satu \textit{worker} \\
     \hline
   \end{tabularx}}
 \end{frame}
@@ -799,7 +801,7 @@ diff sehat.json n1.json && echo "isi response sama persis"
     \hline
     \textbf{Pemeriksaan} & \textbf{Batas} & \textbf{Terukur} & \textbf{Verdict} \\
     \hline
-    waktu unit & 10 s & 0,83 s & lolos \\
+    waktu unit & 10 s & 1,89 s & lolos \\
     \hline
     coverage \texttt{harga.py} & 95\% & 100\% & lolos \\
     \hline
@@ -847,6 +849,78 @@ docker compose down -v
   berikutnya dimulai dari keadaan bersih.}
 \end{frame}
 
+\section{Latihan 5: Membedah E2E}
+
+\begin{frame}{\hfill}
+  \centering
+  \Huge{\textbf{Latihan 5\\Membedah Pengujian E2E}}
+\end{frame}
+
+\begin{frame}{{\Large Langkah Kerja}}
+  \vspace{6pt}
+  \begin{enumerate}
+    \item Jalankan lapisan E2E tiga kali berurutan, catat waktu tiap kali
+          jalan.
+    \item Jalankan sekali lagi dengan \texttt{-{}-repeat-each=3}, catat
+          jumlah pengujian dan waktunya.
+    \item Ubah \texttt{QUERY\_JALUR\_SEHAT} di \texttt{e2e/pesanan.spec.ts}
+          menjadi 3, jalankan dengan \texttt{-{}-trace on}, catat pesan
+          gagalnya dan isi \texttt{test-results/}.
+    \item Kembalikan angkanya menjadi 2, pastikan kelima pengujian hijau.
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{{\Large Menjalankan dan Meninggalkan Jejak}}
+  \vspace{2pt}
+\begin{lstlisting}[language=bash]
+npx playwright test --config e2e/playwright.config.ts
+npx playwright test --config e2e/playwright.config.ts --repeat-each=3
+npx playwright test --config e2e/playwright.config.ts --trace on
+du -sh test-results
+
+# Keluarannya:
+# 5 passed (2.9s)
+# 15 passed (6.7s)
+# 5 passed (2.8s)
+# 369K	test-results
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{{\Large Contoh Hasil dan Lembar Isian Latihan 5}}
+  \vspace{4pt}
+  \centering
+  {\footnotesize
+  \begin{tabularx}{\textwidth}{Yrr}
+    \hline
+    \textbf{Cara menjalankan} & \textbf{Pengujian} & \textbf{Waktu} \\
+    \hline
+    Biasa, jalan pertama sampai ketiga & 5 & 2,1 s, 2,9 s, 5,6 s \\
+    \hline
+    Dengan \texttt{-{}-repeat-each=3} & 15 & 6,7 s \\
+    \hline
+  \end{tabularx}}
+
+  \vspace{6pt}
+  \centering
+  {\footnotesize
+  \begin{tabularx}{\textwidth}{Yrr}
+    \hline
+    \textbf{Cara menjalankan} & \textbf{Pengujian} & \textbf{Waktu} \\
+    \hline
+    Biasa, jalan pertama sampai ketiga & \dots & \dots \\
+    \hline
+    Dengan \texttt{-{}-repeat-each=3} & \dots & \dots \\
+    \hline
+    Sesudah angka harapan diubah menjadi 3 & \dots & \dots \\
+    \hline
+  \end{tabularx}}
+
+  \vspace{4pt}
+  {\footnotesize Pertanyaan: mengapa waktu E2E bergoyang jauh lebih lebar
+  daripada lapisan unit, dan mengapa \textit{gate} mutu tidak menilai waktu
+  lapisan E2E?}
+\end{frame}
+
 \section{Ringkasan}
 
 \begin{frame}{\hfill}
@@ -857,8 +931,8 @@ docker compose down -v
 \begin{frame}{{\Large Ringkasan}}
   \vspace{8pt}
   \begin{itemize}
-    \item Tiga lapisan, tiga harga: 19 unit test 0,43 detik, 15 pengujian
-          integrasi dan kontrak 0,91 detik, 5 pengujian E2E 2,00 detik.
+    \item Tiga lapisan, tiga harga: 19 unit test 0,99 detik, 15 pengujian
+          integrasi dan kontrak 1,27 detik, 5 pengujian E2E 2,90 detik.
     \item Bagian milik orang lain diganti \textit{test double}, bagian milik
           sendiri diuji apa adanya. Basis datanya sungguhan, dan tiap
           pengujian dibungkus transaksi yang dibatalkan.

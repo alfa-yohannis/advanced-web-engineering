@@ -1,51 +1,783 @@
 \chapter{Keamanan Aplikasi Web}
+\label{ch:keamanan}
 
 \section*{Tujuan Pembelajaran}
 \begin{itemize}
-  \item % TODO
-  \item % TODO
-  \item % TODO
+  \item Menyusun model ancaman satu aplikasi web, yaitu menyebut batas
+        kepercayaannya, data yang bernilai di dalamnya, dan jalan masuk yang
+        tersedia bagi penyerang.
+  \item Memasang pertahanan bawaan pada sisi server, yaitu header keamanan,
+        atribut cookie, daftar origin, \textit{query} berparameter, dan
+        \textit{escaping} keluaran, lalu membuktikan terpasangnya dari
+        \textit{response} yang dikirim aplikasi.
+  \item Mengukur keamanan sebagai angka, yaitu jumlah syarat yang terpenuhi
+        dan jumlah kerentanan dependensi, lalu menegakkannya sebagai
+        \textit{gate} yang memblokir \textit{merge}.
 \end{itemize}
 
 \section{Pendahuluan}
 
-% TODO
+Lima bab sebelumnya mengejar cepat dan benar. Bab ini menambahkan satu
+pertanyaan lagi: apa yang terjadi bila ada yang memakai aplikasi ini dengan
+cara yang tidak diniatkan pembuatnya. Pertanyaan itu tidak dapat dijawab
+dengan mencoba-coba, karena jumlah cara memakai sebuah aplikasi jauh lebih
+banyak daripada jumlah cara memakainya dengan benar.
+
+Jawabannya disusun terbalik. Alih-alih menebak satu per satu serangan yang
+mungkin, pertahanannya dipasang sebagai bawaan, lalu keberadaannya diperiksa
+ulang pada tiap perubahan. Cara ini memindahkan keamanan dari ingatan orang
+ke dalam file yang dapat dibaca mesin, persis seperti \textit{budget} performa
+pada Bab 5 dan batas mutu pada Bab 6.
+
+Seluruh pemeriksaan pada bab ini bersifat mengamati dan dijalankan terhadap
+aplikasi sendiri di komputer sendiri. Referensi utamanya adalah daftar risiko
+Open Worldwide Application Security Project (OWASP) Top 10
+\cite{owasp-top10} untuk memilih apa yang dijaga, Content
+Security Policy Level 3 \cite{w3c-csp3} untuk header, RFC 6265
+\cite{rfc6265} untuk cookie, dan Fetch Standard \cite{whatwg-fetch} untuk
+aturan lintas origin.
 
 \section{Threat Modelling}
 
-% TODO
+\textit{Threat modelling} adalah menuliskan lebih dahulu apa yang dijaga, dari
+siapa, dan lewat jalan mana \cite{owasp-threat-modeling}. Hasilnya bukan
+daftar serangan, melainkan daftar batas: di mana data berpindah tangan, dan
+siapa yang dipercaya di tiap sisinya.
 
-\section{OWASP Top 10}
+Analoginya seperti menata ruang arsip fakultas. Yang ditulis lebih dahulu
+bukan daftar cara orang menyelinap, melainkan daftar pintu, siapa yang
+memegang kuncinya, dan lemari mana yang berisi berkas bernilai. Sesudah
+daftar itu ada, pengamanannya tinggal dipasang di tiap pintu.
 
-% TODO
+Gambar \ref{fig:batas-percaya} memperlihatkan batas kepercayaan aplikasi bab
+ini.
 
-\section{Cross-Site Scripting dan Cross-Site Request Forgery}
+\begin{figure}[!htb]
+  \centering
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    kotak/.style={draw, rounded corners, minimum height=0.9cm,
+                  minimum width=2.3cm, align=center, font=\scriptsize\bfseries},
+    panah/.style={-{Stealth[length=2mm]}, thick}
+  ]
+    \node[kotak, fill=red!22] (browser) at (0,0) {Browser\\{\tiny\mdseries tidak dipercaya}};
+    \node[kotak, fill=orange!12] (server) at (4.2,0) {Aplikasi\\{\tiny\mdseries memeriksa semua}};
+    \node[kotak, fill=blue!8] (basis) at (8.4,0) {Basis data\\{\tiny\mdseries di jaringan sendiri}};
+    \node[kotak, fill=gray!35] (paket) at (4.2,-1.8) {Paket pihak lain\\{\tiny\mdseries ikut berjalan}};
 
-% TODO
+    \draw[panah] (browser) -- node[font=\tiny, above] {teks pengguna} (server);
+    \draw[panah] (server) -- node[font=\tiny, above] {query berparameter} (basis);
+    \draw[panah] (paket) -- (server);
+    \draw[dashed, thick, gray] (2.1,1.1) -- (2.1,-2.6);
+    \node[font=\tiny, gray, anchor=south] at (2.1,1.15) {batas kepercayaan};
+  \end{tikzpicture}
+  \caption{Semua yang datang dari kiri garis putus-putus diperlakukan sebagai
+           teks yang belum dipercaya, termasuk paket pihak lain yang ikut
+           berjalan di dalam aplikasi}
+  \label{fig:batas-percaya}
+\end{figure}
 
-\section{Injeksi SQL dan Command}
+Dari gambar tersebut keluar tiga kewajiban yang dipakai sepanjang bab ini.
+Pertama, teks dari browser tidak pernah disambung langsung ke dalam perintah
+apa pun. Kedua, \textit{response} membawa aturan main untuk browser, yaitu
+header keamanan dan atribut cookie. Ketiga, paket pihak lain ikut dihitung
+sebagai jalan masuk, sehingga daftarnya diperiksa berkala.
 
-% TODO
+\section{Header Keamanan}
 
-\section{SSRF, CORS, dan Content Security Policy}
+Header keamanan adalah aturan yang dikirim server untuk dipatuhi browser.
+Header itu tidak mengubah apa pun di sisi server, dan justru itulah
+kekuatannya: satu baris pada \textit{response} mempersempit apa yang boleh
+dilakukan halaman di komputer pengunjung.
 
-% TODO
+Tabel \ref{tab:header} membandingkan \textit{response} aplikasi bab ini
+dengan \textit{response} server statis bawaan Python yang tidak disetel sama
+sekali. Keduanya diukur dengan \texttt{curl} pada komputer yang sama.
 
-\section{Cookie Aman dan Manajemen Secret}
+\begin{table}[!htb]
+  \centering
+  \caption{Header keamanan pada server bawaan lawan aplikasi yang sudah
+           dikeraskan, hasil pengukuran nyata}
+  \label{tab:header}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Header} & \textbf{Server bawaan} & \textbf{Aplikasi Bab 7} \\
+    \hline
+    \texttt{Content-Security-Policy} & tidak ada & \texttt{default-src 'self'} \\
+    \hline
+    \texttt{X-Content-Type-Options} & tidak ada & \texttt{nosniff} \\
+    \hline
+    \texttt{Referrer-Policy} & tidak ada & \texttt{no-referrer} \\
+    \hline
+    \texttt{Permissions-Policy} & tidak ada & \texttt{geolocation=(), camera=(), microphone=()} \\
+    \hline
+  \end{tabularx}
+\end{table}
 
-% TODO
+Empat baris itu menjaga empat hal yang berbeda. \texttt{Content-Security-Policy}
+membatasi dari mana skrip dan gambar boleh dimuat, sehingga kode yang
+berhasil diselipkan ke halaman tetap tidak punya tempat mengambil
+perintahnya \cite{w3c-csp3}. \texttt{X-Content-Type-Options} menutup
+kebiasaan browser menebak jenis file dari isinya. \texttt{Referrer-Policy}
+menahan alamat halaman asal agar tidak ikut bocor ke situs lain.
+\texttt{Permissions-Policy} mematikan kemampuan perangkat yang memang tidak
+dipakai, yaitu lokasi, kamera, dan mikrofon.
 
-\section{Serangan Dependensi dan Rantai Pasok Perangkat Lunak}
+Listing \ref{lst:header} memperlihatkan tempat keempatnya dipasang. Letaknya
+di satu fungsi yang dilewati seluruh \textit{response}, sehingga alamat baru
+tidak dapat lupa memasangnya.
 
-% TODO
+\begin{lstlisting}[style=PythonStyle, caption={Header keamanan dipasang di satu tempat, tersedia di \berkas{sources/chapter07/aplikasi.py}}, label={lst:header}]
+  def kirim_response(self, status, isi_response, jenis_isi, header_tambahan):
+    """Mengirim satu response lengkap beserta seluruh header keamanannya."""
+    self.send_response(status)
+    self.send_header("Content-Type", jenis_isi)
+    self.send_header("Content-Length", str(len(isi_response)))
+    for nama_header, nilai in self.server.kebijakan["header_wajib"].items():
+      self.send_header(nama_header, nilai)
+\end{lstlisting}
+
+\section{Cookie yang Aman}
+
+Cookie sesi adalah penanda yang membuat server mengenali pengunjung yang sama
+pada permintaan berikutnya. Karena isinya cukup untuk mewakili seseorang,
+cookie diberi atribut pembatas, bukan dikirim polos \cite{rfc6265}.
+
+Tabel \ref{tab:cookie} memuat atribut yang dipakai aplikasi bab ini beserta
+yang dijaga masing-masing. Nilainya diambil apa adanya dari header
+\texttt{Set-Cookie} yang terbaca \texttt{curl}.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Atribut cookie sesi aplikasi Bab 7, hasil pembacaan header
+           \texttt{Set-Cookie}}
+  \label{tab:cookie}
+  \begin{tabularx}{\textwidth}{lX}
+    \hline
+    \textbf{Atribut} & \textbf{Yang dijaga} \\
+    \hline
+    \texttt{HttpOnly} & Cookie tidak dapat dibaca JavaScript mana pun yang berjalan di halaman \\
+    \hline
+    \texttt{SameSite=Lax} & Cookie tidak ikut terkirim pada permintaan yang dipicu situs lain \\
+    \hline
+    \texttt{Path=/} & Jangkauan cookie ditulis eksplisit, bukan ditebak browser \\
+    \hline
+    \texttt{Max-Age=3600} & Sesi berakhir sendiri sesudah satu jam \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Satu atribut sengaja tidak dipasang, yaitu \texttt{Secure}. Atribut itu
+membuat cookie hanya dikirim lewat HTTPS, sedangkan latihan bab ini berjalan
+lewat HTTP di \textit{localhost}. Pada aplikasi yang sungguhan dilayani lewat
+HTTPS, atribut itu wajib ada, dan alasannya ditulis di komentar kode agar
+tidak hilang ketika aplikasinya dipindahkan ke server.
+
+\texttt{SameSite=Lax} juga menjawab satu risiko yang sering disebut
+tersendiri, yaitu permintaan yang dipicu dari situs lain memakai sesi
+pengunjung yang sedang masuk. Dengan atribut itu, cookie tidak ikut terkirim
+pada permintaan semacam itu, sehingga server memperlakukannya sebagai
+pengunjung yang belum dikenal.
+
+\section{Aturan Lintas Origin}
+
+\textit{Cross-Origin Resource Sharing} (CORS) sering disalahpahami sebagai
+pengaman server, padahal yang dilindunginya adalah pembaca
+\cite{whatwg-fetch}. Browser menahan halaman dari satu situs untuk membaca
+\textit{response} milik situs lain, kecuali situs pemilik \textit{response}
+itu menyatakan izin lewat header.
+
+Dua hal pada CORS sering tertukar. Pembagiannya begini. Izin CORS menentukan
+siapa yang boleh membaca \textit{response}, sedangkan pemeriksaan hak akses
+menentukan siapa yang boleh meminta. Server tetap wajib memeriksa hak akses
+sendiri, karena permintaan dari luar browser tidak terikat aturan CORS sama
+sekali.
+
+Tabel \ref{tab:cors} memuat perilaku aplikasi bab ini untuk origin yang
+terdaftar dan yang tidak.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Izin lintas origin menurut daftar di
+           \berkas{sources/chapter07/kebijakan.json}, hasil pengukuran nyata}
+  \label{tab:cors}
+  \begin{tabularx}{\textwidth}{lX}
+    \hline
+    \textbf{Origin yang meminta} & \textbf{Header izin yang dikirim} \\
+    \hline
+    \texttt{https://toko.pradita.ac.id} & \texttt{Access-Control-Allow-Origin} berisi origin itu sendiri \\
+    \hline
+    \texttt{http://127.0.0.1:8030} & \texttt{Access-Control-Allow-Origin} berisi origin itu sendiri \\
+    \hline
+    \texttt{https://situs-lain.example} & tidak ada, hanya \texttt{Vary: Origin} \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Nilai bintang sengaja tidak dipakai. Bintang membuka \textit{response} bagi
+situs mana pun, dan sekali dipasang, menariknya kembali berarti merusak
+halaman yang sudah terlanjur bergantung padanya. Header \texttt{Vary: Origin}
+ikut dikirim agar \textit{cache} perantara tidak menyimpan satu izin lalu
+memakainya untuk origin yang lain.
+
+\section{Teks dari Pengguna}
+
+Dua risiko terbesar pada daftar OWASP lahir dari kebiasaan yang sama, yaitu
+menyambung teks pengguna ke dalam sesuatu yang kemudian dijalankan
+\cite{owasp-top10}. Jawabannya pun sama bentuknya: teks itu dikirim sebagai
+data, bukan sebagai bagian perintah.
+
+Pada basis data, caranya memakai parameter. Listing \ref{lst:parameter}
+memperlihatkan bentuknya. Teks apa pun yang dikirim pengunjung berakhir
+sebagai satu nilai pencarian, tidak peduli tanda baca apa yang ada di
+dalamnya.
+
+\begin{lstlisting}[style=PythonStyle, caption={Teks pengguna dikirim sebagai parameter, bukan disambung ke SQL, tersedia di \berkas{sources/chapter07/aplikasi.py}}, label={lst:parameter}]
+def cari_buku(judul_dicari):
+  """Mencari buku menurut judulnya, dengan judul dikirim sebagai parameter.
+
+  Teks dari pengguna tidak pernah disambung ke dalam SQL. Tanda kutip, tanda
+  titik koma, dan kata kunci SQL di dalamnya diperlakukan sebagai data biasa,
+  sehingga hasilnya hanya kosong, bukan perintah tambahan.
+  """
+  pola = f"%{judul_dicari}%"
+  with psycopg.connect(DSN) as koneksi:
+    baris = koneksi.execute(SQL_CARI_BUKU, (pola, BATAS_HASIL_CARI)).fetchall()
+\end{lstlisting}
+
+Tabel \ref{tab:parameter} memuat dua pencarian yang dijalankan terhadap
+aplikasi bab ini. Baris kedua memakai kata kunci yang di dalamnya ada tanda
+kutip dan tanda titik koma.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Pencarian dengan teks biasa dan dengan teks bertanda baca, hasil
+           pengukuran nyata}
+  \label{tab:parameter}
+  \begin{tabularx}{\textwidth}{Xrl}
+    \hline
+    \textbf{Kata kunci yang dikirim} & \textbf{Baris} & \textbf{Status} \\
+    \hline
+    \texttt{Pengantar Jilid 7} & 20 & 200, tanpa \textit{error} \\
+    \hline
+    \texttt{Pengantar'; SELECT 1 -{}-} & 0 & 200, tanpa \textit{error} \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Baris kedua itu yang perlu dibaca pelan. Hasilnya nol bukan karena teksnya
+ditolak, melainkan karena tidak ada judul buku yang berisi rangkaian huruf
+tersebut. Bagi basis data, isinya tidak berbeda dengan judul biasa, dan di
+situlah letak pengamanannya.
+
+Pada HTML, bentuk jawabannya adalah \textit{escaping} keluaran. Teks pengguna
+diubah lebih dahulu sehingga tanda kurung siku dan tanda kutip terbaca
+sebagai huruf, bukan sebagai markup. Pengujian pada aplikasi ini mengirim
+\texttt{<b>Mahasiswa</b>} sebagai nama, dan halaman yang keluar berisi
+\texttt{\&lt;b\&gt;Mahasiswa\&lt;/b\&gt;}, yaitu teks yang tampil apa adanya
+di layar.
+
+\section{Manajemen Secret}
+
+Secret adalah nilai yang kekuatannya habis begitu diketahui orang lain,
+misalnya kunci penanda sesi, kata sandi basis data, dan token layanan luar.
+Aturannya satu kalimat: secret tidak pernah ditulis di dalam kode, karena
+kode masuk repositori dan dibaca siapa pun yang punya aksesnya.
+
+Listing \ref{lst:secret} memperlihatkan cara aplikasi bab ini membacanya.
+
+\begin{lstlisting}[style=PythonStyle, caption={Secret dibaca dari environment, bukan dari kode, tersedia di \berkas{sources/chapter07/aplikasi.py}}, label={lst:secret}]
+def ambil_secret_sesi():
+  """Mengambil secret penanda sesi dari environment.
+
+  Secret tidak pernah ditulis di kode, karena kode masuk repositori dan
+  dibaca siapa saja yang punya aksesnya. Bila environment-nya kosong,
+  aplikasi membuat nilai acak sekali jalan, yang hilang begitu aplikasi
+  dimatikan.
+  """
+  return os.environ.get("SECRET_SESI") or secrets.token_hex(PANJANG_SESI_BYTE)
+\end{lstlisting}
+
+Tabel \ref{tab:secret} merangkum tempat tiap jenis nilai disimpan. Yang
+membedakan bukan tingkat kerahasiaannya saja, melainkan juga apa yang harus
+dilakukan ketika nilainya bocor.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Tempat menyimpan nilai menurut jenisnya}
+  \label{tab:secret}
+  \begin{tabularx}{\textwidth}{lXl}
+    \hline
+    \textbf{Jenis nilai} & \textbf{Contoh} & \textbf{Tempatnya} \\
+    \hline
+    Setelan biasa & Port, nama basis data, batas halaman & File kode \\
+    \hline
+    Setelan per lingkungan & Alamat basis data, daftar origin & File kebijakan \\
+    \hline
+    Secret & Kunci sesi, kata sandi, token & Environment atau \textit{secret manager} \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\section{Keamanan Rantai Pasok}
+
+Paket pihak lain ikut berjalan di dalam aplikasi dengan hak yang sama.
+Karena itu daftar dependensi diperlakukan sebagai bagian dari permukaan
+serangan, dan diperiksa berkala terhadap pengumuman kerentanan
+\cite{pypa-advisory}.
+
+Tabel \ref{tab:dependensi} memuat hasil pemeriksaan pada repositori modul ini.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Hasil pemeriksaan dependensi, hasil pengukuran nyata}
+  \label{tab:dependensi}
+  \begin{tabularx}{\textwidth}{lrX}
+    \hline
+    \textbf{Ekosistem} & \textbf{Paket} & \textbf{Temuan} \\
+    \hline
+    Python, lewat \texttt{pip-audit} & 48 & Tidak ada kerentanan yang diumumkan \\
+    \hline
+    Node, lewat \texttt{npm audit} & paket Bab 6 & Tidak ada kerentanan yang diumumkan \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Angka nol pada tabel tersebut punya umur simpan. Pemeriksaan ini mencocokkan
+versi yang terpasang dengan pengumuman yang sudah ada hari itu, sehingga
+paket yang hari ini bersih dapat berubah status besok tanpa satu baris kode
+pun berubah. Karena itu pemeriksaannya dipasang berulang di
+\textit{Continuous Integration}, bukan dijalankan sekali saat memasang.
+
+\section{Gate Keamanan di CI}
+
+Seluruh pertahanan di atas mudah terpasang dan sama mudahnya hilang, misalnya
+ketika sebuah alamat baru ditulis tanpa melewati fungsi pengirim
+\textit{response}. Karena itu syaratnya ditulis sebagai file, lalu dinilai
+ulang pada tiap perubahan. Gambar \ref{fig:gate-keamanan} memperlihatkan
+tempatnya bekerja.
+
+\begin{figure}[!htb]
+  \centering
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    kotak/.style={draw, rounded corners, minimum height=0.9cm, minimum width=2.1cm,
+                  align=center, font=\scriptsize\bfseries},
+    panah/.style={-{Stealth[length=2mm]}, thick}
+  ]
+    \node[kotak, fill=blue!8] (ubah) at (0,0) {Perubahan\\kode};
+    \node[kotak, fill=blue!8] (baca) at (3.0,0) {Baca response\\{\tiny\mdseries header, cookie, CORS}};
+    \node[kotak, fill=orange!12] (nilai) at (6.2,0) {Nilai syarat\\{\tiny\mdseries kebijakan.json}};
+    \node[kotak, fill=green!10] (gabung) at (9.6,0.9) {Status 0\\{\tiny\mdseries boleh digabung}};
+    \node[kotak, fill=red!22] (tolak) at (9.6,-0.9) {Status 1\\{\tiny\mdseries merge diblokir}};
+
+    \draw[panah] (ubah) -- (baca);
+    \draw[panah] (baca) -- (nilai);
+    \draw[panah] (nilai.east) -- ++(0.5,0) |- (gabung.west);
+    \draw[panah] (nilai.east) -- ++(0.5,0) |- (tolak.west);
+    \node[font=\tiny, gray, anchor=east] at (7.7,0.72) {seluruh syarat terpenuhi};
+    \node[font=\tiny, gray, anchor=east] at (7.7,-0.72) {ada syarat yang hilang};
+  \end{tikzpicture}
+  \caption{Syarat keamanan dinilai dari \textit{response} yang benar-benar
+           dikirim aplikasi, bukan dari pembacaan kode}
+  \label{fig:gate-keamanan}
+\end{figure}
+
+Listing \ref{lst:gate-keamanan} memuat keluaran gerbangnya pada aplikasi bab
+ini, dipersingkat pada bagian yang berulang.
+
+\begin{lstlisting}[language=bash, caption={Menjalankan gate keamanan, tersedia di \berkas{sources/chapter07/periksa-keamanan.py}}, label={lst:gate-keamanan}]
+source ../.venv/bin/activate
+python periksa-keamanan.py
+echo $?
+
+# Keluarannya:
+#   Pemeriksaan                                  Keadaan      Verdict
+#   / Content-Security-Policy                    sesuai       lolos
+#   / X-Content-Type-Options                     sesuai       lolos
+#   / Referrer-Policy                            sesuai       lolos
+#   / Permissions-Policy                         sesuai       lolos
+#   cookie sesi HttpOnly                         sesuai       lolos
+#   cookie sesi SameSite=Lax                     sesuai       lolos
+#   CORS izin untuk https://toko.pradita.ac.id   sesuai       lolos
+#   CORS tolak https://situs-lain.example        sesuai       lolos
+#
+# Lolos: seluruh syarat keamanan terpenuhi.
+# 0
+\end{lstlisting}
+
+Gerbang yang selalu lolos tidak membuktikan apa pun, sehingga pemeriksaan
+yang sama dijalankan terhadap pembanding, yaitu server statis bawaan Python
+tanpa penyetelan. Tabel \ref{tab:gate-banding} memuat kedua hasilnya.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Verdict gerbang pada dua sasaran, hasil pengukuran nyata}
+  \label{tab:gate-banding}
+  \begin{tabularx}{\textwidth}{Xrrr}
+    \hline
+    \textbf{Sasaran} & \textbf{Syarat} & \textbf{Lolos} & \textbf{Status keluar} \\
+    \hline
+    Aplikasi Bab 7 & 18 & 18 & 0 \\
+    \hline
+    Server statis bawaan Python & 9 & 1 & 1 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Satu baris pada pembanding justru lolos, dan sebabnya layak diperhatikan.
+Syarat itu berbunyi bahwa origin yang tidak terdaftar tidak boleh menerima
+izin lintas origin, sedangkan server bawaan memang tidak pernah mengirim
+header CORS sama sekali. Syarat yang ditulis sebagai larangan dapat terpenuhi
+karena fiturnya tidak ada, bukan karena pengamanannya bekerja, dan syarat
+semacam itu perlu dipasangkan dengan syarat positifnya.
+
+Analisis statis melengkapi gerbang tersebut dari sisi kode. Pengaturan
+\texttt{ruff} pada bab ini menyalakan aturan keamanan dari bandit, misalnya
+peringatan untuk SQL yang disambung dari potongan teks dan untuk nilai yang
+tampak seperti kata sandi tertulis di kode. Pada seluruh file sumber Bab 7,
+pemeriksaan itu melaporkan nol temuan.
 
 \section{Ringkasan}
 
-% TODO
+Keamanan tidak dikejar dengan menebak satu per satu cara orang menyalahgunakan
+aplikasi, melainkan dengan menuliskan apa yang dijaga dan dari mana jalan
+masuknya. Model ancaman bab ini berisi satu batas kepercayaan, dan dari batas
+itu keluar tiga kewajiban: teks pengguna tidak pernah disambung ke perintah,
+\textit{response} membawa aturan main untuk browser, dan paket pihak lain
+dihitung sebagai jalan masuk.
+
+Pertahanan sisi server dipasang sebagai bawaan, bukan pilihan. Empat header
+keamanan dikirim pada tiap \textit{response} lewat satu fungsi, cookie sesi
+diberi \texttt{HttpOnly} dan \texttt{SameSite=Lax}, dan izin lintas origin
+hanya diberikan kepada daftar yang ditulis di file kebijakan. Server bawaan
+Python yang dipakai sebagai pembanding tidak mengirim satu pun dari keempat
+header itu.
+
+Teks dari pengguna diperlakukan sebagai data di mana pun ia berakhir.
+Pencarian dengan kata kunci bertanda kutip dan titik koma dijawab 200 dengan
+nol baris, tanpa \textit{error}, karena isinya hanya dibandingkan sebagai
+teks. Nama yang berisi markup tampil di layar sebagai huruf, karena
+keluarannya di-\textit{escape} lebih dahulu.
+
+Nilai yang kekuatannya habis begitu diketahui orang lain disimpan di luar
+kode, dan daftar dependensi diperiksa terhadap pengumuman kerentanan. Empat
+puluh delapan paket Python dan paket Node Bab 6 sama-sama bersih pada
+pemeriksaan hari itu, dan justru karena jawabannya bergantung pada hari,
+pemeriksaannya diulang di \textit{Continuous Integration}.
+
+Seluruhnya berakhir pada satu angka yang dapat dibaca mesin. Gerbang keamanan
+membaca \textit{response} yang benar-benar dikirim, menilainya terhadap 18
+syarat, lalu keluar dengan status 0. Pemeriksaan yang sama terhadap server
+tanpa penyetelan meloloskan satu syarat dari sembilan dan keluar dengan
+status 1. Selisih itulah bukti bahwa yang dinilai memang pertahanannya, bukan
+niat baik penulisnya.
 
 \section{Latihan}
 
+Seluruh file yang dipakai pada latihan ini tersedia di
+\berkas{sources/chapter07/}, dihitung relatif terhadap akar repositori.
+Latihan membutuhkan Docker dengan Compose versi 2 dan Python 3. Listing
+penyiapan masuk ke direktori itu lebih dahulu, dan seluruh perintah sesudahnya
+dijalankan dari sana.
+
+Seluruh pemeriksaan pada latihan ini bersifat mengamati dan hanya diarahkan
+ke aplikasi yang berjalan di komputer sendiri. Tidak ada satu pun perintah di
+bab ini yang boleh diarahkan ke situs kampus maupun sistem milik orang lain.
+Hasil tiap mahasiswa akan berbeda pada bagian waktu dan daftar paket, dan
+yang dilaporkan adalah pola perbandingannya.
+
+Penyiapannya dilakukan sekali, seperti pada Listing \ref{lst:c7-siapkan}.
+
+\begin{lstlisting}[language=bash, caption={Menyiapkan basis data dan venv, memakai \berkas{sources/chapter07/siapkan-data.sh}}, label={lst:c7-siapkan}]
+cd sources/chapter07
+docker compose up -d
+./siapkan-data.sh
+python3 -m venv ../.venv
+../.venv/bin/pip install "psycopg[binary]" ruff pip-audit
+\end{lstlisting}
+
+\subsection*{Latihan 1: Membaca Header Keamanan}
+
+Latihan ini membuktikan bahwa header keamanan adalah pilihan yang harus
+dibuat, bukan sesuatu yang datang sendiri.
+
 \begin{enumerate}
-  \item % TODO
-  \item % TODO
+  \item Nyalakan aplikasinya, lalu nyalakan juga server statis bawaan Python
+        sebagai pembanding, seperti pada Listing \ref{lst:c7-lat1-jalan}.
+  \item Baca header kedua server dengan \texttt{curl}, lalu isi Tabel
+        \ref{tab:c7-lat1-hasil}. Tabel \ref{tab:c7-lat1-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Tambahkan satu header baru ke \berkas{sources/chapter07/kebijakan.json},
+        misalnya \texttt{X-Frame-Options} bernilai \texttt{DENY}, lalu
+        nyalakan ulang aplikasinya dan periksa kembali.
+  \item Jawab tiga pertanyaan berikut. Pertama, header mana yang membatasi
+        asal skrip yang boleh dimuat halaman? Kedua, mengapa header keamanan
+        dipasang di satu fungsi dan bukan di tiap alamat? Ketiga, apa yang
+        terjadi pada header baru tadi tanpa aplikasinya dinyalakan ulang?
 \end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Membaca header dua server, tersedia di \berkas{sources/chapter07/aplikasi.py}}, label={lst:c7-lat1-jalan}]
+source ../.venv/bin/activate
+SECRET_SESI=rahasia-latihan python aplikasi.py &
+(cd statis && python -m http.server 8031 &)
+curl -sI http://127.0.0.1:8030/ | grep -iE "^(content-security|x-content|referrer|permissions)"
+curl -sI http://127.0.0.1:8031/index.html | grep -iE "^(content-security|x-content|referrer|permissions)"
+
+# Keluarannya:
+# Content-Security-Policy: default-src 'self'
+# X-Content-Type-Options: nosniff
+# Referrer-Policy: no-referrer
+# Permissions-Policy: geolocation=(), camera=(), microphone=()
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 1 yang sudah terisi}
+  \label{tab:c7-lat1-contoh}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Header} & \textbf{Server bawaan} & \textbf{Aplikasi Bab 7} \\
+    \hline
+    \texttt{Content-Security-Policy} & tidak ada & \texttt{default-src 'self'} \\
+    \hline
+    \texttt{X-Content-Type-Options} & tidak ada & \texttt{nosniff} \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 1}
+  \label{tab:c7-lat1-hasil}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Header} & \textbf{Server bawaan} & \textbf{Aplikasi Bab 7} \\
+    \hline
+    \texttt{Content-Security-Policy} & \dots & \dots \\
+    \hline
+    \texttt{X-Content-Type-Options} & \dots & \dots \\
+    \hline
+    \texttt{Referrer-Policy} & \dots & \dots \\
+    \hline
+    \texttt{Permissions-Policy} & \dots & \dots \\
+    \hline
+    Header tambahan pilihan sendiri & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection*{Latihan 2: Cookie dan Aturan Lintas Origin}
+
+Latihan ini membuktikan bahwa izin lintas origin ditentukan daftar, bukan
+kebetulan, dan bahwa atribut cookie terbaca langsung dari \textit{response}.
+
+\begin{enumerate}
+  \item Baca header \texttt{Set-Cookie} dari alamat profil, lalu catat tiap
+        atributnya.
+  \item Minta alamat yang sama tiga kali dengan header \texttt{Origin} yang
+        berbeda, seperti pada Listing \ref{lst:c7-lat2-jalan}, lalu catat
+        header izin yang kembali ke Tabel \ref{tab:c7-lat2-hasil}. Tabel
+        \ref{tab:c7-lat2-contoh} memperlihatkan contoh yang sudah terisi.
+  \item Tambahkan satu origin baru ke daftar di
+        \berkas{sources/chapter07/kebijakan.json}, nyalakan ulang
+        aplikasinya, lalu ulangi pemeriksaannya.
+  \item Jawab tiga pertanyaan berikut. Pertama, siapa yang sebenarnya
+        dilindungi aturan CORS? Kedua, mengapa aplikasi ini tidak memakai
+        nilai bintang pada header izin? Ketiga, mengapa \texttt{Vary: Origin}
+        tetap dikirim walaupun izinnya tidak diberikan?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Membaca cookie dan izin lintas origin, tersedia di \berkas{sources/chapter07/aplikasi.py}}, label={lst:c7-lat2-jalan}]
+curl -sI http://127.0.0.1:8030/api/profil | grep -i "^set-cookie"
+curl -sI -H "Origin: https://toko.pradita.ac.id" \
+  http://127.0.0.1:8030/api/profil | grep -i "^access-control"
+curl -sI -H "Origin: https://situs-lain.example" \
+  http://127.0.0.1:8030/api/profil | grep -iE "^(access-control|vary)"
+
+# Keluarannya:
+# Set-Cookie: sesi=...; HttpOnly; SameSite=Lax; Path=/; Max-Age=3600
+# Access-Control-Allow-Origin: https://toko.pradita.ac.id
+# Vary: Origin
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 2 yang sudah terisi}
+  \label{tab:c7-lat2-contoh}
+  \begin{tabularx}{\textwidth}{lX}
+    \hline
+    \textbf{Origin yang dikirim} & \textbf{Header izin yang kembali} \\
+    \hline
+    \texttt{https://toko.pradita.ac.id} & berisi origin itu sendiri \\
+    \hline
+    \texttt{https://situs-lain.example} & tidak ada, hanya \texttt{Vary: Origin} \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 2}
+  \label{tab:c7-lat2-hasil}
+  \begin{tabularx}{\textwidth}{lX}
+    \hline
+    \textbf{Yang diperiksa} & \textbf{Hasilnya} \\
+    \hline
+    Atribut cookie sesi & \dots \\
+    \hline
+    Origin terdaftar pertama & \dots \\
+    \hline
+    Origin terdaftar kedua & \dots \\
+    \hline
+    Origin tidak terdaftar & \dots \\
+    \hline
+    Origin baru yang ditambahkan sendiri & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection*{Latihan 3: Teks Pengguna sebagai Data}
+
+Latihan ini membuktikan bahwa teks bertanda baca tidak membuat basis data
+maupun browser berpindah tugas.
+
+\begin{enumerate}
+  \item Jalankan pencarian biasa, lalu catat jumlah barisnya.
+  \item Jalankan pencarian dengan kata kunci yang di dalamnya ada tanda kutip
+        dan tanda titik koma, seperti pada Listing \ref{lst:c7-lat3-jalan},
+        lalu catat jumlah baris dan status permintaannya.
+  \item Buka halaman sapaan dengan nama yang berisi tanda kurung siku, lalu
+        catat apa yang tertulis pada sumber halamannya.
+  \item Isi Tabel \ref{tab:c7-lat3-hasil}. Tabel \ref{tab:c7-lat3-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab dua pertanyaan berikut. Pertama, mengapa pencarian kedua
+        menghasilkan nol baris, dan apa yang akan terjadi bila teks itu
+        disambung langsung ke SQL? Kedua, apa bedanya menolak teks tertentu
+        dengan memperlakukan seluruh teks sebagai data?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Mengirim teks bertanda baca sebagai kata kunci, tersedia di \berkas{sources/chapter07/aplikasi.py}}, label={lst:c7-lat3-jalan}]
+curl -s "http://127.0.0.1:8030/api/cari?judul=Pengantar%20Jilid%207" | head -c 120
+curl -s --get --data-urlencode "judul=Pengantar'; SELECT 1 --" \
+  http://127.0.0.1:8030/api/cari | head -c 120
+curl -s --get --data-urlencode 'nama=<b>Mahasiswa</b>' \
+  http://127.0.0.1:8030/sapa | grep -i halo
+
+# Keluarannya:
+# {"kata_kunci": "Pengantar Jilid 7", "hasil": [{"id": ...
+# {"kata_kunci": "Pengantar'; SELECT 1 --", "hasil": []}
+# <body><h1>Halo, &lt;b&gt;Mahasiswa&lt;/b&gt;</h1>
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 3 yang sudah terisi}
+  \label{tab:c7-lat3-contoh}
+  \begin{tabularx}{\textwidth}{Xrl}
+    \hline
+    \textbf{Yang dikirim} & \textbf{Baris} & \textbf{Status} \\
+    \hline
+    \texttt{Pengantar Jilid 7} & 20 & 200 \\
+    \hline
+    \texttt{Pengantar'; SELECT 1 -{}-} & 0 & 200 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 3}
+  \label{tab:c7-lat3-hasil}
+  \begin{tabularx}{\textwidth}{Xrl}
+    \hline
+    \textbf{Yang dikirim} & \textbf{Baris} & \textbf{Status} \\
+    \hline
+    Kata kunci biasa & \dots & \dots \\
+    \hline
+    Kata kunci bertanda baca & \dots & \dots \\
+    \hline
+    Nama berisi tanda kurung siku & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection*{Latihan 4: Menegakkan Gate Keamanan}
+
+Latihan ini memasang seluruh syarat di atas sebagai satu gerbang, lalu
+membandingkan vonisnya pada dua sasaran.
+
+\begin{enumerate}
+  \item Baca \berkas{sources/chapter07/kebijakan.json}, lalu tulis dugaan
+        berapa syarat yang akan terpenuhi aplikasi dan berapa pada server
+        pembanding.
+  \item Jalankan gerbangnya terhadap keduanya seperti pada Listing
+        \ref{lst:c7-lat4-jalan}, lalu catat jumlah syarat, jumlah yang lolos,
+        dan status keluarnya ke Tabel \ref{tab:c7-lat4-hasil}. Tabel
+        \ref{tab:c7-lat4-contoh} memperlihatkan contoh yang sudah terisi.
+  \item Jalankan pemeriksaan dependensi dan analisis statis, lalu catat
+        jumlah temuannya.
+  \item Hapus sementara satu header dari \berkas{sources/chapter07/kebijakan.json},
+        nyalakan ulang aplikasinya, jalankan ulang gerbangnya, lalu
+        kembalikan seperti semula.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa gerbang menilai
+        \textit{response} yang dikirim dan bukan membaca kodenya? Kedua,
+        mengapa satu syarat justru lolos pada server pembanding? Ketiga,
+        mengapa hasil pemeriksaan dependensi punya umur simpan?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Menjalankan gate pada dua sasaran, tersedia di \berkas{sources/chapter07/periksa-keamanan.py}}, label={lst:c7-lat4-jalan}]
+source ../.venv/bin/activate
+python periksa-keamanan.py
+echo $?
+python periksa-keamanan.py kebijakan-pembanding.json
+echo $?
+./audit-dependensi.sh
+ruff check .
+
+# Keluarannya:
+# Lolos: seluruh syarat keamanan terpenuhi.
+# 0
+# Gagal: 8 syarat keamanan belum terpenuhi.
+# 1
+# No known vulnerabilities found
+# All checks passed!
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 4 yang sudah terisi}
+  \label{tab:c7-lat4-contoh}
+  \begin{tabularx}{\textwidth}{Xrrr}
+    \hline
+    \textbf{Sasaran} & \textbf{Syarat} & \textbf{Lolos} & \textbf{Status keluar} \\
+    \hline
+    Aplikasi Bab 7 & 18 & 18 & 0 \\
+    \hline
+    Server statis bawaan Python & 9 & 1 & 1 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 4}
+  \label{tab:c7-lat4-hasil}
+  \begin{tabularx}{\textwidth}{Xrrr}
+    \hline
+    \textbf{Sasaran} & \textbf{Syarat} & \textbf{Lolos} & \textbf{Status keluar} \\
+    \hline
+    Aplikasi Bab 7 & \dots & \dots & \dots \\
+    \hline
+    Server statis bawaan Python & \dots & \dots & \dots \\
+    \hline
+    Aplikasi dengan satu header dihapus & \dots & \dots & \dots \\
+    \hline
+    Temuan dependensi dan analisis statis & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Setelah seluruh latihan selesai, container dihentikan dengan
+\texttt{docker compose down -v}. Opsi \texttt{-v} ikut menghapus volume
+datanya, sehingga penyiapan berikutnya dimulai dari keadaan bersih.

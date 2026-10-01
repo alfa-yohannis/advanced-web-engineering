@@ -63,18 +63,26 @@ ini.
     \hline
     \textbf{Lapisan} & \textbf{Jumlah} & \textbf{Waktu} & \textbf{Yang tertangkap} \\
     \hline
-    Unit & 19 & 0,43 s & Salah hitung, salah batas, salah syarat \\
+    Unit & 19 & 0,99 s & Salah hitung, salah batas, salah syarat \\
     \hline
-    Integrasi dan kontrak & 15 & 0,91 s & Salah \textit{query}, bentuk \textit{response} berubah \\
+    Integrasi dan kontrak & 15 & 1,27 s & Salah \textit{query}, bentuk \textit{response} berubah \\
     \hline
-    E2E lewat Chrome & 5 & 2,00 s & Tombol tak terhubung, modul gagal dimuat \\
+    E2E lewat Chrome & 5 & 2,90 s & Tombol tak terhubung, modul gagal dimuat \\
     \hline
   \end{tabularx}
 \end{table}
 
-Selisihnya jelas: satu pengujian E2E memakan waktu lebih lama daripada
-seluruh 19 unit test digabung. Karena itu jumlah tiap lapisan tidak dibuat
-sama. Gambar \ref{fig:piramida} memperlihatkan dua cara menyusun
+Selisihnya jelas: satu pengujian E2E rata-rata memakan 0,58 detik, sekitar
+sebelas kali lipat rata-rata satu unit test yang hanya 0,05 detik. Karena
+harganya berbeda, jumlah tiap lapisan pun tidak dibuat sama.
+
+Satu angka pada tabel tersebut perlu dibaca dengan hati-hati. Waktu E2E
+bergoyang jauh lebih lebar daripada lapisan lain: tiga kali jalan berurutan
+di komputer yang sama memberi 2,1 detik, 2,9 detik, dan 5,6 detik. Sebabnya
+lapisan itu menyalakan browser sungguhan, dan browser ikut berebut prosesor
+dengan apa pun yang sedang berjalan. Karena itu lapisan E2E tidak layak
+dipakai sebagai pengukur waktu, dan pada \textit{gate} nanti yang dinilai
+adalah lapisan unit dan integrasi. Gambar \ref{fig:piramida} memperlihatkan dua cara menyusun
 perbandingannya.
 
 \begin{figure}[!htb]
@@ -195,10 +203,36 @@ def koneksi():
     koneksi_uji.rollback()
 \end{lstlisting}
 
+Tabel \ref{tab:container} membandingkan kedua pilihan beserta waktu
+menyiapkannya, diukur dari container yang belum menyala.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Tiruan basis data lawan PostgreSQL di container, waktu penyiapan
+           hasil pengukuran nyata}
+  \label{tab:container}
+  \begin{tabularx}{\textwidth}{lXr}
+    \hline
+    \textbf{Pilihan} & \textbf{Akibatnya} & \textbf{Waktu siap} \\
+    \hline
+    Tiruan di memori & Cepat, tetapi tipe dan urutan barisnya tidak sama dengan aslinya & di bawah 0,1 s \\
+    \hline
+    Container, data sudah ada & Perilakunya persis basis data sungguhan & 0,9 s \\
+    \hline
+    Container, data diisi ulang & Sama, ditambah pengisian 50.000 baris data uji & 31,6 s \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Baris terakhir yang membuat orang ragu memakai container, padahal pengisian
+data hanya dilakukan sekali. Sesudah datanya ada, container yang sudah
+menyala siap dipakai dalam 0,9 detik, dan itulah yang dialami tiap kali
+pengujian dijalankan.
+
 Aturan ini punya dua konsekuensi praktis. Pertama, pengujian boleh ditulis
 dalam urutan apa pun dan tetap memberi hasil yang sama. Kedua, data uji tidak
 perlu dibangun ulang antarpengujian, sehingga 15 pengujian integrasi dan
-kontrak selesai dalam 0,91 detik.
+kontrak selesai dalam 1,27 detik.
 
 \section{Pengujian API dan Contract Testing}
 
@@ -253,6 +287,36 @@ def test_diskon_tidak_melebihi_subtotal(jumlah_unit, harga_satuan):
   subtotal = harga.hitung_subtotal(jumlah_unit, harga_satuan)
   assert 0 <= harga.hitung_diskon(jumlah_unit, subtotal) <= subtotal
 \end{lstlisting}
+
+Tabel \ref{tab:properti} memuat keempat sifat yang diuji beserta biayanya.
+Tiap sifat dicoba dengan seratus contoh, yaitu bawaan Hypothesis, sehingga
+empat sifat berarti empat ratus contoh dalam satu kali jalan.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Empat sifat yang diuji, masing-masing dengan seratus contoh, hasil
+           pengukuran nyata}
+  \label{tab:properti}
+  \begin{tabularx}{\textwidth}{Xl}
+    \hline
+    \textbf{Sifat yang dijaga} & \textbf{Contoh} \\
+    \hline
+    Total tidak pernah negatif & 100 \\
+    \hline
+    Potongan tidak melebihi belanjanya & 100 \\
+    \hline
+    Menambah unit tidak menurunkan subtotal & 100 \\
+    \hline
+    Pesanan grosir selalu mendapat potongan & 100 \\
+    \hline
+    Empat sifat, satu kali jalan & 400 contoh dalam 0,9 s \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Empat ratus contoh dalam 0,9 detik itu yang membuat lapisan ini layak
+dijalankan sesering unit test biasa, walaupun jumlah pengujiannya hanya
+empat.
 
 \section{Analisis Statis dan Batas Coverage}
 
@@ -363,9 +427,9 @@ echo $?
 # Keluarannya:
 #   Pemeriksaan                             Batas            Terukur  Verdict
 #   pytest unit                                 0                 0   lolos
-#   waktu unit                                 10 s           0.83 s  lolos
+#   waktu unit                                 10 s           1.89 s  lolos
 #   pytest integrasi                            0                 0   lolos
-#   waktu integrasi                            30 s            1.3 s  lolos
+#   waktu integrasi                            30 s           2.12 s  lolos
 #   coverage harga.py                          95 %            100 %  lolos
 #   temuan ruff                                 0                 0   lolos
 #   query /api/pesanan/1                        2                 2   lolos
@@ -385,9 +449,9 @@ jumlahnya ikut diukur.
 \section{Ringkasan}
 
 Pengujian otomatis bukan satu benda, melainkan tiga lapisan dengan harga dan
-hasil tangkapan yang berbeda. Sembilan belas unit test selesai dalam 0,43
-detik, lima belas pengujian integrasi dan kontrak dalam 0,91 detik, sedangkan
-lima pengujian E2E lewat Chrome memakan dua detik. Karena harganya berbeda,
+hasil tangkapan yang berbeda. Sembilan belas unit test selesai dalam 0,99
+detik, lima belas pengujian integrasi dan kontrak dalam 1,27 detik, sedangkan
+lima pengujian E2E lewat Chrome memakan 2,90 detik. Karena harganya berbeda,
 jumlahnya pun tidak dibuat sama, dan itulah yang digambarkan piramida
 pengujian maupun \textit{testing trophy}.
 
@@ -477,11 +541,11 @@ npx playwright test --config e2e/playwright.config.ts
     \hline
     \textbf{Lapisan} & \textbf{Jumlah} & \textbf{Waktu} & \textbf{Catatan} \\
     \hline
-    Unit & 19 & 0,43 s & Tanpa basis data dan tanpa jaringan \\
+    Unit & 19 & 0,99 s & Tanpa basis data dan tanpa jaringan \\
     \hline
-    Integrasi dan kontrak & 15 & 0,91 s & Basis data di container \\
+    Integrasi dan kontrak & 15 & 1,27 s & Basis data di container \\
     \hline
-    E2E & 5 & 2,00 s & Chrome sungguhan, satu \textit{worker} \\
+    E2E & 5 & 2,90 s & Chrome sungguhan, satu \textit{worker} \\
     \hline
   \end{tabularx}
 \end{table}
@@ -679,7 +743,7 @@ echo $?
     \hline
     \textbf{Pemeriksaan} & \textbf{Batas} & \textbf{Terukur} & \textbf{Verdict} \\
     \hline
-    waktu unit & 10 s & 0,83 s & lolos \\
+    waktu unit & 10 s & 1,89 s & lolos \\
     \hline
     coverage \berkas{harga.py} & 95\% & 100\% & lolos \\
     \hline
@@ -713,6 +777,88 @@ echo $?
     query \texttt{/api/pesanan-n1/1} & \dots & \dots & \dots \\
     \hline
     Status keluar sebelum dan sesudah dilonggarkan & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection*{Latihan 5: Membedah Pengujian E2E}
+
+Latihan ini membuktikan bahwa lapisan E2E paling bergoyang waktunya, dan
+memperlihatkan jejak yang ditinggalkannya ketika sebuah pengujian gagal.
+
+\begin{enumerate}
+  \item Jalankan lapisan E2E tiga kali berurutan seperti pada Listing
+        \ref{lst:c6-lat5-jalan}, lalu catat waktu tiap kali jalan ke Tabel
+        \ref{tab:c6-lat5-hasil}. Tabel \ref{tab:c6-lat5-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jalankan sekali lagi dengan \texttt{-{}-repeat-each=3}, lalu catat
+        jumlah pengujian dan waktunya.
+  \item Ubah \texttt{QUERY\_JALUR\_SEHAT} di \berkas{sources/chapter06/e2e/pesanan.spec.ts}
+        menjadi 3, jalankan ulang dengan \texttt{-{}-trace on}, lalu catat
+        pesan gagalnya dan isi direktori \berkas{test-results/}.
+  \item Kembalikan angkanya menjadi 2, lalu pastikan kelima pengujian kembali
+        hijau.
+  \item Jawab dua pertanyaan berikut. Pertama, mengapa waktu lapisan E2E
+        bergoyang jauh lebih lebar daripada lapisan unit? Kedua, mengapa
+        \textit{gate} mutu menilai waktu lapisan unit dan integrasi, tetapi
+        tidak menilai waktu lapisan E2E?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Menjalankan lapisan E2E berulang kali beserta jejaknya, memakai \berkas{sources/chapter06/e2e/playwright.config.ts}}, label={lst:c6-lat5-jalan}]
+npx playwright test --config e2e/playwright.config.ts
+npx playwright test --config e2e/playwright.config.ts --repeat-each=3
+npx playwright test --config e2e/playwright.config.ts --trace on
+du -sh test-results
+
+# Keluarannya:
+# 5 passed (2.9s)
+# 15 passed (6.7s)
+# 5 passed (2.8s)
+# 369K	test-results
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 5 yang sudah terisi}
+  \label{tab:c6-lat5-contoh}
+  \begin{tabularx}{\textwidth}{Xrr}
+    \hline
+    \textbf{Cara menjalankan} & \textbf{Pengujian} & \textbf{Waktu} \\
+    \hline
+    Biasa, jalan pertama & 5 & 2,1 s \\
+    \hline
+    Biasa, jalan kedua & 5 & 2,9 s \\
+    \hline
+    Biasa, jalan ketiga & 5 & 5,6 s \\
+    \hline
+    Dengan \texttt{-{}-repeat-each=3} & 15 & 6,7 s \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Ketiga angka pada tiga baris pertama diambil apa adanya, termasuk 5,6 detik
+yang jauh lebih besar daripada dua lainnya. Sebabnya browser sungguhan ikut
+berebut prosesor dengan proses lain di komputer yang sama, dan itulah alasan
+waktu E2E tidak layak dipakai sebagai batas di \textit{Continuous
+Integration}.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 5}
+  \label{tab:c6-lat5-hasil}
+  \begin{tabularx}{\textwidth}{Xrr}
+    \hline
+    \textbf{Cara menjalankan} & \textbf{Pengujian} & \textbf{Waktu} \\
+    \hline
+    Biasa, jalan pertama & \dots & \dots \\
+    \hline
+    Biasa, jalan kedua & \dots & \dots \\
+    \hline
+    Biasa, jalan ketiga & \dots & \dots \\
+    \hline
+    Dengan \texttt{-{}-repeat-each=3} & \dots & \dots \\
+    \hline
+    Sesudah angka harapan diubah menjadi 3 & \dots & \dots \\
     \hline
   \end{tabularx}
 \end{table}

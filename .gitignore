@@ -455,3 +455,6 @@ videos
 # Hasil sementara Playwright
 test-results/
 playwright-report/
+
+# Basis contoh Hypothesis
+.hypothesis/

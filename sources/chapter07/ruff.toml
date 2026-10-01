@@ -1,0 +1,15 @@
+# Pengaturan ruff untuk analisis statis Bab 7.
+# Pemakaian (dari sources/chapter07): ruff check
+#
+# Aturan EXE002 sengaja tidak dipakai, sama seperti Bab 6. Repositori ini
+# tersimpan di filesystem yang menandai seluruh file sebagai dapat
+# dijalankan, sehingga aturan itu melaporkan temuan yang tidak menunjuk cacat
+# apa pun.
+
+line-length = 88
+indent-width = 2
+
+[lint]
+# E dan W dari pycodestyle, F dari pyflakes, I untuk urutan import,
+# S untuk aturan keamanan bandit, yang memang menjadi pokok bab ini.
+select = ["E", "W", "F", "I", "S"]

@@ -1,0 +1,14 @@
+{
+  "keterangan": "Kebijakan yang sama, tetapi diarahkan ke server statis bawaan Python di port 8031. Dipakai sebagai pembanding: server yang tidak disetel sama sekali tidak memenuhi satu pun syarat.",
+  "alamat_dasar": "http://127.0.0.1:8031",
+  "header_wajib": {
+    "Content-Security-Policy": "default-src 'self'",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "Permissions-Policy": "geolocation=(), camera=(), microphone=()"
+  },
+  "atribut_cookie_wajib": ["HttpOnly", "SameSite=Lax", "Path=/"],
+  "origin_boleh": ["http://127.0.0.1:8031"],
+  "origin_ditolak": ["https://situs-lain.example"],
+  "alamat_diperiksa": ["/index.html"]
+}
