@@ -5,22 +5,22 @@ berikutnya tidak dimulai dari menebak-nebak.
 
 ## Yang sudah lengkap
 
-Bab 2 sampai Bab 8 sudah punya naskah, slide, file sumber, dan angka yang
-diukur sungguhan. Kedelapannya sudah masuk buku, dan bukunya terbangun di 160
-halaman.
+Bab 2 sampai Bab 9 sudah punya naskah, slide, file sumber, dan angka yang
+diukur sungguhan. Kesembilannya sudah masuk buku, dan bukunya terbangun di
+172 halaman.
 
 ## Penyeragaman istilah
 
-Istilah Inggris yang disepakati sudah dipakai penuh di Bab 5 sampai Bab 8
+Istilah Inggris yang disepakati sudah dipakai penuh di Bab 5 sampai Bab 9
 beserta slidenya, tetapi belum di bab lain. Yang tertinggal di Bab 2 sampai
 Bab 4 beserta slidenya: `berkas`, `jawaban`, `anggaran`, `latensi`, `gejala`,
 `pita`, `kewarasan`, `pemanasan`, dan `vonis`. Daftar lengkap istilahnya ada
 di `CLAUDE.md`.
 
-## Bab 9 dan sesudahnya
+## Bab 10 dan sesudahnya
 
-Naskah `module/chapter09.tex` sampai `chapter14.tex` masih kerangka berisi
-`% TODO`, dan direktori `sources/chapter09` sampai `chapter14` masih kosong.
+Naskah `module/chapter10.tex` sampai `chapter14.tex` masih kerangka berisi
+`% TODO`, dan direktori `sources/chapter10` sampai `chapter14` masih kosong.
 Peta topik tiap pertemuan ada di `README.md` akar.
 
 Bab 1 juga masih kerangka, padahal sudah aktif di buku, sehingga tercetak

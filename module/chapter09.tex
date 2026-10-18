@@ -1,51 +1,698 @@
 \chapter{Cloud Deployment, DevOps, dan Observability}
+\label{ch:deployment}
 
 \section*{Tujuan Pembelajaran}
 \begin{itemize}
-  \item % TODO
-  \item % TODO
-  \item % TODO
+  \item Mengemas satu layanan sebagai \textit{container} yang setelannya
+        datang dari \textit{environment}, lalu menjalankan dua versi dari
+        artefak yang sama persis.
+  \item Menjalankan rilis \textit{blue-green}, \textit{canary}, dan
+        \textit{rollback} lewat satu \textit{reverse proxy}, lalu mengukur
+        pembagian permintaan yang benar-benar terjadi.
+  \item Menginstrumentasi layanan dengan \textit{log}, metrik, dan
+        \textit{trace}, lalu menilainya terhadap SLO sebagai alarm yang
+        keluar dengan status gagal.
 \end{itemize}
 
 \section{Pendahuluan}
 
-% TODO
+Delapan bab sebelumnya membangun dan memperbaiki aplikasi di komputer
+sendiri. Bab ini menanyakan apa yang berubah ketika aplikasi itu dijalankan
+di tempat lain, dilayani untuk orang lain, dan diperbarui tanpa boleh mati.
+
+Tiga pertanyaan praktis muncul di sana. Bagaimana satu artefak yang sama
+dijalankan di lingkungan yang berbeda tanpa diubah isinya. Bagaimana versi
+baru dinaikkan tanpa membuat seluruh pengunjung menanggung risikonya.
+Bagaimana keadaan sistem diketahui dari luar, tanpa menebak dari keluhan
+pengguna.
+
+Demonya sengaja kecil: dua versi layanan yang sama di belakang satu
+\textit{reverse proxy}, seluruhnya dengan Python pustaka standar, ditambah
+satu \textit{image} container berisi satu file. Referensi utamanya adalah
+aturan \textit{twelve-factor app} \cite{twelve-factor}, W3C Trace Context
+\cite{w3c-trace-context} untuk menyatukan \textit{trace}, dan uraian SLO
+beserta \textit{error budget} dari buku SRE Google \cite{beyer2016sre}.
 
 \section{Container dan Twelve-Factor App}
 
-% TODO
+\textit{Container} mengemas aplikasi beserta seluruh yang dibutuhkannya
+menjadi satu artefak yang dapat dijalankan di mana saja. Yang membuatnya
+berguna bukan pengemasannya saja, melainkan janji bahwa artefak yang diuji
+dan artefak yang dijalankan di produksi benar-benar sama.
+
+\textit{Twelve-factor app} \cite{twelve-factor} adalah daftar aturan yang
+membuat janji itu dapat ditepati. Tabel \ref{tab:12factor} memuat lima aturan
+yang paling terasa pada demo bab ini.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lima aturan \textit{twelve-factor} dan wujudnya pada demo Bab 9}
+  \label{tab:12factor}
+  \begin{tabularx}{\textwidth}{lX}
+    \hline
+    \textbf{Aturan} & \textbf{Wujudnya di sini} \\
+    \hline
+    Setelan dari \textit{environment} & \texttt{VERSI}, \texttt{PORT}, dan \texttt{HOST} dibaca saat proses mulai \\
+    \hline
+    Satu artefak, banyak lingkungan & Dua versi berjalan dari \textit{image} yang sama, berbeda hanya di \textit{environment} \\
+    \hline
+    Proses tanpa ingatan tetap & Metrik hanya hidup selama proses, dan hilang saat proses diganti \\
+    \hline
+    \textit{Port binding} & Layanan mengikat portnya sendiri, tanpa server web di luarnya \\
+    \hline
+    \textit{Log} sebagai aliran peristiwa & Tiap permintaan satu baris JSON ke stdout, tanpa menulis file \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Aturan pertama itu tampak sepele sampai dilanggar. Pada demo ini, layanan
+semula mengikat ke \texttt{127.0.0.1}, dan itu bekerja dengan baik di
+komputer sendiri. Begitu dimasukkan ke \textit{container}, port yang
+dipublikasikan tidak pernah terjawab, karena di dalam \textit{container}
+alamat itu berarti \textit{container} itu sendiri. Perbaikannya satu baris:
+alamat ikat ikut dibaca dari \textit{environment}, dan \textit{image}
+menyetelnya menjadi \texttt{0.0.0.0}.
+
+Tabel \ref{tab:container} memuat angka \textit{image} dan container tersebut.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Ukuran dan waktu \textit{image} layanan Bab 9, hasil pengukuran
+           nyata}
+  \label{tab:container}
+  \begin{tabularx}{\textwidth}{Xr}
+    \hline
+    \textbf{Ukuran} & \textbf{Hasil} \\
+    \hline
+    Ukuran \textit{image} & 119 MB \\
+    \hline
+    Lama \textit{build} pertama, termasuk mengunduh \textit{base image} & 129,7 s \\
+    \hline
+    Lama \textit{build} ulang, seluruh \textit{layer} tersimpan & 9,5 s \\
+    \hline
+    Lama sampai siap melayani sesudah \texttt{docker run} & 0,5 s \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Selisih 129,7 detik dengan 9,5 detik itu bukan keajaiban, melainkan akibat
+urutan di dalam \texttt{Dockerfile}. \textit{Layer} yang jarang berubah
+ditulis lebih dahulu, dan \textit{layer} yang sering berubah ditulis paling
+akhir, sehingga \textit{build} berikutnya cukup mengulang bagian terakhirnya
+\cite{docker-build-best}.
 
 \section{Konfigurasi dan Manajemen Secret}
 
-% TODO
+Setelan dan \textit{secret} sama-sama datang dari luar kode, tetapi
+diperlakukan berbeda. Bab 7 sudah menetapkan aturannya: setelan biasa boleh
+masuk file yang ikut repositori, sedangkan \textit{secret} hanya lewat
+\textit{environment} atau \textit{secret manager}.
+
+Bab ini menambahkan satu pembedaan lagi, yaitu setelan yang boleh berubah
+tanpa menyalakan ulang. Tabel \ref{tab:setelan9} memuat ketiganya beserta
+contohnya pada demo bab ini.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Tiga jenis nilai dari luar kode dan cara memperlakukannya}
+  \label{tab:setelan9}
+  \begin{tabularx}{\textwidth}{lXl}
+    \hline
+    \textbf{Jenis} & \textbf{Contoh di Bab 9} & \textbf{Berubahnya} \\
+    \hline
+    Setelan proses & \texttt{VERSI}, \texttt{PORT}, \texttt{HOST} & Saat proses mulai \\
+    \hline
+    Setelan operasional & Bobot rilis di \berkas{rilis.json} & Kapan saja, tanpa menyalakan ulang \\
+    \hline
+    \textit{Secret} & Kunci sesi, kata sandi basis data & Lewat \textit{environment} saja \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Baris tengah yang membuat rilis pada bab ini mungkin. Bobot rilis dibaca
+proxy pada tiap permintaan, sehingga mengubah satu angka sudah cukup untuk
+memindahkan lalu lintas, tanpa satu proses pun dimatikan.
 
 \section{CI/CD dan Infrastructure as Code}
 
-% TODO
+\textit{Continuous Integration} sudah dipakai sejak Bab 5 sebagai gerbang
+yang menolak perubahan cacat. \textit{Continuous Delivery} melanjutkannya:
+perubahan yang lolos gerbang dikemas dan disiapkan untuk dirilis, tanpa
+langkah manual yang diingat-ingat.
+
+Urutan tahapnya mengikuti aturan yang sama dengan Bab 6, yaitu yang paling
+murah dan paling sering gagal dijalankan lebih dahulu. Listing
+\ref{lst:ci9} memuat potongan contoh \textit{pipeline} pada bab ini.
+
+\begin{lstlisting}[language=yaml, caption={Potongan contoh pipeline, tersedia di \berkas{sources/chapter09/ci-contoh.yml}}, label={lst:ci9}]
+      - name: Analisis statis
+        run: ruff check sources/chapter09
+
+      - name: Uji unit dan integrasi
+        run: pytest -q sources/chapter06
+
+      - name: Bangun image
+        run: docker build -t awe9-layanan sources/chapter09
+\end{lstlisting}
+
+\textit{Infrastructure as Code} (IaC) membawa gagasan yang sama ke
+infrastrukturnya: keadaan yang diinginkan ditulis sebagai file, bukan
+dikerjakan lewat panel. File \berkas{sources/chapter09/docker-compose.yml}
+adalah bentuk paling sederhananya. Di dalamnya tertulis dua layanan yang
+dibangun dari \textit{image} yang sama dan hanya berbeda \textit{environment},
+dan siapa pun yang menjalankannya mendapat susunan yang sama persis.
 
 \section{Reverse Proxy serta Deployment ke Cloud dan Edge}
 
-% TODO
+\textit{Reverse proxy} berdiri di depan satu atau beberapa layanan, menerima
+seluruh permintaan, lalu meneruskannya. Karena seluruh lalu lintas
+melewatinya, di sanalah tempat paling murah untuk memutuskan siapa yang
+melayani apa. Gambar \ref{fig:topologi9} memperlihatkan susunan pada demo
+bab ini.
+
+\begin{figure}[!htb]
+  \centering
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    kotak/.style={draw, rounded corners, minimum height=0.9cm,
+                  minimum width=2.2cm, align=center, font=\scriptsize\bfseries},
+    panah/.style={-{Stealth[length=2mm]}, thick}
+  ]
+    \node[kotak, fill=blue!8] (klien) at (0,0) {Klien};
+    \node[kotak, fill=orange!12] (proxy) at (3.4,0) {Reverse proxy\\{\tiny\mdseries rilis.json}};
+    \node[kotak, fill=blue!8] (biru) at (7.4,0.9) {Versi biru\\{\tiny\mdseries port 8061}};
+    \node[kotak, fill=green!10] (hijau) at (7.4,-0.9) {Versi hijau\\{\tiny\mdseries port 8062}};
+
+    \draw[panah] (klien) -- (proxy);
+    \draw[panah] (proxy.east) -- ++(0.4,0) |- (biru.west);
+    \draw[panah] (proxy.east) -- ++(0.4,0) |- (hijau.west);
+    \node[font=\tiny, gray, anchor=east] at (6.9,0.72) {90 persen};
+    \node[font=\tiny, gray, anchor=east] at (6.9,-0.72) {10 persen};
+    \node[font=\tiny, gray, anchor=north, align=center] at (3.4,-1.3)
+      {membuat trace id,\\mencatat tujuannya};
+  \end{tikzpicture}
+  \caption{Seluruh permintaan melewati proxy, sehingga pembagian rilis dan
+           penandaan \textit{trace} cukup dilakukan di satu tempat}
+  \label{fig:topologi9}
+\end{figure}
+
+Di \textit{cloud}, peran proxy itu biasanya dipegang \textit{load balancer}
+milik penyedia, dan di \textit{edge} dipegang jaringan titik terdekat seperti
+dibahas Bab 8. Bentuknya berbeda, tetapi keputusannya sama: memilih tujuan,
+menambahkan penanda, dan mencatat hasilnya.
 
 \section{Rilis Blue-Green, Canary, dan Rollback}
 
-% TODO
+Tiga nama ini menjawab satu pertanyaan: berapa banyak pengunjung yang
+menanggung risiko versi baru. \textit{Blue-green} memindahkan seluruhnya
+sekaligus. \textit{Canary} memindahkan sebagian kecil lebih dahulu.
+\textit{Rollback} mengembalikan seluruhnya ketika angkanya memburuk.
+
+Listing \ref{lst:pilih} memperlihatkan seluruh mekanismenya, yaitu empat
+baris yang memilih tujuan menurut bobot.
+
+\begin{lstlisting}[style=PythonStyle, caption={Pembagian rilis dalam empat baris, tersedia di \berkas{sources/chapter09/proxy.py}}, label={lst:pilih}]
+def pilih_tujuan(rilis, nomor_permintaan):
+  """Memilih versi tujuan menurut bobot pada file rilis.
+
+  Pemilihannya berurutan, bukan acak, supaya hasilnya dapat diulang: dari
+  tiap seratus permintaan, tepat sebanyak bobot yang menuju versi kedua.
+  """
+  bobot_kedua = rilis["bobot_persen_kedua"]
+  if nomor_permintaan % 100 < bobot_kedua:
+    return rilis["versi_kedua"]
+  return rilis["versi_pertama"]
+\end{lstlisting}
+
+Versi hijau pada demo ini sengaja dibuat cacat: pekerjaannya empat kali lebih
+lama, dan satu dari dua puluh lima permintaannya dijawab 500. Tabel
+\ref{tab:rilis} memuat ketiga tahap rilisnya, diukur dari header
+\texttt{X-Dilayani} pada tiap \textit{response}.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Tiga tahap rilis pada demo Bab 9, hasil pengukuran nyata}
+  \label{tab:rilis}
+  \begin{tabularx}{\textwidth}{Xrrrr}
+    \hline
+    \textbf{Tahap} & \textbf{Minta} & \textbf{Biru} & \textbf{Hijau} & \textbf{Gagal} \\
+    \hline
+    \textit{Canary} 10 persen & 500 & 450 & 50 & 2 \\
+    \hline
+    \textit{Blue-green}, seluruhnya hijau & 100 & 0 & 100 & 4 \\
+    \hline
+    \textit{Rollback}, kembali ke biru & 100 & 100 & 0 & 0 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Tiga baris itu merangkum seluruh alasan \textit{canary} ada. Pada tahap
+pertama, cacat versi hijau hanya mengenai 50 dari 500 permintaan, dan hanya
+dua yang gagal. Pada tahap kedua, cacat yang sama mengenai seluruhnya, dan
+empat dari seratus permintaan gagal. Pada tahap ketiga, satu angka di file
+rilis dikembalikan dan kegagalannya hilang seketika, tanpa satu proses pun
+dimatikan.
 
 \section{OpenTelemetry: Log, Metrik, dan Trace}
 
-% TODO
+Tiga keluaran instrumentasi menjawab tiga pertanyaan yang berbeda
+\cite{otel-docs}. \textit{Log} menjawab apa yang terjadi pada satu peristiwa.
+Metrik menjawab bagaimana keadaan seluruhnya dari waktu ke waktu.
+\textit{Trace} menjawab ke mana saja satu permintaan pergi.
+
+Tabel \ref{tab:tiga-pilar} memuat wujud ketiganya pada demo bab ini.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Tiga keluaran instrumentasi dan wujudnya pada demo Bab 9}
+  \label{tab:tiga-pilar}
+  \begin{tabularx}{\textwidth}{lXl}
+    \hline
+    \textbf{Keluaran} & \textbf{Wujudnya} & \textbf{Menjawab} \\
+    \hline
+    \textit{Log} & Satu baris JSON per permintaan ke stdout & Apa yang terjadi \\
+    \hline
+    Metrik & Teks format Prometheus di \texttt{/metrics} & Bagaimana keadaannya \\
+    \hline
+    \textit{Trace} & \textit{Trace id} di header \texttt{traceparent} & Ke mana perginya \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Metriknya memakai format teks Prometheus \cite{prometheus-exposition}, dan
+sebaran waktunya disimpan sebagai histogram. Cara itu hemat: berapa pun
+jumlah permintaannya, yang disimpan hanya hitungan per ember. Harganya,
+persentil yang dihitung darinya selalu jatuh pada salah satu batas ember,
+bukan pada angka persis.
+
+Papan operasional pada bab ini membaca \texttt{/metrics} kedua versi, lalu
+menampilkannya berdampingan. Tabel \ref{tab:papan} memuat keluarannya sesudah
+tahap \textit{canary}.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Papan operasional sesudah 500 permintaan \textit{canary}, hasil
+           pengukuran nyata}
+  \label{tab:papan}
+  \begin{tabularx}{\textwidth}{Xrrrrr}
+    \hline
+    \textbf{Versi} & \textbf{Minta} & \textbf{Gagal} & \textbf{\% gagal} & \textbf{Rata ms} & \textbf{p95 ms} \\
+    \hline
+    biru & 450 & 0 & 0,0 & 5,1 & 10 \\
+    \hline
+    hijau & 50 & 2 & 4,0 & 20,1 & 25 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Pertanyaan berikutnya, bagaimana satu permintaan ditelusuri ketika melewati
+dua proses. Jawabannya \textit{trace id}, yaitu penanda yang dibuat sekali di
+proxy lalu diteruskan lewat header \texttt{traceparent} menurut W3C Trace
+Context \cite{w3c-trace-context}. Kedua pihak mencatat penanda yang sama,
+sehingga baris lognya dapat disatukan:
+
+\begin{lstlisting}[language=bash, caption={Menyatukan log dua proses dengan satu trace id, memakai \berkas{sources/chapter09/proxy.py}}, label={lst:trace9}]
+grep -h "300a032b60413b55e53009cc0660f240" proxy.log hijau.log
+
+# Keluarannya, dirapikan:
+#   hijau    /api/katalog   status 500   20.2 ms
+#   proxy    /api/katalog   status 500   22.2 ms
+\end{lstlisting}
+
+Dua baris itu menjawab pertanyaan yang tidak dapat dijawab metrik maupun
+\textit{log} sendirian: kegagalan tersebut berasal dari layanan hijau, bukan
+dari proxy, dan selisih 2 milidetik di antara keduanya adalah biaya
+penerusan.
 
 \section{Dasar SLI dan SLO}
 
-% TODO
+\textit{Service Level Indicator} (SLI) adalah angka yang mewakili pengalaman
+pengguna, misalnya persentase permintaan yang berhasil.
+\textit{Service Level Objective} (SLO) adalah batas yang disepakati untuk
+angka itu, misalnya 99 persen \cite{beyer2016sre}.
+
+Selisih antara 100 persen dan SLO disebut \textit{error budget}. Dengan SLO
+99 persen, dari 500 permintaan ada jatah 5 permintaan yang boleh gagal.
+Jatah itulah yang membuat rilis mungkin: selama budgetnya belum habis, versi
+baru boleh dinaikkan.
+
+Tabel \ref{tab:slo} memuat penilaian alarm pada bab ini sesudah tahap
+\textit{canary}.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Penilaian SLO sesudah tahap \textit{canary}, hasil pengukuran
+           nyata}
+  \label{tab:slo}
+  \begin{tabularx}{\textwidth}{Xrrl}
+    \hline
+    \textbf{Tujuan} & \textbf{SLO} & \textbf{Terukur} & \textbf{Verdict} \\
+    \hline
+    biru: ketersediaan persen & 99,0 & 100,0 & lolos \\
+    \hline
+    biru: p95 milidetik & 50 & 10 & lolos \\
+    \hline
+    hijau: ketersediaan persen & 99,0 & 96,0 & LANGGAR \\
+    \hline
+    hijau: p95 milidetik & 50 & 25 & lolos \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Alarm itu keluar dengan status 1, sama seperti gerbang pada Bab 5 sampai Bab
+7, sehingga dapat dipasang di penjadwal maupun di \textit{pipeline} sesudah
+rilis. Yang menarik justru baris p95 versi hijau: angkanya 25 milidetik, dua
+setengah kali lipat versi biru, tetapi masih di bawah batas 50 milidetik.
+Pelan belum tentu melanggar, dan itulah gunanya menuliskan batasnya lebih
+dahulu.
+
+Satu keterbatasan demo ini perlu disebut. Metriknya dihitung sejak proses
+mulai, sedangkan SLO yang sungguhan dihitung atas jendela bergerak, misalnya
+dua puluh delapan hari terakhir. Akibatnya, pada demo ini kegagalan lama
+tidak pernah kedaluwarsa, dan satu-satunya cara mengosongkannya adalah
+menyalakan ulang prosesnya.
 
 \section{Ringkasan}
 
-% TODO
+Satu artefak dijalankan di banyak lingkungan ketika seluruh setelannya datang
+dari luar kode. Demo bab ini menjalankan dua versi dari \textit{image} yang
+sama persis, berbeda hanya pada \textit{environment}-nya, dan satu
+pelanggaran kecil terhadap aturan itu langsung terasa: layanan yang mengikat
+ke \texttt{127.0.0.1} bekerja di komputer sendiri, lalu tidak pernah terjawab
+begitu masuk \textit{container}.
+
+Rilis adalah keputusan tentang berapa banyak pengunjung yang menanggung
+risiko. Pada tahap \textit{canary} sepuluh persen, cacat versi hijau hanya
+mengenai 50 dari 500 permintaan dengan dua kegagalan. Ketika seluruh lalu
+lintas dipindahkan, cacat yang sama menghasilkan empat kegagalan dari seratus
+permintaan. \textit{Rollback} mengembalikannya dengan mengubah satu angka,
+tanpa mematikan satu proses pun.
+
+Keadaan sistem diketahui dari tiga keluaran yang menjawab pertanyaan berbeda.
+\textit{Log} menjawab apa yang terjadi, metrik menjawab bagaimana keadaan
+seluruhnya, dan \textit{trace} menjawab ke mana permintaan itu pergi. Pada
+demo ini ketiganya cukup ditulis dengan pustaka standar, dan \textit{trace
+id} dari header \texttt{traceparent} sudah cukup menyatukan dua proses.
+
+Angka instrumentasi baru berguna ketika ada batas yang disepakati. SLO 99
+persen memberi jatah kegagalan yang jelas, dan alarm pada bab ini menilai
+kedua versi terhadapnya: versi biru lolos dengan 100 persen, versi hijau
+melanggar dengan 96 persen, lalu prosesnya keluar dengan status 1.
+
+Pelan belum tentu melanggar, dan itulah alasan batasnya ditulis lebih dahulu.
+Versi hijau dua setengah kali lebih lambat daripada versi biru, tetapi p95
+25 milidetiknya masih di bawah batas 50 milidetik. Tanpa batas yang
+disepakati, angka seperti itu hanya menjadi bahan perdebatan.
 
 \section{Latihan}
 
+Seluruh file yang dipakai pada latihan ini tersedia di
+\berkas{sources/chapter09/}, dihitung relatif terhadap akar repositori.
+Latihan membutuhkan Python 3, dan Docker hanya pada latihan terakhir.
+
+Seluruh pengukuran diarahkan ke layanan yang berjalan di komputer sendiri,
+dengan beban setara satu pengguna yang mengirim permintaan berurutan. Hasil
+tiap mahasiswa akan berbeda pada bagian waktu, dan yang dilaporkan adalah
+pola perbandingannya beserta penjelasannya.
+
+Penyiapannya dilakukan sekali, seperti pada Listing \ref{lst:c9-siapkan}.
+
+\begin{lstlisting}[language=bash, caption={Menyalakan dua versi layanan beserta proxynya, memakai \berkas{sources/chapter09/aplikasi.py}}, label={lst:c9-siapkan}]
+cd sources/chapter09
+VERSI=biru PORT=8061 python3 aplikasi.py > biru.log &
+VERSI=hijau PORT=8062 python3 aplikasi.py > hijau.log &
+python3 proxy.py > proxy.log &
+\end{lstlisting}
+
+\subsection*{Latihan 1: Menjalankan Rilis Canary}
+
+Latihan ini membuktikan bahwa bobot rilis menentukan berapa banyak pengunjung
+yang menanggung risiko versi baru.
+
 \begin{enumerate}
-  \item % TODO
-  \item % TODO
+  \item Pastikan \texttt{bobot\_persen\_kedua} di
+        \berkas{sources/chapter09/rilis.json} bernilai 10, lalu kirim 200
+        permintaan seperti pada Listing \ref{lst:c9-lat1-jalan}.
+  \item Catat pembagian yang terjadi beserta jumlah kegagalannya ke Tabel
+        \ref{tab:c9-lat1-hasil}. Tabel \ref{tab:c9-lat1-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Ubah bobotnya menjadi 50, kirim 200 permintaan lagi, lalu catat
+        kembali. Perhatikan bahwa proxy tidak perlu dinyalakan ulang.
+  \item Jawab tiga pertanyaan berikut. Pertama, berapa permintaan yang
+        menanggung risiko pada tiap bobot? Kedua, mengapa pembagiannya tepat
+        dan tidak meleset seperti pembagian acak? Ketiga, apa yang menjadi
+        pertimbangan ketika memilih bobot pertama sebuah rilis?
 \end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Mengukur pembagian rilis, tersedia di \berkas{sources/chapter09/ukur-rilis.py}}, label={lst:c9-lat1-jalan}]
+python3 ukur-rilis.py 200
+
+# Keluarannya:
+# Permintaan   : 200
+#   biru     :  180 permintaan (90.0%)
+#   hijau    :   20 permintaan (10.0%)
+#   status 200 :  200 permintaan
+# p50          : 6.7 ms
+# p95          : 21.9 ms
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 1 yang sudah terisi}
+  \label{tab:c9-lat1-contoh}
+  \begin{tabularx}{\textwidth}{Xrrrr}
+    \hline
+    \textbf{Bobot hijau} & \textbf{Minta} & \textbf{Biru} & \textbf{Hijau} & \textbf{Gagal} \\
+    \hline
+    10 persen & 500 & 450 & 50 & 2 \\
+    \hline
+    100 persen & 100 & 0 & 100 & 4 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 1}
+  \label{tab:c9-lat1-hasil}
+  \begin{tabularx}{\textwidth}{Xrrrr}
+    \hline
+    \textbf{Bobot hijau} & \textbf{Minta} & \textbf{Biru} & \textbf{Hijau} & \textbf{Gagal} \\
+    \hline
+    10 persen & \dots & \dots & \dots & \dots \\
+    \hline
+    50 persen & \dots & \dots & \dots & \dots \\
+    \hline
+    100 persen & \dots & \dots & \dots & \dots \\
+    \hline
+    0 persen, sesudah \textit{rollback} & \dots & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection*{Latihan 2: Membaca Papan Operasional}
+
+Latihan ini membuktikan bahwa perbedaan dua versi terbaca dari metrik, tanpa
+perlu membaca kodenya.
+
+\begin{enumerate}
+  \item Lihat teks metrik mentah salah satu versi, lalu kenali ketiga jenis
+        metriknya, seperti pada Listing \ref{lst:c9-lat2-jalan}.
+  \item Jalankan papan operasionalnya, lalu catat angka kedua versi ke Tabel
+        \ref{tab:c9-lat2-hasil}. Tabel \ref{tab:c9-lat2-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Kirim 200 permintaan lagi, lalu jalankan papannya sekali lagi dan
+        perhatikan angka mana yang bertambah dan angka mana yang tetap.
+  \item Jawab dua pertanyaan berikut. Pertama, mengapa p95 pada papan selalu
+        jatuh pada angka yang sama, misalnya 10 atau 25? Kedua, apa yang
+        hilang bila sebaran waktu disimpan sebagai rata-rata saja?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Membaca metrik mentah lalu papannya, tersedia di \berkas{sources/chapter09/papan.py}}, label={lst:c9-lat2-jalan}]
+curl -s http://127.0.0.1:8061/metrics | head -8
+python3 papan.py
+
+# Keluarannya:
+#   Versi                       Minta   Gagal  % gagal   Rata ms   p95 ms
+#   biru                          450       0      0.0       5.1       10
+#   hijau                          50       2      4.0      20.1       25
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 2 yang sudah terisi}
+  \label{tab:c9-lat2-contoh}
+  \begin{tabularx}{\textwidth}{Xrrrr}
+    \hline
+    \textbf{Versi} & \textbf{Minta} & \textbf{Gagal} & \textbf{Rata ms} & \textbf{p95 ms} \\
+    \hline
+    biru & 450 & 0 & 5,1 & 10 \\
+    \hline
+    hijau & 50 & 2 & 20,1 & 25 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 2}
+  \label{tab:c9-lat2-hasil}
+  \begin{tabularx}{\textwidth}{Xrrrr}
+    \hline
+    \textbf{Versi} & \textbf{Minta} & \textbf{Gagal} & \textbf{Rata ms} & \textbf{p95 ms} \\
+    \hline
+    biru, pengamatan pertama & \dots & \dots & \dots & \dots \\
+    \hline
+    hijau, pengamatan pertama & \dots & \dots & \dots & \dots \\
+    \hline
+    biru, sesudah 200 permintaan & \dots & \dots & \dots & \dots \\
+    \hline
+    hijau, sesudah 200 permintaan & \dots & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection*{Latihan 3: Menelusuri Satu Permintaan}
+
+Latihan ini membuktikan bahwa \textit{trace id} menjawab pertanyaan yang
+tidak dapat dijawab metrik maupun \textit{log} sendirian.
+
+\begin{enumerate}
+  \item Ambil satu \textit{trace id} dari header \texttt{X-Trace-Id} sebuah
+        \textit{response}, seperti pada Listing \ref{lst:c9-lat3-jalan}.
+  \item Cari penanda itu di kedua file log, lalu catat status dan lamanya di
+        tiap proses ke Tabel \ref{tab:c9-lat3-hasil}. Tabel
+        \ref{tab:c9-lat3-contoh} memperlihatkan contoh yang sudah terisi.
+  \item Ulangi untuk satu permintaan yang gagal, lalu catat di proses mana
+        kegagalannya berasal.
+  \item Jawab dua pertanyaan berikut. Pertama, berapa biaya penerusan
+        proxy, dan dari angka mana Anda mengetahuinya? Kedua, apa yang
+        terjadi pada penelusuran bila proxy tidak meneruskan header
+        \texttt{traceparent}?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Mengambil trace id lalu mencarinya di kedua log, tersedia di \berkas{sources/chapter09/proxy.py}}, label={lst:c9-lat3-jalan}]
+curl -sI http://127.0.0.1:8060/api/katalog | grep -i x-trace-id
+grep -h "300a032b60413b55e53009cc0660f240" proxy.log hijau.log
+
+# Keluarannya, dirapikan:
+#   hijau    /api/katalog   status 500   20.2 ms
+#   proxy    /api/katalog   status 500   22.2 ms
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 3 yang sudah terisi}
+  \label{tab:c9-lat3-contoh}
+  \begin{tabularx}{\textwidth}{lrr}
+    \hline
+    \textbf{Proses} & \textbf{Status} & \textbf{Lama} \\
+    \hline
+    hijau & 500 & 20,2 ms \\
+    \hline
+    proxy & 500 & 22,2 ms \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil penelusuran Latihan 3}
+  \label{tab:c9-lat3-hasil}
+  \begin{tabularx}{\textwidth}{lrr}
+    \hline
+    \textbf{Proses} & \textbf{Status} & \textbf{Lama} \\
+    \hline
+    Permintaan berhasil, di proxy & \dots & \dots \\
+    \hline
+    Permintaan berhasil, di layanan & \dots & \dots \\
+    \hline
+    Permintaan gagal, di proxy & \dots & \dots \\
+    \hline
+    Permintaan gagal, di layanan & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection*{Latihan 4: Menegakkan SLO dan Menjalankan Container}
+
+Latihan ini menutup bab dengan dua hal yang saling melengkapi: batas yang
+dinilai mesin, dan artefak yang dapat dijalankan di mana saja.
+
+\begin{enumerate}
+  \item Jalankan alarmnya, lalu catat \textit{verdict} tiap tujuan beserta
+        status keluarnya, seperti pada Listing \ref{lst:c9-lat4-jalan}.
+  \item Turunkan \texttt{ketersediaan\_persen\_minimum} di
+        \berkas{sources/chapter09/slo.json} menjadi 95, jalankan ulang
+        alarmnya, lalu catat perubahannya.
+  \item Bangun \textit{image} dan jalankan containernya, lalu catat ukuran
+        \textit{image} serta lama sampai siap melayani ke Tabel
+        \ref{tab:c9-lat4-hasil}. Tabel \ref{tab:c9-lat4-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Hapus baris \texttt{ENV HOST=0.0.0.0} dari
+        \berkas{sources/chapter09/Dockerfile}, bangun ulang, lalu catat apa
+        yang terjadi. Kembalikan sesudahnya.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa menurunkan SLO bukan
+        cara memperbaiki layanan? Kedua, mengapa \textit{build} kedua jauh
+        lebih singkat? Ketiga, mengapa container tanpa
+        \texttt{HOST=0.0.0.0} tidak pernah terjawab?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Menjalankan alarm lalu membangun container, tersedia di \berkas{sources/chapter09/alarm.py}}, label={lst:c9-lat4-jalan}]
+python3 alarm.py
+echo $?
+docker build -t awe9-layanan .
+docker run -d --name awe9-uji -e VERSI=biru -p 8065:8061 awe9-layanan
+curl -s http://127.0.0.1:8065/sehat
+
+# Keluarannya:
+# Gagal: 1 tujuan SLO tidak terpenuhi.
+# 1
+# {"versi": "biru", "keadaan": "sehat"}
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 4 yang sudah terisi}
+  \label{tab:c9-lat4-contoh}
+  \begin{tabularx}{\textwidth}{Xr}
+    \hline
+    \textbf{Yang diamati} & \textbf{Hasil} \\
+    \hline
+    Tujuan SLO yang dilanggar & 1 \\
+    \hline
+    Status keluar alarm & 1 \\
+    \hline
+    Ukuran \textit{image} & 119 MB \\
+    \hline
+    Lama sampai siap melayani & 0,5 s \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 4}
+  \label{tab:c9-lat4-hasil}
+  \begin{tabularx}{\textwidth}{Xr}
+    \hline
+    \textbf{Yang diamati} & \textbf{Hasil} \\
+    \hline
+    Tujuan SLO yang dilanggar & \dots \\
+    \hline
+    Status keluar alarm & \dots \\
+    \hline
+    Status keluar sesudah SLO diturunkan & \dots \\
+    \hline
+    Ukuran \textit{image} & \dots \\
+    \hline
+    Lama \textit{build} pertama dan kedua & \dots \\
+    \hline
+    Akibat menghapus \texttt{ENV HOST=0.0.0.0} & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Setelah seluruh latihan selesai, ketiga proses dihentikan dengan
+\texttt{kill}, dan containernya dihapus dengan
+\texttt{docker rm -f awe9-uji}.

@@ -1,0 +1,14 @@
+{
+  "keterangan": "Pembagian rilis. Bobot persen kedua bernilai 0 berarti seluruh permintaan ke versi pertama, 100 berarti seluruhnya ke versi kedua, dan di antaranya berarti canary.",
+  "bobot_persen_kedua": 0,
+  "versi_pertama": {
+    "nama": "biru",
+    "host": "127.0.0.1",
+    "port": 8061
+  },
+  "versi_kedua": {
+    "nama": "hijau",
+    "host": "127.0.0.1",
+    "port": 8062
+  }
+}

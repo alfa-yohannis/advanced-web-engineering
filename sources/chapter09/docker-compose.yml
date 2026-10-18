@@ -1,0 +1,25 @@
+# Dua versi layanan sekaligus, masing-masing di portnya sendiri.
+# Jalankan dengan: docker compose up -d --build
+# Hentikan dengan: docker compose down
+#
+# Keduanya memakai image yang sama persis, dan hanya berbeda pada environment.
+# Inilah yang dimaksud twelve-factor app: satu artefak, banyak lingkungan.
+
+services:
+  biru:
+    build: .
+    container_name: awe9-biru
+    environment:
+      VERSI: biru
+      PORT: 8061
+    ports:
+      - "8061:8061"
+
+  hijau:
+    build: .
+    container_name: awe9-hijau
+    environment:
+      VERSI: hijau
+      PORT: 8062
+    ports:
+      - "8062:8062"

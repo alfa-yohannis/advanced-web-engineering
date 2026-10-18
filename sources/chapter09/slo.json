@@ -1,0 +1,6 @@
+{
+  "keterangan": "Service Level Objective layanan katalog. Angka ini yang dinilai alarm.py, dan pelanggarannya membuat prosesnya keluar dengan status 1.",
+  "ketersediaan_persen_minimum": 99.0,
+  "p95_milidetik_maksimum": 50,
+  "jendela_permintaan_minimum": 50
+}
