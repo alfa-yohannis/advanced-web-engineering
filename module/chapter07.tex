@@ -103,9 +103,9 @@ sekali. Keduanya diukur dengan \texttt{curl} pada komputer yang sama.
     \hline
     \textbf{Header} & \textbf{Server bawaan} & \textbf{Aplikasi Bab 7} \\
     \hline
-    \texttt{Content-Security-Policy} & tidak ada & \texttt{default-src 'self'} \\
+    \texttt{Content-Security-}\newline\texttt{Policy} & tidak ada & \texttt{default-src 'self'} \\
     \hline
-    \texttt{X-Content-Type-Options} & tidak ada & \texttt{nosniff} \\
+    \texttt{X-Content-Type-}\newline\texttt{Options} & tidak ada & \texttt{nosniff} \\
     \hline
     \texttt{Referrer-Policy} & tidak ada & \texttt{no-referrer} \\
     \hline
@@ -539,9 +539,9 @@ curl -sI http://127.0.0.1:8031/index.html | grep -iE "^(content-security|x-conte
     \hline
     \textbf{Header} & \textbf{Server bawaan} & \textbf{Aplikasi Bab 7} \\
     \hline
-    \texttt{Content-Security-Policy} & tidak ada & \texttt{default-src 'self'} \\
+    \texttt{Content-Security-}\newline\texttt{Policy} & tidak ada & \texttt{default-src 'self'} \\
     \hline
-    \texttt{X-Content-Type-Options} & tidak ada & \texttt{nosniff} \\
+    \texttt{X-Content-Type-}\newline\texttt{Options} & tidak ada & \texttt{nosniff} \\
     \hline
   \end{tabularx}
 \end{table}

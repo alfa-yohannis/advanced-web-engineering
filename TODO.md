@@ -1,27 +1,30 @@
 # Pekerjaan yang Belum Selesai
 
-Catatan ini menandai keadaan repositori pada 1 Oktober 2026, supaya pekerjaan
+Catatan ini menandai keadaan repositori pada 18 Oktober 2026, supaya pekerjaan
 berikutnya tidak dimulai dari menebak-nebak.
 
 ## Yang sudah lengkap
 
-Bab 2 sampai Bab 7 sudah punya naskah, slide, file sumber, dan angka yang
-diukur sungguhan. Ketujuhnya sudah masuk buku, dan bukunya terbangun di 147
+Bab 2 sampai Bab 8 sudah punya naskah, slide, file sumber, dan angka yang
+diukur sungguhan. Kedelapannya sudah masuk buku, dan bukunya terbangun di 160
 halaman.
 
 ## Penyeragaman istilah
 
-Istilah Inggris yang disepakati sudah dipakai penuh di Bab 5, Bab 6, dan Bab
-7 beserta slidenya, tetapi belum di bab lain. Yang tertinggal di Bab 2 sampai
+Istilah Inggris yang disepakati sudah dipakai penuh di Bab 5 sampai Bab 8
+beserta slidenya, tetapi belum di bab lain. Yang tertinggal di Bab 2 sampai
 Bab 4 beserta slidenya: `berkas`, `jawaban`, `anggaran`, `latensi`, `gejala`,
 `pita`, `kewarasan`, `pemanasan`, dan `vonis`. Daftar lengkap istilahnya ada
 di `CLAUDE.md`.
 
-## Bab 8 dan sesudahnya
+## Bab 9 dan sesudahnya
 
-Naskah `module/chapter08.tex` sampai `chapter14.tex` masih kerangka berisi
-`% TODO`, dan direktori `sources/chapter08` sampai `chapter14` masih kosong.
+Naskah `module/chapter09.tex` sampai `chapter14.tex` masih kerangka berisi
+`% TODO`, dan direktori `sources/chapter09` sampai `chapter14` masih kosong.
 Peta topik tiap pertemuan ada di `README.md` akar.
+
+Bab 1 juga masih kerangka, padahal sudah aktif di buku, sehingga tercetak
+sebagai bab tanpa isi.
 
 ## Catatan bentuk praktikum Bab 7
 
@@ -34,10 +37,10 @@ teks peta pertemuan perlu disesuaikan atau dibahas lebih dahulu.
 
 ## Catatan pemeliharaan
 
-- Container basis data Bab 5 (`awe5-db`, 5435), Bab 6 (`awe6-db`, 5436), dan
-  Bab 7 (`awe7-db`, 5437) masih menyala. Matikan dengan
-  `docker compose down -v` dari direktori sumber masing-masing bila tidak
-  dipakai.
+- Container basis data Bab 6 (`awe6-db`, 5436) dan Bab 7 (`awe7-db`, 5437)
+  masih menyala. Matikan dengan `docker compose down -v` dari direktori
+  sumber masing-masing bila tidak dipakai. Bab 8 sengaja tidak memakai
+  container sama sekali.
 - Kotak meluap 1,42 pt pada log buku berasal dari nomor halaman tiga digit di
   daftar isi, dan memang dibiarkan.
 - `package-lock.json` Bab 6 tetap dilacak git, karena ia yang mengunci versi

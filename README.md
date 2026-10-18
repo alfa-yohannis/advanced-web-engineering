@@ -289,6 +289,7 @@ Diurutkan dari yang paling mudah dieksekusi sampai yang paling menuntut.
 | ABAC | Attribute-Based Access Control |
 | ACID | Atomicity, Consistency, Isolation, Durability |
 | ACK | Acknowledge |
+| ADR | Architecture Decision Record |
 | API | Application Programming Interface |
 | AVIF | AV1 Image File Format |
 | AWS | Amazon Web Services |

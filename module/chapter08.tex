@@ -1,51 +1,717 @@
 \chapter{Arsitektur Web Modern}
+\label{ch:arsitektur}
 
 \section*{Tujuan Pembelajaran}
 \begin{itemize}
-  \item % TODO
-  \item % TODO
-  \item % TODO
+  \item Membedakan tempat HTML dirakit pada SPA, SSR, SSG, ISR, dan
+        \textit{islands}, lalu menyebut akibatnya pada jumlah permintaan dan
+        waktu sampai isi tampil.
+  \item Mengukur kelima varian tersebut pada halaman yang sama, lalu membaca
+        selisihnya dari byte yang tiba dan jumlah permintaan yang dibutuhkan.
+  \item Memilih satu arsitektur untuk kebutuhan tertentu, lalu
+        mempertanggungjawabkannya sebagai catatan keputusan berisi pilihan
+        yang dipertimbangkan, yang diambil, dan konsekuensinya.
 \end{itemize}
 
 \section{Pendahuluan}
 
-% TODO
+Bab 2 sampai Bab 7 memperbaiki satu aplikasi dari dalam: kuerinya, ingatannya,
+kecepatannya, pengujiannya, dan pertahanannya. Bab ini mundur satu langkah dan
+menanyakan hal yang lebih awal, yaitu di mana halaman sebaiknya dirakit.
+Jawabannya menentukan banyak hal sesudahnya, termasuk berapa byte yang harus
+diunduh pengunjung sebelum melihat isi.
+
+Perbedaan antarpilihan itu sering dibahas sebagai selera, padahal sebagian
+besarnya dapat dihitung. Satu halaman yang sama dapat disajikan dengan lima
+cara, lalu keempat angkanya dibandingkan: byte yang tiba, apakah isinya sudah
+ada di \textit{response} pertama, berapa permintaan lagi yang dibutuhkan, dan
+berapa lama seluruhnya. Bab ini melakukan persis itu.
+
+Demonya sengaja dibuat sekecil mungkin, yaitu satu file Python tanpa basis
+data dan tanpa container, karena yang dibandingkan adalah tempat perakitannya,
+bukan cara datanya diambil. Referensi utamanya adalah uraian
+\textit{islands architecture} \cite{patterns-islands}, dokumentasi
+\textit{server component} React \cite{react-server-components}, dokumentasi
+ISR Next.js \cite{nextjs-isr}, dan catatan Fowler tentang memulai dari
+\textit{monolith} \cite{fowler-monolith-first}.
 
 \section{Dari Aplikasi Web Tradisional ke Single-Page Application}
 
-% TODO
+Aplikasi web tradisional merakit HTML di server pada tiap permintaan. Browser
+menerima halaman yang sudah jadi, menggambarnya, lalu mengulang seluruh
+proses itu ketika pengunjung pindah halaman. Pola ini disebut
+\textit{Server-Side Rendering} (SSR).
 
-\section{Server-Side Rendering, Static Site Generation, dan Incremental Static Regeneration}
+\textit{Single-Page Application} (SPA) membalik pembagiannya. Server mengirim
+kerangka halaman yang hampir kosong beserta sebuah file JavaScript, lalu
+browser yang meminta datanya dan menggambar isinya. Perpindahan halaman
+sesudah itu tidak lagi meminta HTML baru, cukup data.
 
-% TODO
+Analoginya seperti memesan makanan. SSR mengantar piring yang sudah terisi,
+sedangkan SPA mengantar piring kosong beserta bahan dan kompornya, lalu
+memasaknya di meja pemesan. Cara kedua membuat pesanan berikutnya jauh lebih
+cepat, tetapi suapan pertama datang paling akhir.
+
+Tabel \ref{tab:spa-ssr} memuat ukuran yang membedakan keduanya pada aplikasi
+bab ini.
+
+\begin{table}[!htb]
+  \centering
+  \caption{SSR lawan SPA pada halaman yang sama, hasil pengukuran nyata}
+  \label{tab:spa-ssr}
+  \begin{tabularx}{\textwidth}{Xrr}
+    \hline
+    \textbf{Ukuran} & \textbf{SSR} & \textbf{SPA} \\
+    \hline
+    Byte HTML yang pertama tiba & 511 & 229 \\
+    \hline
+    Byte seluruhnya sampai isi tampil & 511 & 1.551 \\
+    \hline
+    Permintaan sampai isi tampil & 1 & 3 \\
+    \hline
+    Isi katalog ada di HTML pertama & ya & tidak \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Baris terakhir yang paling menentukan. HTML pertama pada varian SPA memang
+paling kecil, tetapi di dalamnya tidak ada satu judul buku pun. Isinya baru
+ada sesudah browser mengunduh skripnya, menjalankannya, lalu meminta data
+lewat permintaan ketiga.
+
+\section[SSR, SSG, dan ISR]{Server-Side Rendering, Static Site
+         Generation, dan Incremental Static Regeneration}
+
+Ketiganya sama-sama mengirim HTML yang sudah berisi, dan hanya berbeda pada
+kapan HTML itu dirakit. SSR merakitnya pada tiap permintaan.
+\textit{Static Site Generation} (SSG) merakitnya sekali saat \textit{build},
+lalu melayani file yang sama berulang kali. \textit{Incremental Static
+Regeneration} (ISR) melayani file yang sudah jadi, tetapi merakitnya ulang
+sesekali ketika umurnya lewat \cite{nextjs-isr}.
+
+Gambar \ref{fig:tempat-rakit} merangkum ketiganya beserta dua varian lain
+dalam satu garis.
+
+\begin{figure}[!htb]
+  \centering
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    kotak/.style={draw, rounded corners, minimum height=0.85cm,
+                  minimum width=2.1cm, align=center, font=\scriptsize\bfseries},
+    panah/.style={-{Stealth[length=2mm]}, thick}
+  ]
+    \node[kotak, fill=green!10] (build) at (0,0) {Saat build\\{\tiny\mdseries SSG}};
+    \node[kotak, fill=orange!12] (sesekali) at (3.2,0) {Sesekali\\{\tiny\mdseries ISR}};
+    \node[kotak, fill=blue!8] (tiap) at (6.4,0) {Tiap permintaan\\{\tiny\mdseries SSR, islands}};
+    \node[kotak, fill=red!22] (browser) at (9.8,0) {Di browser\\{\tiny\mdseries SPA}};
+
+    \draw[panah] (build) -- (sesekali);
+    \draw[panah] (sesekali) -- (tiap);
+    \draw[panah] (tiap) -- (browser);
+    \node[font=\tiny, gray, anchor=north] at (4.9,-0.65)
+      {makin ke kanan, makin segar isinya dan makin mahal tiap permintaannya};
+  \end{tikzpicture}
+  \caption{Kelima varian berbeda pada satu hal: kapan dan di mana HTML-nya
+           dirakit}
+  \label{fig:tempat-rakit}
+\end{figure}
+
+Tabel \ref{tab:varian} memuat pengukuran kelimanya pada halaman yang sama.
+Perakitan halaman pada demo ini sengaja diberi jeda 50 milidetik, mewakili
+halaman yang isinya mahal dihitung.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lima varian pada halaman yang sama, hasil pengukuran nyata dengan
+           \berkas{sources/chapter08/ukur-varian.py}}
+  \label{tab:varian}
+  \begin{tabularx}{\textwidth}{lrrlrr}
+    \hline
+    \textbf{Varian} & \textbf{HTML} & \textbf{Total} & \textbf{Isi di HTML} & \textbf{Minta} & \textbf{Total ms} \\
+    \hline
+    SSG & 511 B & 511 B & ya & 1 & 1,9 \\
+    \hline
+    ISR & 511 B & 511 B & ya & 1 & 52,9 \\
+    \hline
+    SSR & 511 B & 511 B & ya & 1 & 51,8 \\
+    \hline
+    Islands & 625 B & 1.322 B & ya & 2 & 3,1 \\
+    \hline
+    SPA & 229 B & 1.551 B & tidak & 3 & 1,7 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Dua baris pada tabel itu perlu dibaca pelan. Baris ISR tercatat 52,9
+milidetik karena pengukurannya kebetulan jatuh pada permintaan pertama
+sesudah file lamanya kedaluwarsa, sehingga permintaan itulah yang menanggung
+perakitan ulang. Baris SPA tercatat paling singkat justru karena yang diukur
+hanya waktu jaringannya; pekerjaan menjalankan skrip dan menggambar isi
+terjadi di browser dan tidak tertangkap alat ukur ini.
+
+Listing \ref{lst:isr} memuat inti mekanismenya, yaitu delapan baris yang
+memutuskan kapan file lama cukup dan kapan halamannya dirakit ulang.
+
+\begin{lstlisting}[style=PythonStyle, caption={Inti Incremental Static Regeneration, tersedia di \berkas{sources/chapter08/aplikasi.py}}, label={lst:isr}]
+def baca_atau_rakit_isr():
+  """Membaca file ISR, dan merakitnya ulang bila umurnya sudah lewat.
+
+  Inilah inti Incremental Static Regeneration: pengunjung tetap dilayani
+  file yang sudah jadi, sedangkan perakitan ulang hanya terjadi sesekali.
+  """
+  if FILE_ISR.exists():
+    umur = time.time() - FILE_ISR.stat().st_mtime
+    if umur < UMUR_ISR_DETIK:
+      return FILE_ISR.read_bytes(), "file lama dipakai"
+  FILE_ISR.write_text(rakit_halaman_katalog(), encoding="utf-8")
+  return FILE_ISR.read_bytes(), "dirakit ulang"
+\end{lstlisting}
+
+Tabel \ref{tab:isr} memperlihatkan perilaku ISR itu sendiri, diukur lima
+permintaan berurutan dengan jeda sebelas detik sesudah permintaan ketiga.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lima permintaan berurutan ke alamat ISR, umur file sepuluh detik,
+           hasil pengukuran nyata}
+  \label{tab:isr}
+  \begin{tabularx}{\textwidth}{rXr}
+    \hline
+    \textbf{Permintaan} & \textbf{Keterangan dari header \texttt{X-ISR}} & \textbf{Waktu} \\
+    \hline
+    1 & dirakit ulang & 53,5 ms \\
+    \hline
+    2 & file lama dipakai & 1,9 ms \\
+    \hline
+    3 & file lama dipakai & 0,7 ms \\
+    \hline
+    4 & dirakit ulang, sesudah jeda sebelas detik & 51,5 ms \\
+    \hline
+    5 & file lama dipakai & 1,0 ms \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Pola itulah inti ISR. Biaya perakitan tidak hilang, melainkan ditanggung satu
+pengunjung saja tiap satu periode, sedangkan sisanya dilayani secepat SSG.
+Pertanyaan yang kemudian muncul: siapa pengunjung yang menanggungnya, dan
+apakah itu dapat diterima. Bila tidak, perakitan ulang dipindahkan ke latar
+belakang, sehingga pengunjung yang datang tepat sesudah kedaluwarsa tetap
+menerima file lama.
 
 \section{Islands Architecture}
 
-% TODO
+\textit{Islands architecture} mengambil jalan tengah \cite{patterns-islands}.
+Seluruh halaman dirakit di server seperti SSR, lalu hanya bagian yang
+benar-benar perlu berinteraksi yang dihidupkan JavaScript. Bagian kecil itu
+disebut pulau, dan sisanya tetap HTML biasa.
+
+Pada demo bab ini pulaunya hanya satu, yaitu kotak penyaring judul. Daftar
+bukunya sudah tergambar dari HTML yang dikirim server, sehingga pengunjung
+yang tidak pernah mengetik di kotak itu tetap melihat katalog lengkap
+walaupun skripnya gagal dimuat.
+
+Tabel \ref{tab:islands} membandingkannya dengan SPA, yang menghidupkan
+seluruh halaman.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Islands lawan SPA pada halaman yang sama, hasil pengukuran nyata}
+  \label{tab:islands}
+  \begin{tabularx}{\textwidth}{Xrr}
+    \hline
+    \textbf{Ukuran} & \textbf{Islands} & \textbf{SPA} \\
+    \hline
+    Byte HTML yang pertama tiba & 625 & 229 \\
+    \hline
+    Byte JavaScript yang diunduh & 697 & 938 \\
+    \hline
+    Permintaan sampai isi tampil & 2 & 3 \\
+    \hline
+    Isi tetap tampil bila skripnya gagal & ya & tidak \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Baris terakhir itu yang sering menentukan pilihan pada halaman publik.
+Katalog, artikel, dan halaman produk tetap berguna tanpa JavaScript,
+sedangkan papan kendali yang penuh interaksi memang tidak.
 
 \section{Server Component dan Client Component}
 
-% TODO
+Kerangka kerja modern membawa pembagian yang sama ke dalam satu bahasa.
+\textit{Server component} dijalankan di server, hasilnya dikirim sebagai
+HTML, dan kodenya tidak pernah ikut terunduh ke browser.
+\textit{Client component} dikirim sebagai JavaScript dan dijalankan di
+browser \cite{react-server-components}.
+
+Tabel \ref{tab:komponen} merangkum pembagian tugasnya. Pembagian ini yang
+membuat \textit{islands} dapat ditulis tanpa memisahkan dua proyek: komponen
+yang perlu berinteraksi ditandai sebagai komponen klien, sisanya tetap di
+server.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Pembagian tugas server component dan client component}
+  \label{tab:komponen}
+  \begin{tabularx}{\textwidth}{lXX}
+    \hline
+    \textbf{Hal} & \textbf{Server component} & \textbf{Client component} \\
+    \hline
+    Tempat berjalan & Server & Browser \\
+    \hline
+    Ikut diunduh & Tidak & Ya \\
+    \hline
+    Boleh menyentuh basis data & Ya & Tidak \\
+    \hline
+    Boleh memakai \textit{state} dan peristiwa & Tidak & Ya \\
+    \hline
+    Pantas dipakai untuk & Daftar, artikel, halaman detail & Tombol, formulir, penyaring \\
+    \hline
+  \end{tabularx}
+\end{table}
 
 \section{Edge dan Origin}
 
-% TODO
+\textit{Origin} adalah server asal tempat aplikasi dan basis datanya berada.
+\textit{Edge} adalah titik yang jauh lebih dekat ke pengunjung, dan
+jumlahnya banyak. Bab 4 sudah memakai \textit{edge} dalam bentuk CDN untuk
+file statis; bagian ini menanyakan apa lagi yang pantas dipindahkan ke sana.
+
+Aturannya satu kalimat: yang pantas pindah ke \textit{edge} adalah pekerjaan
+yang tidak butuh data tulis dan tidak butuh kedekatan dengan basis data.
+Tabel \ref{tab:edge} memuat contohnya.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Pekerjaan yang pantas dan tidak pantas dipindahkan ke edge}
+  \label{tab:edge}
+  \begin{tabularx}{\textwidth}{Xl}
+    \hline
+    \textbf{Pekerjaan} & \textbf{Tempatnya} \\
+    \hline
+    Melayani file statis dan halaman hasil SSG & \textit{Edge} \\
+    \hline
+    Mengarahkan pengunjung menurut negara atau bahasa & \textit{Edge} \\
+    \hline
+    Memeriksa token sesi sebelum permintaan diteruskan & \textit{Edge} \\
+    \hline
+    Menulis pesanan dan memotong stok & \textit{Origin} \\
+    \hline
+    Menjalankan agregat yang menyentuh banyak tabel & \textit{Origin} \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Dua hal pada \textit{edge} sering tertukar. Pembagiannya begini. Menyimpan
+salinan di \textit{edge} hanya memindahkan \textit{copy}, dan isinya dapat
+\textit{stale} seperti dibahas Bab 4. Menjalankan kode di \textit{edge}
+memindahkan perhitungannya, dan di sana jarak ke basis data justru bertambah
+jauh. Karena itu kode yang banyak menyentuh basis data biasanya lebih cepat
+tetap di \textit{origin}.
 
 \section{Monolith, Modular Monolith, dan Backend for Frontend}
 
-% TODO
+Tiga nama ini menjawab pertanyaan yang berbeda dari lima varian sebelumnya,
+yaitu bagaimana kode sisi server dibagi. \textit{Monolith} menaruh semuanya
+dalam satu aplikasi yang digelar sekali jalan. \textit{Modular monolith}
+tetap satu aplikasi, tetapi dengan batas modul yang ditegakkan.
+\textit{Backend for Frontend} (BFF) menambahkan satu lapisan tipis di depan,
+khusus untuk satu jenis klien \cite{newman-bff}.
+
+Gambar \ref{fig:bentuk-backend} memperlihatkan ketiganya.
+
+\begin{figure}[!htb]
+  \centering
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    kotak/.style={draw, rounded corners, minimum height=0.8cm,
+                  minimum width=1.8cm, align=center, font=\scriptsize\bfseries},
+    panah/.style={-{Stealth[length=2mm]}, thick}
+  ]
+    \node[kotak, fill=blue!8] (mono) at (0,0) {Monolith};
+    \node[font=\tiny, anchor=north] at (0,-0.5) {satu aplikasi};
+
+    \node[kotak, fill=orange!12, minimum width=2.6cm] (modular) at (3.6,0)
+      {Modular monolith};
+    \node[font=\tiny, anchor=north, align=center] at (3.6,-0.5)
+      {satu aplikasi,\\batas modul ditegakkan};
+
+    \node[kotak, fill=green!10] (bff1) at (7.6,0.55) {BFF web};
+    \node[kotak, fill=green!10] (bff2) at (7.6,-0.55) {BFF mobile};
+    \node[kotak, fill=blue!8] (inti) at (10.4,0) {Layanan inti};
+    \draw[panah] (bff1) -- (inti);
+    \draw[panah] (bff2) -- (inti);
+    \node[font=\tiny, anchor=north, align=center] at (9,-1.1)
+      {satu lapisan tipis\\untuk tiap jenis klien};
+  \end{tikzpicture}
+  \caption{Tiga cara membagi kode sisi server, dari yang paling sederhana ke
+           yang paling banyak bagiannya}
+  \label{fig:bentuk-backend}
+\end{figure}
+
+Urutan pada gambar tersebut juga urutan yang disarankan ketika ragu.
+Memulai dari \textit{monolith} dan memecahnya ketika batasnya sudah
+kelihatan lebih murah daripada memecah lebih dahulu lalu menyatukan kembali
+\cite{fowler-monolith-first}. BFF dipakai ketika dua jenis klien benar-benar
+menuntut bentuk data yang berbeda, misalnya aplikasi mobile yang butuh
+jawaban jauh lebih ringkas daripada halaman web.
 
 \section{Membaca dan Mempertanggungjawabkan Trade-off Arsitektur}
 
-% TODO
+Keputusan arsitektur jarang punya pilihan yang benar sendiri. Yang ada adalah
+pilihan yang konsekuensinya diketahui dan diterima. Karena itu keputusannya
+ditulis, dan bentuk yang paling banyak dipakai adalah catatan keputusan
+arsitektur, atau \textit{Architecture Decision Record} (ADR)
+\cite{nygard-adr}.
+
+Isinya pendek dan tetap: apa yang sedang diputuskan, pilihan apa saja yang
+dipertimbangkan, mana yang diambil, dan apa akibatnya. Tabel \ref{tab:adr}
+memperlihatkan satu catatan yang sudah terisi untuk halaman katalog bab ini.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Catatan keputusan untuk halaman katalog, memakai angka pada Tabel
+           \ref{tab:varian}}
+  \label{tab:adr}
+  \begin{tabularx}{\textwidth}{lX}
+    \hline
+    \textbf{Bagian} & \textbf{Isinya} \\
+    \hline
+    Keputusan & Halaman katalog publik disajikan dengan ISR, umur sepuluh menit \\
+    \hline
+    Dipertimbangkan & SSR, SSG, dan ISR \\
+    \hline
+    Alasan & Isinya berubah beberapa kali sehari, sehingga SSG terlalu kaku, sedangkan SSR menanggung 51,8 ms pada tiap permintaan \\
+    \hline
+    Konsekuensi & Satu pengunjung tiap periode menanggung 52,9 ms, dan isi dapat \textit{stale} paling lama sepuluh menit \\
+    \hline
+    Yang membatalkan & Bila isi wajib segar seketika, atau bila perakitannya menjadi jauh lebih mahal \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Baris terakhir yang paling sering dilupakan. Menuliskan apa yang akan
+membatalkan sebuah keputusan membuat keputusan itu dapat ditinjau ulang tanpa
+perdebatan baru: cukup diperiksa apakah syarat pembatalnya sudah terjadi.
 
 \section{Ringkasan}
 
-% TODO
+Kelima varian arsitektur pada bab ini berbeda pada satu hal, yaitu kapan dan
+di mana HTML dirakit. SSG merakitnya saat \textit{build}, ISR sesekali, SSR
+pada tiap permintaan, \textit{islands} di server dengan sedikit bagian yang
+dihidupkan di browser, dan SPA seluruhnya di browser.
+
+Selisihnya dapat dihitung, bukan dikira-kira. Pada halaman yang sama, SSR
+menanggung 51,8 milidetik tiap permintaan sedangkan SSG hanya 1,9 milidetik,
+karena pekerjaan merakitnya sudah dibayar sekali saat \textit{build} dalam
+0,3 milidetik. ISR mengambil keduanya: 53,5 milidetik pada permintaan
+pertama sesudah kedaluwarsa, lalu 0,7 sampai 1,9 milidetik pada permintaan
+berikutnya.
+
+Ukuran yang paling menentukan bukan byte, melainkan ada atau tidaknya isi di
+HTML yang pertama tiba. HTML varian SPA paling kecil, hanya 229 byte, tetapi
+di dalamnya tidak ada satu judul pun, dan pengunjung menunggu tiga permintaan
+sampai katalognya tampil. Varian \textit{islands} mengirim 625 byte yang
+sudah berisi, lalu menambahkan satu skrip kecil hanya untuk kotak
+penyaringnya.
+
+Pembagian yang sama berlaku di sisi kode. \textit{Server component} tidak
+ikut terunduh dan boleh menyentuh basis data, sedangkan \textit{client
+component} diunduh dan boleh memakai \textit{state}. Di sisi penempatan,
+\textit{edge} pantas menerima pekerjaan yang tidak menulis data dan tidak
+butuh dekat dengan basis data, sedangkan sisanya tetap di \textit{origin}.
+
+Keputusan arsitektur ditutup dengan catatan, bukan dengan kesepakatan lisan.
+Catatan itu menyebut pilihan yang dipertimbangkan, yang diambil,
+konsekuensinya, dan syarat yang akan membatalkannya. Dengan begitu
+keputusannya dapat ditinjau ulang dengan memeriksa syarat, bukan dengan
+mengulang perdebatan.
 
 \section{Latihan}
 
+Seluruh file yang dipakai pada latihan ini tersedia di
+\berkas{sources/chapter08/}, dihitung relatif terhadap akar repositori.
+Latihan ini hanya membutuhkan Python 3, tanpa Docker dan tanpa Node.js,
+karena yang dibandingkan adalah tempat HTML dirakit.
+
+Seluruh pengukuran diarahkan ke aplikasi yang berjalan di komputer sendiri,
+dengan beban setara satu pengunjung membuka halaman. Hasil tiap mahasiswa
+akan berbeda pada bagian waktu, dan yang dilaporkan adalah pola
+perbandingannya beserta penjelasannya.
+
+Penyiapannya dilakukan sekali, seperti pada Listing \ref{lst:c8-siapkan}.
+
+\begin{lstlisting}[language=bash, caption={Membangun halaman statis lalu menyalakan server, memakai \berkas{sources/chapter08/bangun-statis.py}}, label={lst:c8-siapkan}]
+cd sources/chapter08
+python3 bangun-statis.py
+python3 aplikasi.py &
+
+# Keluarannya:
+# Dibangun     : katalog-ssg.html
+# Ukuran       : 511 byte
+# Lama merakit : 0.3 ms
+# Melayani di http://127.0.0.1:8040/ssr  (Ctrl+C untuk berhenti)
+\end{lstlisting}
+
+\subsection*{Latihan 1: Membandingkan Lima Varian}
+
+Latihan ini membuktikan bahwa perbedaan kelima varian dapat dihitung, bukan
+hanya diperdebatkan.
+
 \begin{enumerate}
-  \item % TODO
-  \item % TODO
+  \item Jalankan alat ukurnya seperti pada Listing \ref{lst:c8-lat1-jalan},
+        lalu isi Tabel \ref{tab:c8-lat1-hasil}. Tabel
+        \ref{tab:c8-lat1-contoh} memperlihatkan contoh yang sudah terisi.
+  \item Buka kelima alamat di browser, lalu bandingkan apa yang tampil
+        ketika JavaScript dimatikan lewat panel pengembang.
+  \item Lihat sumber halaman tiap varian, lalu catat varian mana yang
+        memuat judul buku di dalam HTML-nya.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa HTML varian SPA
+        paling kecil tetapi totalnya paling besar? Kedua, mengapa alat ukur
+        ini tidak dapat menangkap seluruh biaya varian SPA? Ketiga, varian
+        mana yang paling tahan terhadap skrip yang gagal dimuat?
 \end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Mengukur kelima varian, tersedia di \berkas{sources/chapter08/ukur-varian.py}}, label={lst:c8-lat1-jalan}]
+python3 ukur-varian.py
+
+# Keluarannya:
+#   Varian        HTML   Total  Isi di HTML  Minta  HTML ms  Total ms
+#   ssg            511     511           ya      1      1.9       1.9
+#   isr            511     511           ya      1     52.9      52.9
+#   ssr            511     511           ya      1     51.8      51.8
+#   islands        625    1322           ya      2      1.5       3.1
+#   spa            229    1551        tidak      3      0.9       1.7
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 1 yang sudah terisi}
+  \label{tab:c8-lat1-contoh}
+  \begin{tabularx}{\textwidth}{lrrlr}
+    \hline
+    \textbf{Varian} & \textbf{HTML} & \textbf{Total} & \textbf{Isi di HTML} & \textbf{Minta} \\
+    \hline
+    SSG & 511 B & 511 B & ya & 1 \\
+    \hline
+    SPA & 229 B & 1.551 B & tidak & 3 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 1}
+  \label{tab:c8-lat1-hasil}
+  \begin{tabularx}{\textwidth}{lrrlr}
+    \hline
+    \textbf{Varian} & \textbf{HTML} & \textbf{Total} & \textbf{Isi di HTML} & \textbf{Minta} \\
+    \hline
+    SSG & \dots & \dots & \dots & \dots \\
+    \hline
+    ISR & \dots & \dots & \dots & \dots \\
+    \hline
+    SSR & \dots & \dots & \dots & \dots \\
+    \hline
+    Islands & \dots & \dots & \dots & \dots \\
+    \hline
+    SPA & \dots & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection*{Latihan 2: Membaca Perilaku ISR}
+
+Latihan ini membuktikan bahwa biaya perakitan pada ISR tidak hilang,
+melainkan ditanggung satu pengunjung tiap periode.
+
+\begin{enumerate}
+  \item Minta alamat ISR tiga kali berurutan, lalu catat header
+        \texttt{X-ISR} dan waktunya, seperti pada Listing
+        \ref{lst:c8-lat2-jalan}.
+  \item Tunggu sebelas detik, lalu minta dua kali lagi dan catat kembali.
+  \item Ubah \texttt{UMUR\_ISR\_DETIK} di
+        \berkas{sources/chapter08/aplikasi.py} menjadi 60, nyalakan ulang
+        aplikasinya, lalu ulangi pengamatannya.
+  \item Isi Tabel \ref{tab:c8-lat2-hasil}. Tabel \ref{tab:c8-lat2-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab dua pertanyaan berikut. Pertama, pengunjung mana yang
+        menanggung biaya perakitan, dan apakah itu adil? Kedua, apa yang
+        berubah bila umurnya dinaikkan menjadi satu jam?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Mengamati daur ISR, tersedia di \berkas{sources/chapter08/aplikasi.py}}, label={lst:c8-lat2-jalan}]
+curl -s -D - -o /dev/null -w "%{time_total}\n" http://127.0.0.1:8040/isr \
+  | grep -iE "^(x-isr|[0-9])"
+
+# Keluarannya:
+# X-ISR: dirakit ulang
+# 0.053519
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 2 yang sudah terisi, umur file sepuluh detik}
+  \label{tab:c8-lat2-contoh}
+  \begin{tabularx}{\textwidth}{rXr}
+    \hline
+    \textbf{Permintaan} & \textbf{Keterangan \texttt{X-ISR}} & \textbf{Waktu} \\
+    \hline
+    1 & dirakit ulang & 53,5 ms \\
+    \hline
+    2 & file lama dipakai & 1,9 ms \\
+    \hline
+    4 & dirakit ulang, sesudah jeda & 51,5 ms \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 2}
+  \label{tab:c8-lat2-hasil}
+  \begin{tabularx}{\textwidth}{rXr}
+    \hline
+    \textbf{Permintaan} & \textbf{Keterangan \texttt{X-ISR}} & \textbf{Waktu} \\
+    \hline
+    1 & \dots & \dots \\
+    \hline
+    2 & \dots & \dots \\
+    \hline
+    3 & \dots & \dots \\
+    \hline
+    4, sesudah jeda sebelas detik & \dots & \dots \\
+    \hline
+    5 & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection*{Latihan 3: Memindahkan Satu Bagian Menjadi Pulau}
+
+Latihan ini membuktikan bahwa jumlah JavaScript yang diunduh ditentukan oleh
+seberapa banyak bagian halaman yang dihidupkan.
+
+\begin{enumerate}
+  \item Baca \berkas{sources/chapter08/statis/pulau.js}, lalu catat
+        ukurannya dan apa saja yang dikerjakannya.
+  \item Bandingkan dengan \berkas{sources/chapter08/statis/spa.js}, lalu
+        catat ukurannya dan apa yang akan hilang bila skrip itu gagal
+        dimuat.
+  \item Tambahkan satu pulau kedua pada halaman islands, misalnya tombol
+        yang mengurutkan daftar menurut harga, lalu ukur ulang kedua varian.
+  \item Isi Tabel \ref{tab:c8-lat3-hasil}. Tabel \ref{tab:c8-lat3-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab dua pertanyaan berikut. Pertama, berapa byte JavaScript yang
+        bertambah untuk tiap pulau baru? Kedua, pada titik mana menambah
+        pulau menjadi tidak lagi lebih murah daripada memakai SPA?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Membandingkan ukuran skrip kedua varian, memakai \berkas{sources/chapter08/statis/}}, label={lst:c8-lat3-jalan}]
+wc -c statis/pulau.js statis/spa.js
+
+# Keluarannya:
+#  697 statis/pulau.js
+#  938 statis/spa.js
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 3 yang sudah terisi}
+  \label{tab:c8-lat3-contoh}
+  \begin{tabularx}{\textwidth}{Xrr}
+    \hline
+    \textbf{Varian} & \textbf{Byte skrip} & \textbf{Byte total} \\
+    \hline
+    Islands, satu pulau & 697 & 1.322 \\
+    \hline
+    SPA & 938 & 1.551 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 3}
+  \label{tab:c8-lat3-hasil}
+  \begin{tabularx}{\textwidth}{Xrr}
+    \hline
+    \textbf{Varian} & \textbf{Byte skrip} & \textbf{Byte total} \\
+    \hline
+    Islands, satu pulau & \dots & \dots \\
+    \hline
+    Islands, dua pulau & \dots & \dots \\
+    \hline
+    SPA & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection*{Latihan 4: Menulis Catatan Keputusan}
+
+Latihan ini mengubah angka pada ketiga latihan sebelumnya menjadi satu
+keputusan yang dapat dipertanggungjawabkan.
+
+\begin{enumerate}
+  \item Pilih satu kebutuhan nyata, misalnya halaman katalog publik, halaman
+        rincian pesanan milik pengguna yang sudah masuk, atau papan kendali
+        admin.
+  \item Pilih tiga varian yang masuk akal bagi kebutuhan itu, lalu tulis
+        angka pembandingnya dari Tabel \ref{tab:c8-lat1-hasil}.
+  \item Tulis catatan keputusan berisi lima bagian seperti pada Tabel
+        \ref{tab:c8-lat4-hasil}, yaitu keputusan, pilihan yang
+        dipertimbangkan, alasan, konsekuensi, dan syarat yang
+        membatalkannya. Tabel \ref{tab:c8-lat4-contoh} memperlihatkan
+        contoh yang sudah terisi.
+  \item Jawab dua pertanyaan berikut. Pertama, angka mana yang paling
+        menentukan pilihan Anda, dan mengapa? Kedua, keadaan apa yang akan
+        membuat keputusan itu perlu ditinjau ulang?
+\end{enumerate}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh catatan keputusan yang sudah terisi}
+  \label{tab:c8-lat4-contoh}
+  \begin{tabularx}{\textwidth}{lX}
+    \hline
+    \textbf{Bagian} & \textbf{Isinya} \\
+    \hline
+    Keputusan & Halaman katalog publik memakai ISR dengan umur sepuluh menit \\
+    \hline
+    Dipertimbangkan & SSR, SSG, ISR \\
+    \hline
+    Alasan & SSR menanggung 51,8 ms tiap permintaan, SSG terlalu kaku untuk isi yang berubah beberapa kali sehari \\
+    \hline
+    Konsekuensi & Satu pengunjung tiap periode menanggung 52,9 ms, isi dapat \textit{stale} sampai sepuluh menit \\
+    \hline
+    Yang membatalkan & Isi wajib segar seketika, atau perakitannya menjadi jauh lebih mahal \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian catatan keputusan Latihan 4}
+  \label{tab:c8-lat4-hasil}
+  \begin{tabularx}{\textwidth}{lX}
+    \hline
+    \textbf{Bagian} & \textbf{Isinya} \\
+    \hline
+    Kebutuhan yang dipilih & \dots \\
+    \hline
+    Keputusan & \dots \\
+    \hline
+    Dipertimbangkan & \dots \\
+    \hline
+    Alasan, beserta angkanya & \dots \\
+    \hline
+    Konsekuensi & \dots \\
+    \hline
+    Yang membatalkan & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Setelah seluruh latihan selesai, server dihentikan dengan Ctrl+C. Tidak ada
+container yang perlu dimatikan, karena bab ini memang tidak memakainya.
