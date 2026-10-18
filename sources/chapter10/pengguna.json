@@ -1,0 +1,34 @@
+{
+  "keterangan": "Daftar pengguna latihan Bab 10. Kata sandi disimpan sebagai hash, bukan teks biasa, dan seluruhnya hanya untuk latihan di komputer sendiri.",
+  "pengguna": [
+    {
+      "nama": "ani",
+      "kata_sandi": "ani123",
+      "peran": "admin",
+      "tenant": "kampus-a"
+    },
+    {
+      "nama": "budi",
+      "kata_sandi": "budi123",
+      "peran": "staf",
+      "tenant": "kampus-a"
+    },
+    {
+      "nama": "cita",
+      "kata_sandi": "cita123",
+      "peran": "pembeli",
+      "tenant": "kampus-a"
+    },
+    {
+      "nama": "dedi",
+      "kata_sandi": "dedi123",
+      "peran": "staf",
+      "tenant": "kampus-b"
+    }
+  ],
+  "pesanan": [
+    {"id": 1, "tenant": "kampus-a", "pemilik": "cita", "total": 120000},
+    {"id": 2, "tenant": "kampus-a", "pemilik": "budi", "total": 95000},
+    {"id": 3, "tenant": "kampus-b", "pemilik": "dedi", "total": 110000}
+  ]
+}

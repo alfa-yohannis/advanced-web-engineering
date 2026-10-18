@@ -1,51 +1,663 @@
 \chapter{Identity, Authentication, dan Authorization}
+\label{ch:identitas}
 
 \section*{Tujuan Pembelajaran}
 \begin{itemize}
-  \item % TODO
-  \item % TODO
-  \item % TODO
+  \item Membedakan sesi yang disimpan server dari token bertanda tangan,
+        lalu menyebut akibatnya pada pencabutan dan pada keadaan yang harus
+        disimpan server.
+  \item Merancang pasangan \textit{access token} dan \textit{refresh token}
+        beserta rotasinya, lalu membuktikan pemakaian ulang penanda lama
+        tertangkap.
+  \item Menegakkan hak akses dengan RBAC dan ABAC sekaligus, lalu mengukur
+        keputusannya sebagai matriks pengguna lawan alamat, termasuk isolasi
+        antar-\textit{tenant}.
 \end{itemize}
 
 \section{Pendahuluan}
 
-% TODO
+Bab 7 memasang pertahanan yang berlaku bagi semua orang: header, cookie yang
+dibatasi, dan teks pengguna yang diperlakukan sebagai data. Bab ini
+menanyakan hal yang berbeda, yaitu siapa yang sedang meminta, dan apa yang
+boleh dilakukannya.
+
+Dua pertanyaan itu sering disatukan padahal berbeda jauh.
+\textit{Authentication} menjawab siapa, dan jawabannya satu kali di awal.
+\textit{Authorization} menjawab boleh atau tidak, dan jawabannya diulang pada
+tiap permintaan. Kesalahan paling mahal biasanya terjadi di pertanyaan kedua,
+ketika aplikasi mengenali penggunanya dengan benar lalu lupa memeriksa apa
+yang boleh dilihatnya.
+
+Demonya kecil: satu aplikasi tanpa basis data, dengan empat pengguna pada dua
+\textit{tenant}. Referensi utamanya adalah RFC 7519 untuk bentuk token
+\cite{rfc7519}, RFC 6749 untuk kerangka OAuth 2.0 \cite{rfc6749}, RFC 9700
+untuk praktik pengamanannya \cite{rfc9700}, dan NIST SP 800-207 untuk
+gagasan \textit{zero trust} \cite{nist-zero-trust}.
 
 \section{Cookie dan Session}
 
-% TODO
+Sesi menyimpan keadaannya di server. Klien hanya membawa penanda acak di
+dalam cookie, dan server menyimpan arti penanda itu di tempatnya sendiri.
+Karena artinya ada di server, mencabut sesi cukup menghapus satu baris.
+
+Analoginya seperti nomor antrean di loket. Kertasnya sendiri tidak memuat
+apa-apa selain nomor, dan seluruh keterangan ada di buku petugas. Ketika
+petugas mencoret satu nomor, kertas yang dipegang orangnya seketika tidak
+berarti apa-apa lagi.
+
+Demo bab ini menerbitkan sesi sepanjang 32 huruf, dengan atribut cookie yang
+sama seperti Bab 7. Pencabutannya terbukti seketika, seperti pada Listing
+\ref{lst:sesi10}.
+
+\begin{lstlisting}[language=bash, caption={Sesi dicabut seketika saat keluar, tersedia di \berkas{sources/chapter10/aplikasi.py}}, label={lst:sesi10}]
+curl -s -X POST "http://127.0.0.1:8070/masuk?cara=sesi&nama=budi&sandi=budi123" -D -
+curl -s -H "Cookie: sesi=..." http://127.0.0.1:8070/api/pesanan
+curl -s -X POST -H "Cookie: sesi=..." http://127.0.0.1:8070/keluar
+curl -s -H "Cookie: sesi=..." http://127.0.0.1:8070/api/pesanan
+
+# Keluarannya:
+# Set-Cookie: sesi=4b2f8d7e...; HttpOnly; SameSite=Lax; Path=/
+# {"tenant": "kampus-a", "jumlah": 2, "item": [...]}
+# {"dicabut": true}
+# {"pesan": "sesi tidak dikenal atau sudah dicabut"}
+\end{lstlisting}
 
 \section{JSON Web Token}
 
-% TODO
+Token bertanda tangan menempuh jalan sebaliknya. Keterangannya dibawa di
+dalam token itu sendiri, dan server tidak menyimpan apa pun. Keasliannya
+dijaga tanda tangan, sehingga isinya boleh dibaca siapa saja tetapi tidak
+dapat diubah tanpa ketahuan \cite{rfc7519}.
+
+Listing \ref{lst:token10} memperlihatkan pemeriksaannya. Dua hal diperiksa
+sekaligus, yaitu tanda tangan dan masa berlakunya.
+
+\begin{lstlisting}[style=PythonStyle, caption={Memeriksa tanda tangan dan masa berlaku, tersedia di \berkas{sources/chapter10/token\_sederhana.py}}, label={lst:token10}]
+def periksa(token):
+  """Memeriksa tanda tangan dan masa berlaku, lalu mengembalikan isinya.
+
+  Mengembalikan pasangan (isi, alasan). Isi bernilai None bila tokennya
+  ditolak, dan alasannya menyebut penyebabnya, sehingga latihan dapat
+  membedakan token palsu dari token yang sekadar kedaluwarsa.
+  """
+  bagian = token.split(".")
+  if len(bagian) != 3:
+    return None, "bentuk token salah"
+  bagian_awal = f"{bagian[0]}.{bagian[1]}"
+\end{lstlisting}
+
+Dua akibat mengikuti pilihan itu. Pertama, server menjadi tidak berkeadaan,
+sehingga permintaan dapat dilayani proses mana pun tanpa berbagi penyimpanan.
+Kedua, token tidak dapat dicabut sebelum kedaluwarsa, karena tidak ada
+tempat yang menyimpan daftar token yang masih berlaku.
+
+Tabel \ref{tab:sesi-token} membandingkan keduanya dengan angka dari demo bab
+ini.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Sesi lawan token bertanda tangan, hasil pengukuran nyata}
+  \label{tab:sesi-token}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Hal} & \textbf{Sesi} & \textbf{Token} \\
+    \hline
+    Yang dibawa klien & penanda 32 huruf & token 169 byte \\
+    \hline
+    Yang disimpan server & arti tiap penanda & tidak ada \\
+    \hline
+    Dicabut saat keluar & seketika & tidak bisa, menunggu kedaluwarsa \\
+    \hline
+    Hilang saat proses mati & ya & tidak \\
+    \hline
+    Isinya terbaca klien & tidak & ya, tetapi tidak dapat diubah \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Baris terakhir sering disalahpahami. Token yang diubah satu huruf pun langsung
+ditolak dengan alasan tanda tangan tidak cocok, tetapi isinya tetap terbaca
+siapa pun yang memegangnya. Karena itu token tidak pernah diisi data rahasia.
 
 \section{OAuth 2.x dan OpenID Connect}
 
-% TODO
+OAuth 2.0 menjawab pertanyaan yang lebih luas daripada demo bab ini, yaitu
+bagaimana satu aplikasi memperoleh izin mengakses data pengguna di aplikasi
+lain, tanpa pengguna menyerahkan kata sandinya \cite{rfc6749}. Empat peran
+terlibat di dalamnya, dan Gambar \ref{fig:oauth} merangkum alurnya.
+
+\begin{figure}[!htb]
+  \centering
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    kotak/.style={draw, rounded corners, minimum height=0.9cm,
+                  minimum width=2.4cm, align=center, font=\scriptsize\bfseries},
+    panah/.style={-{Stealth[length=2mm]}, thick}
+  ]
+    \node[kotak, fill=blue!8] (pengguna) at (0,0) {Pengguna\\{\tiny\mdseries resource owner}};
+    \node[kotak, fill=orange!12] (klien) at (3.8,0) {Aplikasi\\{\tiny\mdseries client}};
+    \node[kotak, fill=praditagreen!15] (otoritas) at (7.8,0.9) {Server otorisasi\\{\tiny\mdseries menerbitkan token}};
+    \node[kotak, fill=green!10] (sumber) at (7.8,-0.9) {Server sumber\\{\tiny\mdseries memeriksa token}};
+
+    \draw[panah] (pengguna) -- node[font=\tiny, above] {izin} (klien);
+    \draw[panah] (klien.east) -- ++(0.4,0) |- (otoritas.west);
+    \draw[panah] (klien.east) -- ++(0.4,0) |- (sumber.west);
+    \node[font=\tiny, gray, anchor=east] at (7.3,0.72) {menukar kode dengan token};
+    \node[font=\tiny, gray, anchor=east] at (7.3,-0.72) {memakai access token};
+  \end{tikzpicture}
+  \caption{Empat peran pada OAuth 2.0. Demo bab ini menyatukan server
+           otorisasi dan server sumber dalam satu aplikasi}
+  \label{fig:oauth}
+\end{figure}
+
+OpenID Connect menambahkan satu lapis di atas OAuth \cite{oidc-core}. OAuth
+sendirian hanya menyatakan bahwa pemegang token boleh mengakses sesuatu,
+tanpa menyebut siapa pemegangnya. OIDC menambahkan \textit{id token}, yaitu
+token yang memang berisi identitas penggunanya.
+
+Dua hal pada keduanya sering tertukar. Pembagiannya begini. OAuth menjawab
+apa yang boleh diakses, sedangkan OIDC menjawab siapa yang sedang masuk.
+Memakai \textit{access token} untuk menyimpulkan identitas adalah kesalahan
+yang sering terjadi, dan RFC 9700 menyebutnya secara khusus
+\cite{rfc9700}.
 
 \section{Access Token, Refresh Token, dan Rotasi Token}
 
-% TODO
+Dua token dipakai bersama karena keduanya menanggung risiko yang berbeda.
+\textit{Access token} ikut terkirim pada tiap permintaan, sehingga umurnya
+dibuat pendek. \textit{Refresh token} hanya dikirim ke satu alamat, sehingga
+umurnya boleh panjang.
+
+Tabel \ref{tab:umur-token} memuat perilaku \textit{access token} pada demo
+bab ini, yang umurnya sengaja hanya lima detik.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Umur \textit{access token} lima detik, hasil pengukuran nyata}
+  \label{tab:umur-token}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Kapan dipakai} & \textbf{Status} & \textbf{Alasan} \\
+    \hline
+    Segera sesudah terbit & 200 & sah \\
+    \hline
+    Sesudah 2 detik & 200 & sah \\
+    \hline
+    Sesudah 6 detik & 401 & token kedaluwarsa \\
+    \hline
+    Diubah satu huruf & 401 & tanda tangan tidak cocok \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Rotasi menjawab satu kelemahan \textit{refresh token} yang berumur panjang:
+bila penanda itu bocor, pencurinya dapat memakainya berkali-kali. Dengan
+rotasi, tiap penyegaran menerbitkan penanda baru dan menandai yang lama
+terpakai. Bila yang lama dipakai lagi, keadaan itu hanya mungkin terjadi
+karena ada dua pihak yang memegangnya \cite{rfc9700}.
+
+Listing \ref{lst:rotasi} memperlihatkan jawabannya, yaitu mencabut seluruh
+keluarga penanda tersebut.
+
+\begin{lstlisting}[style=PythonStyle, caption={Pemakaian ulang menandakan penanda sudah di tangan lain, tersedia di \berkas{sources/chapter10/aplikasi.py}}, label={lst:rotasi}]
+def cabut_keluarga(keluarga):
+  """Mencabut seluruh refresh token satu keluarga sekaligus.
+
+  Dipanggil ketika ada refresh token lama yang dipakai ulang. Keadaan itu
+  menandakan penanda tersebut sudah berada di tangan lain, dan cara teraman
+  adalah menghentikan seluruh rantainya.
+  """
+  jumlah = 0
+  for penanda, catatan in list(REFRESH.items()):
+    if catatan["keluarga"] == keluarga:
+      del REFRESH[penanda]
+      jumlah += 1
+  return jumlah
+\end{lstlisting}
+
+Tabel \ref{tab:rotasi} memuat ketiga langkah tersebut, diukur berurutan pada
+demo bab ini.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Rotasi \textit{refresh token} dan penangkapan pemakaian ulang,
+           hasil pengukuran nyata}
+  \label{tab:rotasi}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Langkah} & \textbf{Status} & \textbf{Hasil} \\
+    \hline
+    Menyegarkan dengan penanda yang sah & 200 & terbit pasangan token baru \\
+    \hline
+    Memakai ulang penanda lama & 401 & dipakai ulang, 2 penanda dicabut \\
+    \hline
+    Memakai penanda baru sesudah pencabutan & 401 & penanda tidak dikenal \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Baris ketiga itu yang sering mengejutkan. Penanda baru ikut mati karena
+seluruh keluarganya dicabut, dan pengguna yang sah harus masuk ulang. Harga
+itu memang disengaja: ketika satu penanda terbukti bocor, tidak ada cara
+membedakan pemilik aslinya dari pemegang lainnya.
 
 \section{RBAC dan ABAC}
 
-% TODO
+RBAC memutuskan dari peran. Tiap peran membawa daftar izin, dan yang
+diperiksa adalah izinnya, bukan nama perannya. ABAC memutuskan dari sifat
+permintaan: siapa pemohonnya, siapa pemilik datanya, dan dari
+\textit{tenant} mana keduanya.
+
+Listing \ref{lst:abac} memperlihatkan keduanya bekerja dalam satu fungsi.
+Urutannya penting: pemeriksaan \textit{tenant} berada paling depan, sehingga
+peran setinggi apa pun tidak dapat menembus batas itu.
+
+\begin{lstlisting}[style=PythonStyle, caption={Tiga sifat diperiksa berurutan, tersedia di \berkas{sources/chapter10/kebijakan.py}}, label={lst:abac}]
+def boleh_baca_pesanan(identitas, pesanan):
+  """Memutuskan satu pesanan boleh dibaca atau tidak, secara ABAC.
+
+  Tiga sifat ikut dibaca: tenant pemohon, tenant pesanan, dan pemiliknya.
+  Mengembalikan pasangan (boleh, alasan), sehingga alasan penolakan dapat
+  ikut diuji dan ikut dicatat.
+  """
+  if identitas["tenant"] != pesanan["tenant"]:
+    return False, "tenant berbeda"
+  if punya_izin(identitas["peran"], "baca_semua_pesanan"):
+    return True, "peran boleh membaca seluruh pesanan tenantnya"
+  if pesanan["pemilik"] == identitas["sub"]:
+    return True, "pemohon adalah pemilik pesanan"
+  return False, "bukan pemilik dan perannya tidak mencakup"
+\end{lstlisting}
 
 \section{Multi-Tenancy dan Isolasi Data}
 
-% TODO
+\textit{Multi-tenancy} berarti satu aplikasi melayani beberapa penyewa
+sekaligus, dan tiap penyewa hanya boleh melihat datanya sendiri. Pada demo
+bab ini ada dua \textit{tenant}, yaitu kampus-a dan kampus-b, dan tiap
+pesanan membawa nama \textit{tenant}-nya.
+
+Tabel \ref{tab:matriks} memuat keputusan seluruh persilangan empat pengguna
+dengan empat alamat, diukur sekali jalan.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Matriks hak akses empat pengguna lawan empat alamat, hasil
+           pengukuran nyata}
+  \label{tab:matriks}
+  \begin{tabularx}{\textwidth}{Xllll}
+    \hline
+    \textbf{Pengguna} & \textbf{/api/pesanan} & \textbf{/pesanan/1} & \textbf{/pesanan/3} & \textbf{/laporan} \\
+    \hline
+    ani, admin kampus-a & 200, 2 baris & 200 & 404 & 200 \\
+    \hline
+    budi, staf kampus-a & 200, 2 baris & 200 & 404 & 403 \\
+    \hline
+    cita, pembeli kampus-a & 200, 1 baris & 200 & 404 & 403 \\
+    \hline
+    dedi, staf kampus-b & 200, 1 baris & 404 & 200 & 403 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Empat belas sel itu menjelaskan seluruh bab ini. Kolom terakhir murni RBAC:
+hanya ani yang punya izin \texttt{baca\_laporan}, sehingga tiga lainnya
+ditolak 403. Kolom pertama murni ABAC: cita hanya melihat satu baris, yaitu
+pesanan miliknya, sedangkan budi dan ani melihat dua baris milik
+\textit{tenant} mereka.
+
+Dua kolom tengah memuat isolasi \textit{tenant}. Pesanan nomor 1 milik
+kampus-a dijawab 200 bagi ketiga penggunanya dan 404 bagi dedi, sedangkan
+pesanan nomor 3 milik kampus-b berlaku sebaliknya.
+
+Pilihan status itu disengaja dan layak diperhatikan. Permintaan lintas
+\textit{tenant} dijawab 404, bukan 403, karena 403 berarti "ada, tetapi Anda
+tidak boleh", dan jawaban itu sendiri sudah membocorkan keberadaan datanya.
+Penolakan di dalam satu \textit{tenant} tetap 403, karena di sana keberadaan
+pesanan memang bukan rahasia.
 
 \section{Identity Provider dan Konsep Zero Trust}
 
-% TODO
+\textit{Identity provider} adalah satu tempat yang memegang identitas
+pengguna untuk banyak aplikasi sekaligus. Dengan begitu, kata sandi hanya
+diketahui satu sistem, dan aplikasi lain cukup mempercayai token yang
+diterbitkannya.
+
+\textit{Zero trust} adalah cara memandang jaringan: tidak ada permintaan yang
+dipercaya hanya karena datang dari dalam \cite{nist-zero-trust}. Setiap
+permintaan membawa identitasnya sendiri dan diperiksa ulang di tempat
+tujuannya.
+
+Tabel \ref{tab:zero-trust} membandingkan dua cara pandang tersebut.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Cara pandang lama lawan \textit{zero trust}}
+  \label{tab:zero-trust}
+  \begin{tabularx}{\textwidth}{lXX}
+    \hline
+    \textbf{Hal} & \textbf{Cara lama} & \textbf{Zero trust} \\
+    \hline
+    Dasar kepercayaan & Letak di jaringan & Identitas tiap permintaan \\
+    \hline
+    Pemeriksaan & Di pintu masuk & Di tiap layanan \\
+    \hline
+    Permintaan dari dalam & Dipercaya & Diperiksa sama ketatnya \\
+    \hline
+    Akibat satu titik jebol & Seluruh jaringan terbuka & Terbatas pada hak penanda itu \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Demo bab ini mengikuti cara kedua, walaupun kecil. Tidak ada alamat yang
+melayani permintaan tanpa penanda, dan pemeriksaan hak aksesnya terjadi di
+tiap alamat, bukan sekali di depan.
 
 \section{Ringkasan}
 
-% TODO
+Sesi dan token menjawab pertanyaan yang sama dengan harga yang berbeda. Sesi
+menyimpan artinya di server, sehingga pencabutannya seketika dan terbukti
+pada demo ini: sesudah keluar, penanda yang sama langsung ditolak. Token
+tidak menyimpan apa pun di server, sehingga 169 byte yang dibawa klien sudah
+cukup, tetapi pencabutannya harus menunggu kedaluwarsa.
+
+Umur pendek menutup sebagian kelemahan itu. \textit{Access token} pada demo
+ini berlaku lima detik: sah segera sesudah terbit, sah pada detik kedua,
+lalu ditolak pada detik keenam. Token yang diubah satu huruf ditolak lebih
+awal lagi, karena tanda tangannya tidak cocok.
+
+Rotasi menutup sisanya. Tiap penyegaran menerbitkan penanda baru dan
+menandai yang lama terpakai, dan ketika penanda lama dipakai ulang, seluruh
+keluarganya dicabut. Pada demo ini dua penanda hilang sekaligus, termasuk
+penanda baru yang sah, dan pemiliknya harus masuk ulang.
+
+Hak akses diputuskan dua model yang bekerja bersama. RBAC menjawab dari izin
+yang dibawa peran, dan hanya satu dari empat pengguna yang boleh membuka
+laporan. ABAC menjawab dari sifat permintaan, sehingga pembeli hanya melihat
+satu pesanan miliknya sendiri sedangkan staf melihat dua.
+
+Batas \textit{tenant} diperiksa paling depan, sebelum peran dan sebelum
+kepemilikan. Permintaan lintas \textit{tenant} dijawab 404, bukan 403, karena
+jawaban 403 sudah menyatakan bahwa datanya ada. Dalam sistem yang melayani
+banyak penyewa, keberadaan data pun termasuk yang dijaga.
 
 \section{Latihan}
 
+Seluruh file yang dipakai pada latihan ini tersedia di
+\berkas{sources/chapter10/}, dihitung relatif terhadap akar repositori.
+Latihan ini hanya membutuhkan Python 3, tanpa Docker dan tanpa basis data.
+
+Seluruh permintaan diarahkan ke aplikasi yang berjalan di komputer sendiri.
+Kata sandi pada \berkas{sources/chapter10/pengguna.json} hanya untuk latihan,
+dan kunci tandanya dibaca dari \textit{environment} \texttt{KUNCI\_TOKEN}.
+Hasil tiap mahasiswa akan sama pada bagian status, dan berbeda pada bagian
+penanda yang memang acak.
+
+Penyiapannya satu perintah, seperti pada Listing \ref{lst:c10-siapkan}.
+
+\begin{lstlisting}[language=bash, caption={Menyalakan aplikasi identitas, tersedia di \berkas{sources/chapter10/aplikasi.py}}, label={lst:c10-siapkan}]
+cd sources/chapter10
+KUNCI_TOKEN=kunci-latihan python3 aplikasi.py &
+
+# Keluarannya:
+# Melayani di http://127.0.0.1:8070/  (Ctrl+C untuk berhenti)
+\end{lstlisting}
+
+\subsection*{Latihan 1: Sesi lawan Token}
+
+Latihan ini membuktikan bahwa pencabutan seketika hanya dimiliki sesi, dan
+bahwa isi token terbaca siapa pun yang memegangnya.
+
 \begin{enumerate}
-  \item % TODO
-  \item % TODO
+  \item Masuk dengan cara sesi, catat panjang penandanya dan atribut
+        cookienya, seperti pada Listing \ref{lst:c10-lat1-jalan}.
+  \item Pakai sesi itu untuk membuka daftar pesanan, lalu keluar, lalu
+        pakai sesi yang sama sekali lagi. Catat ketiga hasilnya.
+  \item Masuk dengan cara token, lalu dekode bagian tengah tokennya dengan
+        \texttt{base64}. Catat apa saja yang terbaca di dalamnya.
+  \item Isi Tabel \ref{tab:c10-lat1-hasil}. Tabel \ref{tab:c10-lat1-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa token tidak dapat
+        dicabut seketika? Kedua, apa yang hilang bila seluruh keterangan
+        pengguna dimasukkan ke dalam token? Ketiga, kapan sesi lebih pantas
+        dipakai daripada token?
 \end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Membandingkan sesi dan token, tersedia di \berkas{sources/chapter10/aplikasi.py}}, label={lst:c10-lat1-jalan}]
+curl -s -D - -X POST "http://127.0.0.1:8070/masuk?cara=sesi&nama=budi&sandi=budi123"
+curl -s -X POST "http://127.0.0.1:8070/masuk?cara=token&nama=budi&sandi=budi123"
+
+# Keluarannya:
+# Set-Cookie: sesi=4b2f8d7e...; HttpOnly; SameSite=Lax; Path=/
+# {"cara": "sesi", "panjang_penanda": 32}
+# {"cara": "token", "access_token": "eyJhbGciOi...", "panjang_access": 169}
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 1 yang sudah terisi}
+  \label{tab:c10-lat1-contoh}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Hal} & \textbf{Sesi} & \textbf{Token} \\
+    \hline
+    Panjang yang dibawa klien & 32 huruf & 169 byte \\
+    \hline
+    Sesudah keluar & ditolak & masih berlaku \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 1}
+  \label{tab:c10-lat1-hasil}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Hal} & \textbf{Sesi} & \textbf{Token} \\
+    \hline
+    Panjang yang dibawa klien & \dots & \dots \\
+    \hline
+    Sesudah keluar & \dots & \dots \\
+    \hline
+    Isi yang terbaca klien & \dots & \dots \\
+    \hline
+    Yang disimpan server & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection*{Latihan 2: Umur dan Rotasi Token}
+
+Latihan ini membuktikan bahwa umur pendek dan rotasi menjawab dua risiko yang
+berbeda.
+
+\begin{enumerate}
+  \item Masuk dengan cara token, lalu pakai \textit{access token}-nya
+        segera, pada detik kedua, dan pada detik keenam. Catat ketiga
+        statusnya.
+  \item Ubah satu huruf terakhir token itu, lalu pakai lagi dan catat
+        alasan penolakannya.
+  \item Segarkan dengan \textit{refresh token}, catat pasangan baru yang
+        terbit, lalu pakai ulang penanda lama seperti pada Listing
+        \ref{lst:c10-lat2-jalan}.
+  \item Coba penanda baru sesudah pemakaian ulang itu, lalu isi Tabel
+        \ref{tab:c10-lat2-hasil}. Tabel \ref{tab:c10-lat2-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab dua pertanyaan berikut. Pertama, mengapa penanda baru ikut
+        mati? Kedua, apa yang terjadi bila rotasi dipakai tanpa penangkapan
+        pemakaian ulang?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Rotasi dan pemakaian ulang refresh token, tersedia di \berkas{sources/chapter10/aplikasi.py}}, label={lst:c10-lat2-jalan}]
+curl -s -X POST "http://127.0.0.1:8070/segarkan?refresh=PENANDA_LAMA"
+curl -s -X POST "http://127.0.0.1:8070/segarkan?refresh=PENANDA_LAMA"
+curl -s -X POST "http://127.0.0.1:8070/segarkan?refresh=PENANDA_BARU"
+
+# Keluarannya:
+# {"access_token": "eyJhbGciOi...", "refresh_token": "50dbfff1..."}
+# {"pesan": "refresh token dipakai ulang", "dicabut": 2}
+# {"pesan": "refresh token tidak dikenal"}
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 2 yang sudah terisi}
+  \label{tab:c10-lat2-contoh}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Langkah} & \textbf{Status} & \textbf{Alasan} \\
+    \hline
+    Token sesudah 6 detik & 401 & token kedaluwarsa \\
+    \hline
+    Memakai ulang penanda lama & 401 & dipakai ulang, 2 dicabut \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 2}
+  \label{tab:c10-lat2-hasil}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Langkah} & \textbf{Status} & \textbf{Alasan} \\
+    \hline
+    Token segera sesudah terbit & \dots & \dots \\
+    \hline
+    Token sesudah 2 detik & \dots & \dots \\
+    \hline
+    Token sesudah 6 detik & \dots & \dots \\
+    \hline
+    Token yang diubah satu huruf & \dots & \dots \\
+    \hline
+    Memakai ulang penanda lama & \dots & \dots \\
+    \hline
+    Penanda baru sesudah pencabutan & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection*{Latihan 3: Matriks Hak Akses}
+
+Latihan ini membuktikan bahwa RBAC, ABAC, dan isolasi \textit{tenant}
+terbaca sekaligus dari satu tabel.
+
+\begin{enumerate}
+  \item Jalankan alat ukurnya seperti pada Listing \ref{lst:c10-lat3-jalan},
+        lalu salin hasilnya ke Tabel \ref{tab:c10-lat3-hasil}. Tabel
+        \ref{tab:c10-lat3-contoh} memperlihatkan contoh yang sudah terisi.
+  \item Tandai sel mana yang ditentukan peran, sel mana yang ditentukan
+        kepemilikan, dan sel mana yang ditentukan \textit{tenant}.
+  \item Tambahkan satu izin \texttt{baca\_laporan} pada peran staf di
+        \berkas{sources/chapter10/kebijakan.py}, jalankan ulang, lalu catat
+        sel mana yang berubah.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa permintaan lintas
+        \textit{tenant} dijawab 404 dan bukan 403? Kedua, mengapa
+        pemeriksaan \textit{tenant} ditaruh paling depan? Ketiga, apa yang
+        terjadi bila penyaringan daftar dan pemeriksaan rincian memakai
+        aturan yang berbeda?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Menjalankan matriks hak akses, tersedia di \berkas{sources/chapter10/ukur-akses.py}}, label={lst:c10-lat3-jalan}]
+python3 ukur-akses.py
+
+# Keluarannya:
+#   Pengguna    /api/pesanan  /api/pesanan/1  /api/pesanan/3    /api/laporan
+#   ani         200, 2 baris             200             404             200
+#   budi        200, 2 baris             200             404             403
+#   cita        200, 1 baris             200             404             403
+#   dedi        200, 1 baris             404             200             403
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 3 yang sudah terisi}
+  \label{tab:c10-lat3-contoh}
+  \begin{tabularx}{\textwidth}{Xllll}
+    \hline
+    \textbf{Pengguna} & \textbf{Daftar} & \textbf{/1} & \textbf{/3} & \textbf{Laporan} \\
+    \hline
+    ani, admin kampus-a & 200, 2 baris & 200 & 404 & 200 \\
+    \hline
+    dedi, staf kampus-b & 200, 1 baris & 404 & 200 & 403 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 3}
+  \label{tab:c10-lat3-hasil}
+  \begin{tabularx}{\textwidth}{Xllll}
+    \hline
+    \textbf{Pengguna} & \textbf{Daftar} & \textbf{/1} & \textbf{/3} & \textbf{Laporan} \\
+    \hline
+    ani, admin kampus-a & \dots & \dots & \dots & \dots \\
+    \hline
+    budi, staf kampus-a & \dots & \dots & \dots & \dots \\
+    \hline
+    cita, pembeli kampus-a & \dots & \dots & \dots & \dots \\
+    \hline
+    dedi, staf kampus-b & \dots & \dots & \dots & \dots \\
+    \hline
+    Sesudah staf diberi izin laporan & \dots & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection*{Latihan 4: Menambah Tenant dan Peran Baru}
+
+Latihan ini menguji apakah aturan hak akses benar-benar terpusat, atau
+sebenarnya tersebar di banyak tempat.
+
+\begin{enumerate}
+  \item Tambahkan satu \textit{tenant} ketiga beserta satu penggunanya dan
+        satu pesanannya ke
+        \berkas{sources/chapter10/pengguna.json}.
+  \item Tambahkan peran baru, misalnya auditor yang boleh membaca laporan
+        tetapi tidak boleh membaca pesanan, ke
+        \berkas{sources/chapter10/kebijakan.py}.
+  \item Tambahkan kedua pengguna baru itu ke daftar pada
+        \berkas{sources/chapter10/ukur-akses.py}, jalankan ulang, lalu
+        catat matriksnya ke Tabel \ref{tab:c10-lat4-hasil}. Tabel
+        \ref{tab:c10-lat4-contoh} memperlihatkan bentuk isian yang
+        diharapkan.
+  \item Catat berapa file yang harus disunting untuk kedua penambahan itu.
+  \item Jawab dua pertanyaan berikut. Pertama, berapa file yang berubah, dan
+        apakah jumlah itu menandakan aturannya terpusat? Kedua, apa yang
+        perlu diubah bila aturannya berganti dari peran menjadi izin per
+        pengguna?
+\end{enumerate}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Bentuk isian Latihan 4 yang diharapkan}
+  \label{tab:c10-lat4-contoh}
+  \begin{tabularx}{\textwidth}{Xlll}
+    \hline
+    \textbf{Pengguna baru} & \textbf{Daftar} & \textbf{Rincian} & \textbf{Laporan} \\
+    \hline
+    auditor kampus-a & 200, 0 baris & 403 & 200 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 4}
+  \label{tab:c10-lat4-hasil}
+  \begin{tabularx}{\textwidth}{Xlll}
+    \hline
+    \textbf{Pengguna baru} & \textbf{Daftar} & \textbf{Rincian} & \textbf{Laporan} \\
+    \hline
+    Pengguna \textit{tenant} ketiga & \dots & \dots & \dots \\
+    \hline
+    Peran auditor & \dots & \dots & \dots \\
+    \hline
+    Jumlah file yang disunting & \multicolumn{3}{l}{\dots} \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Setelah seluruh latihan selesai, aplikasinya dihentikan dengan Ctrl+C. Tidak
+ada container yang perlu dimatikan, karena bab ini memang tidak memakainya.
