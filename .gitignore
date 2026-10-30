@@ -359,7 +359,7 @@ sdist/
 var/
 wheels/
 # CATATAN: "lib/" dan "lib64/" sengaja TIDAK di-ignore. Pola itu tidak ter-anchor,
-# jadi akan menelan folder sumber seperti module/sources/chapterXX/js/lib/.
+# jadi akan menelan folder sumber seperti sources/chapterXX/js/lib/.
 share/python-wheels/
 *.egg-info/
 .installed.cfg
@@ -417,7 +417,7 @@ ipython_config.py
 cython_debug/
 
 ## ---------------------------------------------------------------------------
-## Node / web (module/sources berisi .js dan .ts)
+## Node / web (sources berisi .js dan .ts)
 ## ---------------------------------------------------------------------------
 node_modules/
 npm-debug.log*
