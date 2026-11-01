@@ -462,3 +462,6 @@ playwright-report/
 # Hasil build halaman statis Bab 8, dibuat ulang oleh skripnya
 sources/chapter08/statis/katalog-ssg.html
 sources/chapter08/statis/katalog-isr.html
+
+# Antrean percobaan Bab 13, dibuat ulang oleh skripnya
+sources/chapter13/antrean.json

@@ -5,23 +5,24 @@ berikutnya tidak dimulai dari menebak-nebak.
 
 ## Yang sudah lengkap
 
-Bab 2 sampai Bab 12 sudah punya naskah, slide, file sumber, dan angka yang
-diukur sungguhan. Keduabelasnya sudah masuk buku, dan bukunya terbangun di
-215 halaman.
+Bab 2 sampai Bab 13 sudah punya naskah, slide, file sumber, dan angka yang
+diukur sungguhan. Ketigabelasnya sudah masuk buku, dan bukunya terbangun di
+229 halaman.
 
 ## Penyeragaman istilah
 
-Istilah Inggris yang disepakati sudah dipakai penuh di Bab 5 sampai Bab 12
+Istilah Inggris yang disepakati sudah dipakai penuh di Bab 5 sampai Bab 13
 beserta slidenya, tetapi belum di bab lain. Yang tertinggal di Bab 2 sampai
 Bab 4 beserta slidenya: `berkas`, `jawaban`, `anggaran`, `latensi`, `gejala`,
 `pita`, `kewarasan`, `pemanasan`, dan `vonis`. Daftar lengkap istilahnya ada
 di `CLAUDE.md`.
 
-## Bab 13 dan sesudahnya
+## Bab 14
 
-Naskah `module/chapter13.tex` dan `chapter14.tex` masih kerangka berisi
-`% TODO`, dan direktori `sources/chapter13` serta `chapter14` masih kosong.
-Peta topik tiap pertemuan ada di `README.md` akar.
+Naskah `module/chapter14.tex` masih kerangka berisi `% TODO`, dan direktori
+`sources/chapter14` masih kosong. Topiknya penskalaan, sistem terdistribusi,
+dan satu eksperimen teknologi yang sedang tumbuh. Peta topiknya ada di
+`README.md` akar.
 
 Bab 1 juga masih kerangka, padahal sudah aktif di buku, sehingga tercetak
 sebagai bab tanpa isi.
@@ -52,6 +53,10 @@ teks peta pertemuan perlu disesuaikan atau dibahas lebih dahulu.
   daftar isi, dan memang dibiarkan.
 - `package-lock.json` Bab 6 tetap dilacak git, karena ia yang mengunci versi
   Playwright yang dipakai mengukur.
+- Bab 13 memakai port 8100 untuk server peristiwa, 8101 untuk WebSocket, dan
+  8102 untuk penerima *webhook*. WebSocket-nya ditulis dengan pustaka standar,
+  jadi tidak ada dependensi baru. File `antrean.json` dibuat sendiri oleh
+  skripnya dan tidak dilacak git.
 - Bab 12 memakai `tsc` dari `sources/chapter06/node_modules`, sehingga tidak
   menambah pemasangan npm. Aplikasinya di port 8090 dan *gateway*-nya di
   8091.

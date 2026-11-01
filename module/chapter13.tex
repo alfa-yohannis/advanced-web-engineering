@@ -1,47 +1,747 @@
 \chapter{Sistem Real-Time dan Asinkron}
+\label{ch:realtime}
 
 \section*{Tujuan Pembelajaran}
 \begin{itemize}
-  \item % TODO
-  \item % TODO
-  \item % TODO
+  \item Mengukur keterlambatan dan biaya \textit{polling}, SSE (Server-Sent
+        Events), serta WebSocket pada peristiwa yang sama, lalu memilih satu
+        di antaranya beserta alasannya.
+  \item Merancang alur asinkron memakai antrean, \textit{worker}, dan
+        \textit{webhook}, lalu menunjukkan jeda \textit{retry}-nya pada hasil
+        pengukuran.
+  \item Membedakan pengiriman \textit{at-least-once} dari pengiriman sekali
+        saja, lalu membuktikan \textit{consumer} yang idempoten menahan
+        duplikatnya.
 \end{itemize}
 
 \section{Pendahuluan}
 
-% TODO
+Dua kebutuhan sering disatukan padahal berbeda. Kebutuhan pertama, pengguna
+ingin melihat perubahan segera, tanpa menekan tombol \textit{refresh}.
+Kebutuhan kedua, pekerjaan yang lama tidak boleh menahan jawaban, sehingga
+harus dikerjakan di belakang.
+
+Keduanya menolak pola permintaan dan jawaban yang biasa. Yang pertama
+menuntut jalan dari server ke klien, padahal HTTP dirancang untuk arah
+sebaliknya. Yang kedua menuntut pekerjaan hidup lebih lama daripada
+permintaan yang memulainya, sehingga harus dititipkan ke tempat lain.
+
+Demonya dua bagian yang berjalan bersama: satu server peristiwa yang
+melayani tiga cara pengiriman, dan satu alur asinkron berisi antrean,
+\textit{worker}, dan penerima \textit{webhook}. Referensi utamanya adalah
+HTML Standard untuk SSE beserta \texttt{EventSource} \cite{whatwg-html}, RFC
+6455 untuk WebSocket \cite{rfc6455}, RFC 9110 untuk arti metode yang
+idempoten \cite{rfc9110}, dan dokumentasi Amazon SQS untuk
+\textit{visibility timeout} beserta akibatnya \cite{aws-sqs-visibility}.
 
 \section{Polling, Server-Sent Events, dan WebSocket}
 
-% TODO
+Tiga cara dipakai luas untuk membawa peristiwa dari server ke klien.
+\textit{Polling} membuat klien bertanya berulang kali, dan jawabannya sering
+kosong. SSE membuat satu sambungan HTTP tetap terbuka, lalu server menulis
+peristiwa ke sambungan itu \cite{whatwg-html}. WebSocket menukar sambungan
+HTTP menjadi sambungan dua arah lewat jabat tangan khusus \cite{rfc6455}.
 
-\section{Publish/Subscribe dan Antrean}
+Analoginya seperti menunggu nilai ujian keluar. \textit{Polling} berarti
+menengok papan pengumuman tiap lima menit. SSE berarti menunggu di depan
+papan sementara petugas menempel pengumuman begitu siap. WebSocket berarti
+berdiri di depan petugas, sehingga keduanya dapat saling berbicara.
 
-% TODO
+Gambar \ref{fig:transport} memperlihatkan ketiganya pada demo bab ini.
 
-\section{Background Worker dan Scheduled Job}
+\begin{figure}[!htb]
+  \centering
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    kotak/.style={draw, rounded corners, minimum height=0.8cm,
+                  minimum width=2.2cm, align=center, font=\scriptsize\bfseries},
+    panah/.style={-{Stealth[length=2mm]}, thick}
+  ]
+    \node[kotak, fill=praditagreen!15, minimum height=2.6cm] (server) at (0,0) {Server\\peristiwa\\{\tiny\mdseries port 8100}};
+    \node[kotak, fill=gray!35] (polling) at (4.3,1.7) {Polling\\{\tiny\mdseries 11 permintaan}};
+    \node[kotak, fill=blue!8] (sse) at (4.3,0) {SSE\\{\tiny\mdseries 1 sambungan}};
+    \node[kotak, fill=orange!12] (ws) at (4.3,-1.7) {WebSocket\\{\tiny\mdseries 1 sambungan}};
 
-% TODO
+    \draw[panah] (polling.west) -- node[font=\tiny, above] {tanya} (server.east |- polling);
+    \draw[panah] (server.east |- polling) ++(0,-0.3) -- ++(2.1,0);
+    \draw[panah] (server.east |- sse) -- node[font=\tiny, above] {dorong} (sse.west);
+    \draw[panah] (server.east |- ws) -- node[font=\tiny, above] {dorong} (ws.west);
+    \draw[panah] (ws.west) ++(0,-0.3) -- ++(-2.1,0);
+    \node[font=\tiny, gray, anchor=west] at (6.0,1.4) {jawaban sering kosong};
+    \node[font=\tiny, gray, anchor=west] at (6.0,0) {satu arah};
+    \node[font=\tiny, gray, anchor=west] at (6.0,-2.0) {dua arah};
+  \end{tikzpicture}
+  \caption{Tiga cara membawa peristiwa ke klien, beserta jumlah permintaan
+           yang terukur untuk 10 peristiwa}
+  \label{fig:transport}
+\end{figure}
 
-\section{Webhook}
+Listing \ref{lst:sse13} memperlihatkan inti SSE di sisi server. Panjang
+isinya tidak disebutkan, karena sambungannya belum berakhir, dan tiap
+peristiwa ditulis sebagai satu blok yang diakhiri baris kosong.
 
-% TODO
+\begin{lstlisting}[style=PythonStyle, caption={Satu sambungan yang tetap terbuka, tersedia di \berkas{sources/chapter13/aplikasi.py}}, label={lst:sse13}]
+    self.send_response(200)
+    self.send_header("Content-Type", JENIS_ISI_SSE)
+    self.send_header("Cache-Control", "no-store")
+    self.send_header("Connection", "keep-alive")
+    self.end_headers()
+    try:
+      while True:
+        try:
+          peristiwa = antrean.get(timeout=JEDA_PENANDA_HIDUP_DETIK)
+        except queue.Empty:
+          self.wfile.write(b": tetap hidup\n\n")
+          self.wfile.flush()
+          continue
+        blok = (f"id: {peristiwa['nomor']}\n"
+                f"data: {json.dumps(peristiwa['isi'])}\n\n")
+        self.wfile.write(blok.encode())
+        self.wfile.flush()
+\end{lstlisting}
 
-\section{Retry, Exponential Backoff, dan Consumer Idempoten}
+Baris penanda hidup itu bukan hiasan. Sambungan yang lama menganggur dapat
+ditutup perantara di tengah jalan, dan kliennya baru tahu ketika peristiwa
+berikutnya tidak pernah tiba. Satu baris komentar tiap 15 detik cukup untuk
+mencegahnya.
 
-% TODO
+Tabel \ref{tab:transport} memuat hasil pengukuran ketiganya. Sepuluh
+peristiwa yang sama diterbitkan untuk tiap transport, lalu keterlambatan,
+jumlah byte yang diterima klien, dan jumlah permintaan HTTP dicatat.
 
-\section{Pengiriman At-Least-Once dan Eventual Consistency}
+\begin{table}[!htb]
+  \centering
+  \caption{Tiga transport pada 10 peristiwa yang sama, hasil pengukuran
+           nyata}
+  \label{tab:transport}
+  \begin{tabularx}{\textwidth}{Xllll}
+    \hline
+    \textbf{Transport} & \textbf{Tengah ms} & \textbf{Tertinggi ms} & \textbf{Byte} & \textbf{Permintaan} \\
+    \hline
+    \textit{polling}, jeda 0,5 detik & 199,8 & 202,0 & 639 & 11 \\
+    \hline
+    SSE & 1,8 & 2,0 & 400 & 1 \\
+    \hline
+    WebSocket & 1,9 & 2,1 & 490 & 1 \\
+    \hline
+  \end{tabularx}
+\end{table}
 
-% TODO
+Tabel itu punya dua konsekuensi praktis. Pertama, keterlambatan
+\textit{polling} ditentukan jedanya, bukan kecepatan servernya: 199,8
+milidetik pada jeda 0,5 detik, sedangkan kedua transport yang mendorong
+berada di bawah 2 milidetik. Kedua, satu sambungan mengganti sebelas
+permintaan, dan sebelas permintaan itu masing-masing membawa header
+permintaan dan header jawaban yang tidak ikut terhitung di kolom byte.
+
+Kolom byte perlu dibaca hati-hati. Yang dihitung hanya isi yang diterima
+klien, yaitu badan jawaban untuk \textit{polling}, baris data untuk SSE, dan
+isi frame untuk WebSocket. SSE mencapai 400 byte karena tiap peristiwa
+ditulis sebagai dua baris teks, sedangkan WebSocket mencapai 490 byte karena
+tiap frame membawa seluruh peristiwa sebagai JSON (JavaScript Object
+Notation) ditambah dua byte header. Selisih 90 byte itu berasal dari isi yang
+dibawa, bukan dari protokolnya.
+
+Perbedaan yang menentukan pilihan justru tidak ada di tabel. SSE berjalan
+satu arah dan otomatis menyambung ulang di browser, sedangkan WebSocket
+berjalan dua arah tetapi penyambungan ulangnya ditulis sendiri. Karena itu
+papan pemberitahuan cukup dengan SSE, sedangkan permainan atau penyuntingan
+bersama membutuhkan WebSocket.
+
+\section{Publish/Subscribe dan Satu Sumber Peristiwa}
+
+\textit{Publish/subscribe} memisahkan yang menerbitkan dari yang membaca.
+Penerbit tidak tahu ada berapa pembaca, dan pembaca tidak tahu siapa yang
+menerbitkan. Pada demo bab ini, pemisahan itu membuat ketiga transport
+membaca peristiwa yang sama, sehingga perbedaan yang terukur memang berasal
+dari cara pengirimannya.
+
+Listing \ref{lst:terbit13} memperlihatkan penerbitannya. Dua hal dikerjakan
+di dalam satu kunci: pemberian nomor dan penitipan ke tiap pelanggan.
+
+\begin{lstlisting}[style=PythonStyle, caption={Satu penerbitan, banyak pelanggan, tersedia di \berkas{sources/chapter13/aplikasi.py}}, label={lst:terbit13}]
+def terbitkan(isi):
+  """Mencatat satu peristiwa, lalu menitipkannya ke tiap pelanggan SSE.
+
+  Pencatatan dan penitipan dilakukan di dalam satu kunci, agar nomor
+  peristiwa tidak pernah terlewat atau terbalik ketika dua penerbit datang
+  bersamaan.
+  """
+  with KUNCI:
+    peristiwa = {"nomor": len(RIWAYAT) + 1, "isi": isi}
+    RIWAYAT.append(peristiwa)
+    for antrean in list(PELANGGAN):
+      if antrean.qsize() < BATAS_ANTREAN_PELANGGAN:
+        antrean.put(peristiwa)
+  return peristiwa
+\end{lstlisting}
+
+Batas antrean pada baris kedua dari bawah menjawab pertanyaan yang muncul
+berikutnya: bagaimana bila ada pelanggan yang membaca lebih lambat daripada
+kecepatan penerbitan. Tanpa batas, server menyimpan peristiwa untuk pelanggan
+itu sampai memorinya habis. Dengan batas, pelanggan yang tidak sanggup
+mengikuti kehilangan peristiwa, dan kehilangan itu dipilih dengan sadar.
+
+Nomor peristiwa punya guna kedua. Klien \textit{polling} memakainya sebagai
+penanda sampai mana ia sudah membaca, dan klien SSE menerimanya sebagai field
+\texttt{id}, yang dipakai browser untuk melanjutkan dari tempat terakhir
+ketika sambungannya tersambung ulang.
+
+\section{Antrean, Background Worker, dan Webhook}
+
+Pekerjaan yang lama tidak dikerjakan di dalam permintaan. Permintaan hanya
+menitipkannya ke antrean, lalu menjawab bahwa titipannya diterima.
+\textit{Worker} yang berjalan terpisah mengambil pekerjaan itu dan
+mengerjakannya, misalnya mengirim \textit{webhook} ke sistem lain.
+
+Analoginya seperti loket pengurusan surat. Mahasiswa menyerahkan berkas dan
+menerima tanda terima, lalu pulang. Petugas di belakang mengerjakan berkasnya
+menurut urutan masuk, dan hasilnya diambil kemudian. Loketnya tidak pernah
+menahan orang sampai suratnya jadi.
+
+Gambar \ref{fig:antrean} memperlihatkan alurnya beserta ketiga jenis
+pekerjaan yang diukur bab ini.
+
+\begin{figure}[!htb]
+  \centering
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    kotak/.style={draw, rounded corners, minimum height=0.85cm,
+                  minimum width=2.2cm, align=center, font=\scriptsize\bfseries},
+    panah/.style={-{Stealth[length=2mm]}, thick}
+  ]
+    \node[kotak, fill=blue!8] (kirim) at (0,0) {Pengirim\\{\tiny\mdseries 3 pekerjaan}};
+    \node[kotak, fill=praditagreen!15, minimum height=1.1cm] (antrean) at (3.2,0) {Antrean\\{\tiny\mdseries siap\_pada}\\{\tiny\mdseries percobaan}};
+    \node[kotak, fill=orange!12, minimum height=1.1cm] (worker) at (6.4,0) {Worker\\{\tiny\mdseries periksa duplikat}\\{\tiny\mdseries lalu kirim}};
+    \node[kotak, fill=gray!35] (webhook) at (9.6,0.6) {Webhook\\{\tiny\mdseries port 8102}};
+    \node[kotak, fill=red!22] (gagal) at (9.6,-0.9) {500\\{\tiny\mdseries dua kali}};
+
+    \draw[panah] (kirim) -- (antrean);
+    \draw[panah] (antrean) -- (worker);
+    \draw[panah] (worker.east) -- ++(0.3,0) |- (webhook.west);
+    \draw[panah] (worker.east) -- ++(0.3,0) |- (gagal.west);
+    \draw[panah] (gagal.south) -- ++(0,-0.45) -| node[font=\tiny, below, pos=0.25] {dicoba lagi dengan jeda berlipat} (antrean.south);
+  \end{tikzpicture}
+  \caption{Alur asinkron: titipan masuk antrean, \textit{worker}
+           mengerjakannya, kegagalan kembali ke antrean}
+  \label{fig:antrean}
+\end{figure}
+
+Antrean pada demo ini satu file JSON, dan itu memang bukan antrean untuk
+produksi. Yang ditirukan hanya sifat yang menentukan cara menulis
+\textit{consumer}, dan sifat terpentingnya ada pada Listing
+\ref{lst:ambil13}: pekerjaan yang diambil tidak langsung hilang.
+
+\begin{lstlisting}[style=PythonStyle, caption={Pekerjaan yang diambil hanya disembunyikan sementara, tersedia di \berkas{sources/chapter13/antrean.py}}, label={lst:ambil13}]
+def ambil(sekarang):
+  """Mengambil satu pekerjaan yang sudah waktunya dikerjakan.
+
+  Pekerjaan yang diambil tidak langsung hilang dari antrean. Waktu siapnya
+  digeser sejauh jeda backoff, sehingga pekerjaan itu kembali muncul bila
+  worker-nya mati sebelum memanggil selesai. Di sanalah sifat at-least-once
+  berasal: pekerjaan dapat terkirim lebih dari sekali, dan tidak pernah
+  hilang tanpa dikerjakan.
+  """
+  keadaan = muat()
+  for pesan in keadaan["pesan"]:
+    if pesan["siap_pada"] <= sekarang:
+      pesan["percobaan"] += 1
+      pesan["siap_pada"] = sekarang + jeda_backoff(pesan["percobaan"])
+      simpan(keadaan)
+      return dict(pesan)
+  return None
+\end{lstlisting}
+
+Pergeseran waktu siap itu disebut \textit{visibility timeout} pada layanan
+antrean sungguhan \cite{aws-sqs-visibility}. Akibatnya dua. Pertama,
+pekerjaan tidak hilang ketika \textit{worker}-nya mati, karena pekerjaannya
+muncul kembali. Kedua, pekerjaan dapat dikerjakan dua kali, karena kematian
+itu bisa terjadi sesudah pekerjaannya tuntas tetapi sebelum di-\textit{ack}.
+
+\textit{Webhook} adalah sisi lain dari hal yang sama. Pada \textit{polling},
+sistem kita yang bertanya ke sistem lain. Pada \textit{webhook}, sistem lain
+yang memanggil alamat kita ketika ada kabar. Keduanya memindahkan masalah ke
+tempat yang sama, yaitu apa yang terjadi ketika pemanggilannya gagal.
+
+\section{Retry dan Exponential Backoff}
+
+\textit{Retry} yang tanpa jeda memperburuk keadaan. Tujuan yang sedang
+bermasalah justru dibanjiri percobaan baru, tepat ketika ia paling butuh
+kesempatan untuk pulih. Karena itu jeda antarpercobaan dibuat berlipat, dan
+caranya satu baris, seperti pada Listing \ref{lst:backoff13}.
+
+\begin{lstlisting}[style=PythonStyle, caption={Jeda yang berlipat dua tiap percobaan, tersedia di \berkas{sources/chapter13/antrean.py}}, label={lst:backoff13}]
+def jeda_backoff(percobaan):
+  """Menghitung jeda sebelum percobaan berikutnya, berlipat dua tiap kali.
+
+  Jeda yang berlipat menahan worker dari membanjiri tujuan yang sedang
+  bermasalah. Percobaan pertama memakai jeda dasar, yang kedua dua kali,
+  yang ketiga empat kali, dan seterusnya.
+  """
+  return JEDA_DASAR_DETIK * (2 ** max(0, percobaan - 1))
+\end{lstlisting}
+
+Tabel \ref{tab:retry} memuat seluruh percobaan yang dilakukan
+\textit{worker} pada satu daur pengukuran. Jeda dasarnya 0,5 detik, dan
+pekerjaan \texttt{gagal-dua-kali} ditolak \textit{webhook} dua kali sebelum
+diterima.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Seluruh percobaan \textit{worker} pada satu daur, hasil
+           pengukuran nyata}
+  \label{tab:retry}
+  \begin{tabularx}{\textwidth}{llXl}
+    \hline
+    \textbf{Pekerjaan} & \textbf{Ke} & \textbf{Hasil} & \textbf{Detik} \\
+    \hline
+    \texttt{kerja-0001} & 1 & terkirim dan di-\textit{ack} & 0,01 \\
+    \hline
+    \texttt{kerja-0002} & 1 & gagal, \textit{webhook} 500 & 0,01 \\
+    \hline
+    \texttt{kerja-0003} & 1 & terkirim, \textit{worker} mati sebelum \textit{ack} & 0,01 \\
+    \hline
+    \texttt{kerja-0002} & 2 & gagal, \textit{webhook} 500 & 0,51 \\
+    \hline
+    \texttt{kerja-0003} & 2 & duplikat ditahan & 0,51 \\
+    \hline
+    \texttt{kerja-0002} & 3 & terkirim dan di-\textit{ack} & 1,52 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Kolom detik memperlihatkan jedanya bekerja. Percobaan kedua
+\texttt{kerja-0002} terjadi 0,5 detik sesudah yang pertama, dan percobaan
+ketiga terjadi 1,0 detik sesudah yang kedua. Angka 0,01 dan 0,51 dan 1,52
+adalah waktu sejak pengukuran mulai, sehingga selisihnya persis jeda dasar
+lalu dua kali jeda dasar.
+
+Pertanyaan berikutnya, sampai kapan dicoba ulang. Pada demo ini batasnya
+lima percobaan, dan pekerjaan yang tetap gagal sesudah itu pantas dipindahkan
+ke tempat terpisah, yang biasa disebut \textit{dead letter queue}, agar
+antreannya tidak tersumbat satu pekerjaan yang tidak akan pernah berhasil.
+
+\section{Consumer Idempoten dan Pengiriman At-Least-Once}
+
+\textit{At-least-once} berarti satu pekerjaan dijamin terkirim setidaknya
+sekali, dan boleh lebih. Jaminan itu bukan kemalasan perancangnya, melainkan
+pilihan yang masuk akal: menjamin tepat sekali menuntut kesepakatan antara
+antrean dan \textit{consumer} yang mahal, sedangkan menjamin paling banyak
+sekali berarti pekerjaan boleh hilang.
+
+Akibatnya pindah ke sisi \textit{consumer}, yang harus menahan duplikat
+sendiri. Listing \ref{lst:idempoten13} memperlihatkan urutannya, dan urutan
+itulah intinya.
+
+\begin{lstlisting}[style=PythonStyle, caption={Pemeriksaan duplikat dilakukan paling dahulu, tersedia di \berkas{sources/chapter13/worker.py}}, label={lst:idempoten13}]
+def kerjakan(pesan, tirukan_crash):
+  """Mengerjakan satu pesan, lalu mengembalikan keterangan hasilnya.
+
+  Urutannya penting. Pemeriksaan duplikat dilakukan paling dahulu, sebelum
+  webhooknya dikirim, karena itulah satu-satunya tempat duplikat masih dapat
+  ditahan tanpa akibat.
+  """
+  if antrean.sudah_diproses(pesan["id"]):
+    antrean.selesai(pesan["id"])
+    return "duplikat ditahan"
+  status = kirim_webhook(pesan)
+  if status != 200:
+    return f"gagal, webhook {status}, dicoba lagi nanti"
+  antrean.tandai_diproses(pesan["id"])
+  if pesan["jenis"] == JENIS_CRASH and tirukan_crash:
+    return "terkirim, worker mati sebelum ack"
+  antrean.selesai(pesan["id"])
+  return "terkirim dan di-ack"
+\end{lstlisting}
+
+Pekerjaan \texttt{kerja-0003} menirukan kejadian yang paling sering
+melahirkan duplikat: \textit{webhook}-nya terkirim, pekerjaannya ditandai
+selesai, lalu \textit{worker}-nya mati sebelum meng-\textit{ack}. Tabel
+\ref{tab:atleastonce} membandingkan jumlah percobaan dengan jumlah pengiriman
+yang benar-benar tiba.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Percobaan \textit{worker} lawan pengiriman yang tiba di
+           \textit{webhook}, hasil pengukuran nyata}
+  \label{tab:atleastonce}
+  \begin{tabularx}{\textwidth}{Xlll}
+    \hline
+    \textbf{Pekerjaan} & \textbf{Percobaan} & \textbf{Tiba} & \textbf{Akibat di tujuan} \\
+    \hline
+    \texttt{kerja-0001}, lancar & 1 & 1 & satu kali \\
+    \hline
+    \texttt{kerja-0002}, ditolak dua kali & 3 & 3 & satu kali, pada percobaan ketiga \\
+    \hline
+    \texttt{kerja-0003}, \textit{worker} mati & 2 & 1 & satu kali \\
+    \hline
+    \textbf{Jumlah} & \textbf{6} & \textbf{5} & \textbf{3 pekerjaan tuntas} \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Baris ketiga memuat hasil yang dicari. Pekerjaannya dikirim \textit{worker}
+dua kali, tetapi hanya satu yang sampai ke \textit{webhook}, karena
+pengiriman kedua berhenti di pemeriksaan duplikat. Tanpa pemeriksaan itu,
+tujuan menerima pekerjaan yang sama dua kali, dan pada pekerjaan seperti
+pembayaran akibatnya bukan hal kecil.
+
+Kuncinya adalah id pekerjaan yang tetap, bukan id yang dibuat ulang tiap
+percobaan. Dua percobaan \texttt{kerja-0003} membawa id yang sama, sehingga
+dapat dikenali sebagai pekerjaan yang sama. Bila idnya dibuat baru tiap
+pengiriman, keduanya terlihat seperti dua pekerjaan berbeda, dan tidak ada
+yang dapat menahannya.
+
+\section{Scheduled Job dan Eventual Consistency}
+
+\textit{Scheduled job} adalah pekerjaan yang dijalankan menurut waktu, bukan
+menurut permintaan. Pada demo ini, putaran \textit{worker} yang berulang tiap
+0,25 detik berperan seperti itu: ia memeriksa antrean, mengambil pekerjaan
+yang sudah waktunya, lalu tidur lagi. Pola yang sama dipakai pekerjaan harian
+seperti merangkum laporan atau membersihkan data lama.
+
+Akibat dari alur asinkron ini perlu dinyatakan terus terang. Begitu pekerjaan
+dititipkan ke antrean, keadaan sistem tidak lagi seragam di satu waktu. Tabel
+\ref{tab:konsisten} memuat urutannya dari hasil pengukuran, dan di sana
+terlihat satu sistem sudah tahu sedangkan yang lain belum.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Keadaan kedua sistem pada beberapa titik waktu, hasil pengukuran
+           nyata}
+  \label{tab:konsisten}
+  \begin{tabularx}{\textwidth}{lXX}
+    \hline
+    \textbf{Detik} & \textbf{Sistem kita} & \textbf{Tujuan \textit{webhook}} \\
+    \hline
+    0,00 & tiga pekerjaan diterima & belum menerima apa pun \\
+    \hline
+    0,01 & dua tuntas, satu gagal & \texttt{kerja-0001} dan \texttt{kerja-0003} \\
+    \hline
+    0,51 & duplikat ditahan & masih belum tahu \texttt{kerja-0002} \\
+    \hline
+    1,52 & tiga tuntas & ketiganya sudah diterima \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Keadaan seperti itu disebut \textit{eventual consistency}: kedua sisi akan
+sama, tetapi tidak sekarang. Dua akibat praktisnya perlu disiapkan lebih
+dahulu. Pertama, tampilan tidak boleh berjanji lebih daripada yang sudah
+terjadi, sehingga kalimat "sedang diproses" lebih jujur daripada "sudah
+terkirim". Kedua, jarak waktunya harus dipantau, karena antrean yang
+menumpuk adalah masalah yang tidak terlihat pada halaman mana pun.
 
 \section{Ringkasan}
 
-% TODO
+Tiga transport membawa peristiwa yang sama dengan biaya yang berbeda, dan
+selisihnya terukur. \textit{Polling} dengan jeda 0,5 detik menyerahkan
+peristiwa dalam 199,8 milidetik dan memakai sebelas permintaan, sedangkan SSE
+dan WebSocket menyerahkannya dalam 1,8 dan 1,9 milidetik lewat satu
+sambungan. Keterlambatan \textit{polling} ditentukan jedanya, bukan kecepatan
+servernya.
+
+Pilihan di antara SSE dan WebSocket tidak ditentukan angka di tabel itu. SSE
+berjalan satu arah, berbentuk teks, dan menyambung ulang sendiri di browser.
+WebSocket berjalan dua arah dan lebih hemat pada pesan kecil, tetapi
+penyambungan ulangnya ditulis sendiri. Papan pemberitahuan cukup dengan yang
+pertama, sedangkan penyuntingan bersama membutuhkan yang kedua.
+
+Alur asinkron memindahkan pekerjaan lama keluar dari permintaan, dan
+memindahkan masalahnya juga. Antrean pada demo ini menggeser waktu siap tiap
+pekerjaan yang diambil, sehingga pekerjaan tidak hilang ketika
+\textit{worker}-nya mati, dengan ganti bahwa pekerjaan dapat terkirim lebih
+dari sekali.
+
+Pengukurannya memperlihatkan keduanya sekaligus. Enam percobaan
+\textit{worker} menghasilkan lima pengiriman yang tiba, dan tiga pekerjaan
+tuntas. Pekerjaan yang ditolak dua kali dicoba ulang pada detik 0,51 dan
+1,52, yaitu jeda dasar lalu dua kali jeda dasar. Pekerjaan yang
+\textit{worker}-nya mati sesudah mengirim dikirim ulang, lalu ditahan
+pemeriksaan duplikat sebelum menyentuh tujuannya.
+
+Pesan utama bab ini adalah tempat jaminan itu ditegakkan. Antrean hanya dapat
+menjamin pekerjaan tidak hilang. Jaminan bahwa akibatnya tidak terjadi dua
+kali hanya dapat ditegakkan \textit{consumer}, dengan id pekerjaan yang tetap
+dan satu pemeriksaan yang dilakukan sebelum pekerjaannya dikerjakan.
 
 \section{Latihan}
 
+Seluruh file yang dipakai pada latihan ini tersedia di
+\berkas{sources/chapter13/}, dihitung relatif terhadap akar repositori.
+Latihan ini hanya membutuhkan Python 3, tanpa Docker dan tanpa pustaka
+tambahan, termasuk WebSocket-nya.
+
+Seluruh permintaan diarahkan ke layanan yang berjalan di komputer sendiri,
+dan sifatnya mengamati, bukan membebani. Angka milidetik tiap mahasiswa akan
+berbeda, sedangkan pola perbandingannya dan jumlah percobaannya akan sama.
+
+Penyiapannya tiga perintah, dan urutannya berpengaruh, seperti pada Listing
+\ref{lst:c13-siapkan}.
+
+\begin{lstlisting}[language=bash, caption={Menyalakan ketiga layanan, tersedia di \berkas{sources/chapter13/}}, label={lst:c13-siapkan}]
+cd sources/chapter13
+python3 aplikasi.py &
+python3 webhook.py &
+python3 websocket.py &
+
+# Keluarannya:
+# Melayani di http://127.0.0.1:8100/sse dan /polling
+# Webhook di http://127.0.0.1:8102/webhook, dua percobaan pertama ditolak
+# WebSocket di ws://127.0.0.1:8101/
+\end{lstlisting}
+
+\subsection*{Latihan 1: Membandingkan Tiga Transport}
+
+Latihan ini mengukur keterlambatan dan biaya ketiga transport pada peristiwa
+yang sama, lalu memisahkan biaya yang terlihat dari biaya yang tersembunyi.
+
 \begin{enumerate}
-  \item % TODO
-  \item % TODO
+  \item Jalankan \berkas{ukur-transport.py}, seperti pada Listing
+        \ref{lst:c13-lat1-jalan}, lalu catat ketiga barisnya.
+  \item Catat jumlah permintaan tiap transport, lalu hitung berapa permintaan
+        yang jawabannya kosong pada varian \textit{polling}.
+  \item Buka \texttt{http://127.0.0.1:8100/sse} dengan \texttt{curl -sN},
+        lalu terbitkan satu peristiwa dari terminal lain. Catat bentuk blok
+        yang tiba.
+  \item Isi Tabel \ref{tab:c13-lat1-hasil}. Tabel \ref{tab:c13-lat1-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa keterlambatan
+        \textit{polling} tidak membaik walaupun servernya cepat? Kedua,
+        mengapa kolom byte tidak cukup untuk menilai biaya \textit{polling}?
+        Ketiga, kapan WebSocket pantas dipilih walaupun SSE lebih sederhana?
 \end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Mengukur ketiga transport, tersedia di \berkas{sources/chapter13/ukur-transport.py}}, label={lst:c13-lat1-jalan}]
+python3 ukur-transport.py
+
+# Keluarannya:
+#   Transport   Peristiwa  Tengah ms  Tertinggi     Byte  Permintaan
+#   polling            10      199.8      202.0      639          11
+#   sse                10        1.8        2.0      400           1
+#   websocket          10        1.9        2.1      490           1
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 1 yang sudah terisi}
+  \label{tab:c13-lat1-contoh}
+  \begin{tabularx}{\textwidth}{Xlll}
+    \hline
+    \textbf{Transport} & \textbf{Tengah ms} & \textbf{Byte} & \textbf{Permintaan} \\
+    \hline
+    \textit{polling} 0,5 detik & 199,8 & 639 & 11 \\
+    \hline
+    SSE & 1,8 & 400 & 1 \\
+    \hline
+    WebSocket & 1,9 & 490 & 1 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 1}
+  \label{tab:c13-lat1-hasil}
+  \begin{tabularx}{\textwidth}{Xlll}
+    \hline
+    \textbf{Transport} & \textbf{Tengah ms} & \textbf{Byte} & \textbf{Permintaan} \\
+    \hline
+    \textit{polling} 0,5 detik & \dots & \dots & \dots \\
+    \hline
+    SSE & \dots & \dots & \dots \\
+    \hline
+    WebSocket & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection*{Latihan 2: Jeda Polling dan Keterlambatannya}
+
+Latihan ini membuktikan bahwa keterlambatan \textit{polling} ditentukan
+jedanya, dan bahwa memperkecil jeda membayar dengan jumlah permintaan.
+
+\begin{enumerate}
+  \item Ubah \texttt{JEDA\_POLLING\_DETIK} di \berkas{ukur-transport.py}
+        menjadi 0,1 lalu jalankan pengukurannya. Catat keterlambatan dan
+        jumlah permintaannya.
+  \item Ulangi dengan nilai 0,5 dan 1,0.
+  \item Bandingkan ketiganya dengan selisih jeda penerbitan peristiwa, yaitu
+        \texttt{JEDA\_ANTARPENERBITAN\_DETIK} yang bernilai 0,3 detik.
+  \item Isi Tabel \ref{tab:c13-lat2-hasil}. Tabel \ref{tab:c13-lat2-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab dua pertanyaan berikut. Pertama, mengapa keterlambatannya
+        mendekati jeda \textit{polling} dikurangi jeda penerbitan, bukan
+        setengah jeda \textit{polling}? Kedua, pada beban nyata dengan
+        peristiwa yang datang sembarang waktu, berapa keterlambatan rata-rata
+        yang pantas diharapkan?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Mengukur satu transport pada beberapa jeda, memakai \berkas{sources/chapter13/ukur-transport.py}}, label={lst:c13-lat2-jalan}]
+# JEDA_POLLING_DETIK diubah, lalu pengukurannya dijalankan ulang:
+python3 ukur-transport.py
+
+# Baris polling pada tiga nilai jeda, 0.1 lalu 0.5 lalu 1.0 detik:
+#   polling            10        3.3        5.3      997          31
+#   polling            10      200.2      202.6      657          11
+#   polling            10      700.1      701.0      657          11
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 2 yang sudah terisi}
+  \label{tab:c13-lat2-contoh}
+  \begin{tabularx}{\textwidth}{Xlll}
+    \hline
+    \textbf{Jeda polling} & \textbf{Tengah ms} & \textbf{Byte} & \textbf{Permintaan} \\
+    \hline
+    0,1 detik & 3,3 & 997 & 31 \\
+    \hline
+    0,5 detik & 200,2 & 657 & 11 \\
+    \hline
+    1,0 detik & 700,1 & 657 & 11 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 2}
+  \label{tab:c13-lat2-hasil}
+  \begin{tabularx}{\textwidth}{Xlll}
+    \hline
+    \textbf{Jeda polling} & \textbf{Tengah ms} & \textbf{Byte} & \textbf{Permintaan} \\
+    \hline
+    0,1 detik & \dots & \dots & \dots \\
+    \hline
+    0,5 detik & \dots & \dots & \dots \\
+    \hline
+    1,0 detik & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection*{Latihan 3: Retry dan Jeda yang Berlipat}
+
+Latihan ini memperlihatkan jeda \textit{retry} bekerja, dan membuktikan
+angkanya dapat dihitung sebelum diukur.
+
+\begin{enumerate}
+  \item Jalankan \berkas{ukur-antrean.py}, seperti pada Listing
+        \ref{lst:c13-lat3-jalan}, lalu catat keenam percobaannya beserta
+        detiknya.
+  \item Hitung selisih detik antarpercobaan \texttt{kerja-0002}, lalu
+        bandingkan dengan \texttt{JEDA\_DASAR\_DETIK} di
+        \berkas{antrean.py}.
+  \item Ubah \texttt{JEDA\_DASAR\_DETIK} menjadi 1,0 lalu ulangi, dan catat
+        detik percobaan kedua dan ketiganya.
+  \item Isi Tabel \ref{tab:c13-lat3-hasil}. Tabel \ref{tab:c13-lat3-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab tiga pertanyaan berikut. Pertama, berapa lama satu pekerjaan
+        bertahan sebelum percobaan kelimanya, bila jeda dasarnya 0,5 detik?
+        Kedua, mengapa \textit{retry} tanpa jeda memperburuk keadaan? Ketiga,
+        ke mana pekerjaan yang tetap gagal sesudah batas percobaan pantas
+        dipindahkan?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Menjalankan satu daur antrean, tersedia di \berkas{sources/chapter13/ukur-antrean.py}}, label={lst:c13-lat3-jalan}]
+python3 ukur-antrean.py
+
+# Keluarannya:
+#   Pekerjaan    Jenis                 Ke   Detik  Hasil
+#   kerja-0001   kirim-laporan          1    0.01  terkirim dan di-ack
+#   kerja-0002   gagal-dua-kali         1    0.01  gagal, webhook 500
+#   kerja-0003   crash-setelah-kirim    1    0.01  terkirim, mati sebelum ack
+#   kerja-0002   gagal-dua-kali         2    0.51  gagal, webhook 500
+#   kerja-0003   crash-setelah-kirim    2    0.51  duplikat ditahan
+#   kerja-0002   gagal-dua-kali         3    1.52  terkirim dan di-ack
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 3 yang sudah terisi}
+  \label{tab:c13-lat3-contoh}
+  \begin{tabularx}{\textwidth}{Xlll}
+    \hline
+    \textbf{Jeda dasar} & \textbf{Percobaan 2} & \textbf{Percobaan 3} & \textbf{Selisih} \\
+    \hline
+    0,5 detik & 0,51 & 1,52 & 0,5 lalu 1,0 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 3}
+  \label{tab:c13-lat3-hasil}
+  \begin{tabularx}{\textwidth}{Xlll}
+    \hline
+    \textbf{Jeda dasar} & \textbf{Percobaan 2} & \textbf{Percobaan 3} & \textbf{Selisih} \\
+    \hline
+    0,5 detik & \dots & \dots & \dots \\
+    \hline
+    1,0 detik & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection*{Latihan 4: Duplikat dan Consumer Idempoten}
+
+Latihan ini membuktikan bahwa pengiriman dapat terjadi dua kali, dan bahwa
+akibat gandanya hanya dapat ditahan \textit{consumer}.
+
+\begin{enumerate}
+  \item Dari hasil Latihan 3, catat jumlah percobaan \textit{worker} dan
+        jumlah pengiriman yang tiba di \textit{webhook}.
+  \item Catat pekerjaan mana yang dikirim dua kali oleh \textit{worker}
+        tetapi hanya sekali tiba di \textit{webhook}.
+  \item Matikan pemeriksaan duplikat dengan memberi komentar pada pemanggilan
+        \texttt{sudah\_diproses} di \berkas{worker.py}, jalankan ulang, lalu
+        catat jumlah pengiriman yang tiba sekarang.
+  \item Pulihkan kembali pemeriksaannya.
+  \item Isi Tabel \ref{tab:c13-lat4-hasil}. Tabel \ref{tab:c13-lat4-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa id pekerjaan harus
+        tetap pada tiap percobaan? Kedua, mengapa pemeriksaan duplikat
+        diletakkan sebelum pengiriman, bukan sesudahnya? Ketiga, pekerjaan
+        apa saja yang akibatnya memang tidak berubah walaupun dikerjakan dua
+        kali?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Membandingkan percobaan dengan pengiriman yang tiba, tersedia di \berkas{sources/chapter13/ukur-antrean.py}}, label={lst:c13-lat4-jalan}]
+python3 ukur-antrean.py | tail -3
+
+# Keluarannya:
+#   Percobaan worker: 6, pengiriman tiba: 5, pekerjaan tersisa: 0,
+#   ditandai diproses: 3
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 4 yang sudah terisi}
+  \label{tab:c13-lat4-contoh}
+  \begin{tabularx}{\textwidth}{Xlll}
+    \hline
+    \textbf{Keadaan} & \textbf{Percobaan} & \textbf{Tiba} & \textbf{Akibat ganda} \\
+    \hline
+    pemeriksaan duplikat hidup & 6 & 5 & tidak ada \\
+    \hline
+    \texttt{kerja-0003} saja & 2 & 1 & tidak ada \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 4}
+  \label{tab:c13-lat4-hasil}
+  \begin{tabularx}{\textwidth}{Xlll}
+    \hline
+    \textbf{Keadaan} & \textbf{Percobaan} & \textbf{Tiba} & \textbf{Akibat ganda} \\
+    \hline
+    pemeriksaan duplikat hidup & \dots & \dots & \dots \\
+    \hline
+    pemeriksaan duplikat mati & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
