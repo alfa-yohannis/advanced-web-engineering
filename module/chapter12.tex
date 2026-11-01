@@ -1,55 +1,851 @@
 \chapter{Type Safety, Kontrak API, dan Desain Layanan}
+\label{ch:kontrak}
 
 \section*{Tujuan Pembelajaran}
 \begin{itemize}
-  \item % TODO
-  \item % TODO
-  \item % TODO
+  \item Memformalkan satu API (Application Programming Interface) sebagai
+        kontrak OpenAPI, lalu meng-\textit{generate} tipe kliennya dari
+        kontrak tersebut.
+  \item Membedakan validasi \textit{runtime} dari pemeriksaan
+        \textit{compile-time}, lalu menunjukkan kesalahan yang hanya
+        tertangkap masing-masing.
+  \item Memisahkan perubahan kontrak yang aman dari yang merusak klien lama,
+        lalu membuktikannya pada server yang berjalan.
 \end{itemize}
 
 \section{Pendahuluan}
 
-% TODO
+API biasanya tidak dirancang, melainkan tumbuh. Satu alamat ditambahkan,
+satu field disisipkan, dan satu nama diubah karena nama lamanya terasa
+kurang tepat. Selama yang memakai API itu hanya penulisnya sendiri, caranya
+bekerja. Begitu ada klien lain, tiap perubahan menjadi taruhan.
 
-\section{TypeScript untuk Sistem Besar}
+Bab ini memindahkan API dari kebiasaan menjadi kontrak. Kontraknya ditulis
+sebagai dokumen OpenAPI, lalu dokumen itu dipakai tiga kali: untuk
+meng-\textit{generate} tipe di sisi klien, untuk memvalidasi isi permintaan
+di batas sistem, dan untuk menguji apakah jawaban server masih sesuai
+janjinya. Bagian kedua bab membahas keputusan desain yang menyertainya, yaitu
+bentuk \textit{error}, \textit{pagination}, idempotensi, dan pembatasan laju.
 
-% TODO
+Demonya satu API katalog berisi 48 buku, dilayani dalam dua versi sekaligus,
+dengan satu \textit{gateway} di depannya. Referensi utamanya adalah OpenAPI
+3.1 untuk bentuk kontraknya \cite{openapi-31}, JSON Schema 2020-12 untuk
+skemanya \cite{jsonschema-2020}, RFC 9457 untuk bentuk \textit{error}
+\cite{rfc9457}, RFC 9110 untuk arti metode yang idempoten \cite{rfc9110},
+dan disertasi Fielding untuk \textit{constraint} REST (Representational
+State Transfer) \cite{fielding2000rest}.
 
-\section{Validasi Runtime dan Compile-Time}
+\section{Kontrak sebagai Sumber Kebenaran}
 
-% TODO
+Kontrak adalah satu dokumen yang menyebutkan alamat, parameter, bentuk isi,
+dan bentuk jawaban sebuah API. Pada pengembangan \textit{contract-first},
+dokumen itu ditulis lebih dahulu, dan kode mengikutinya. Arah sebaliknya juga
+mungkin, yaitu kontrak dibuat dari kode, tetapi arah itu membuat kontrak
+selalu tertinggal satu langkah.
 
-\section{OpenAPI dan Pengembangan Contract-First}
+Analoginya seperti gambar kerja sebuah bangunan. Tukang tidak menebak lebar
+pintu dari dinding yang sudah berdiri, dan gambar kerjanya tidak digambar
+ulang sesudah pintunya dipasang. Gambar itu yang menjadi acuan, dan perubahan
+apa pun dibahas di gambarnya lebih dahulu.
 
-% TODO
+Gambar \ref{fig:kontrak} memperlihatkan satu kontrak yang dipakai empat kali
+pada demo bab ini.
 
-\section{DTO dan Validasi di Batas Sistem}
+\begin{figure}[!htb]
+  \centering
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    kotak/.style={draw, rounded corners, minimum height=0.8cm,
+                  minimum width=2.7cm, align=center, font=\scriptsize\bfseries},
+    panah/.style={-{Stealth[length=2mm]}, thick}
+  ]
+    \node[kotak, fill=praditagreen!15, minimum height=1.0cm] (kontrak) at (0,0) {kontrak.json\\{\tiny\mdseries OpenAPI 3.1, 5 skema}};
+    \node[kotak, fill=orange!12] (tipe) at (5.0,1.6) {Tipe TypeScript\\{\tiny\mdseries 50 baris, di-generate}};
+    \node[kotak, fill=blue!8] (validasi) at (5.0,0.5) {Validasi di batas\\{\tiny\mdseries jsonschema}};
+    \node[kotak, fill=blue!8] (uji) at (5.0,-0.6) {Uji kontrak\\{\tiny\mdseries jawaban server}};
+    \node[kotak, fill=gray!35] (diff) at (5.0,-1.7) {Beda versi\\{\tiny\mdseries aman atau merusak}};
 
-% TODO
+    \draw[panah] (kontrak.east) -- ++(0.4,0) |- (tipe.west);
+    \draw[panah] (kontrak.east) -- ++(0.4,0) |- (validasi.west);
+    \draw[panah] (kontrak.east) -- ++(0.4,0) |- (uji.west);
+    \draw[panah] (kontrak.east) -- ++(0.4,0) |- (diff.west);
+  \end{tikzpicture}
+  \caption{Satu kontrak dipakai empat kali: tipe, validasi, pengujian, dan
+           perbandingan versi}
+  \label{fig:kontrak}
+\end{figure}
 
-\section{Kompatibilitas dan Versioning API}
+Listing \ref{lst:kontrak12} memperlihatkan satu skema di dalam kontrak itu.
+Dua hal pada skema tersebut menentukan perilaku seluruh demo:
+\texttt{required} menyebut field yang wajib ada, dan
+\texttt{additionalProperties} bernilai \texttt{false} menolak field yang
+tidak disebutkan.
 
-% TODO
+\begin{lstlisting}[language=json, caption={Satu skema di dalam kontrak, tersedia di \berkas{sources/chapter12/kontrak.json}}, label={lst:kontrak12}]
+      "PesananBaru": {
+        "type": "object",
+        "required": ["id_buku", "jumlah"],
+        "additionalProperties": false,
+        "properties": {
+          "id_buku": { "type": "integer", "minimum": 1 },
+          "jumlah": { "type": "integer", "minimum": 1, "maximum": 10 }
+        }
+      }
+\end{lstlisting}
 
-\section{REST, GraphQL, dan RPC}
+\section{Validasi di Batas Sistem}
 
-% TODO
+Validasi di batas sistem berarti satu pemeriksaan di pintu masuk, bukan
+pemeriksaan yang diulang di tiap fungsi. Isi permintaan diperiksa terhadap
+skema di kontrak, dan sesudah lolos, kode di belakangnya boleh
+memperlakukannya sebagai data yang bentuknya sudah pasti.
 
-\section{Pagination, Filtering, Model Error, dan Idempotency}
+Listing \ref{lst:validasi12} memperlihatkan seluruh validasinya. Panjangnya
+delapan baris, karena aturannya tidak ditulis di sana, melainkan dibaca dari
+kontrak.
 
-% TODO
+\begin{lstlisting}[style=PythonStyle, caption={Validasi di batas sistem memakai skema dari kontrak, tersedia di \berkas{sources/chapter12/aplikasi.py}}, label={lst:validasi12}]
+def periksa_isi(versi, isi):
+  """Memvalidasi isi permintaan terhadap skema PesananBaru di kontrak.
 
-\section{Rate Limiting, API Gateway, dan Backend for Frontend}
+  Inilah validasi di batas sistem: satu pemeriksaan di pintu masuk, memakai
+  skema yang sama dengan yang dipakai meng-generate tipe kliennya.
+  """
+  try:
+    jsonschema.validate(isi, skema(versi, "PesananBaru"))
+  except jsonschema.ValidationError as kesalahan:
+    return kesalahan.message
+  return None
+\end{lstlisting}
 
-% TODO
+Tabel \ref{tab:validasi} memuat hasil pengiriman lima isi permintaan ke
+alamat \texttt{/v1/pesanan}, termasuk yang sengaja salah. Statusnya
+dibandingkan dengan yang dijanjikan kontrak.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lima isi permintaan di batas sistem, hasil pengukuran nyata}
+  \label{tab:validasi}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Isi yang dikirim} & \textbf{Status} & \textbf{Alasan dari server} \\
+    \hline
+    sesuai kontrak & 201 & diterima \\
+    \hline
+    field wajib \texttt{id\_buku} hilang & 422 & isi tidak sesuai \\
+    \hline
+    \texttt{id\_buku} bertipe string & 422 & isi tidak sesuai \\
+    \hline
+    \texttt{jumlah} bernilai 99 & 422 & isi tidak sesuai \\
+    \hline
+    ada field asing \texttt{catatan} & 422 & isi tidak sesuai \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Baris terakhir sering mengejutkan. Field asing ditolak, bukan diabaikan,
+karena \texttt{additionalProperties} bernilai \texttt{false}. Pilihan itu
+punya dua akibat. Pertama, salah tulis nama field ketahuan seketika, bukan
+berujung pada data yang hilang tanpa pesan. Kedua, menambah field baru
+menjadi perubahan kontrak yang harus disengaja.
+
+\section{Tipe Hasil Generate dan Validasi Compile-Time}
+
+Validasi \textit{runtime} memeriksa data yang benar-benar tiba, dan baru
+berjalan ketika programnya jalan. Pemeriksaan \textit{compile-time}
+memeriksa kode sebelum dijalankan, dan tidak pernah melihat data sungguhan.
+Keduanya diperlukan, dan Tabel \ref{tab:dua-validasi} memisahkan tugasnya.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Validasi \textit{runtime} lawan pemeriksaan \textit{compile-time}}
+  \label{tab:dua-validasi}
+  \begin{tabularx}{\textwidth}{lXX}
+    \hline
+    \textbf{Hal} & \textbf{Runtime} & \textbf{Compile-time} \\
+    \hline
+    Yang diperiksa & data yang tiba & kode yang ditulis \\
+    \hline
+    Kapan & saat permintaan dilayani & sebelum program jalan \\
+    \hline
+    Menangkap & isi permintaan yang salah & pemakaian field yang tidak ada \\
+    \hline
+    Tidak menangkap & salah tulis di kode klien & data yang dikirim klien lain \\
+    \hline
+    Pada demo ini & \texttt{jsonschema} di server & \texttt{tsc --strict} di klien \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Tipe di sisi klien tidak ditulis tangan. Generator membacanya dari kontrak,
+lalu menuliskannya sebagai tipe TypeScript, termasuk field opsional dan
+daftar nilai yang diperbolehkan. Dari kontrak berisi lima skema dan dua
+jalur, hasilnya 50 baris tipe. Listing \ref{lst:tipe12} memuat sebagiannya.
+
+\begin{lstlisting}[language=TypeScript, caption={Tipe hasil generate dari kontrak, tersedia di \berkas{sources/chapter12/tipe-katalog.ts}}, label={lst:tipe12}]
+export interface HalamanBuku {
+  item: Buku[];
+  halaman: number;
+  per_halaman: number;
+  total: number;
+  berikutnya?: string;
+}
+
+export interface PesananBaru {
+  id_buku: number;
+  jumlah: number;
+}
+
+export interface Pesanan {
+  id: string;
+  id_buku: number;
+  jumlah: number;
+  status: "diterima" | "diproses";
+}
+\end{lstlisting}
+
+Dua hal pada potongan itu datang langsung dari kontrak. Tanda tanya pada
+\texttt{berikutnya} datang dari daftar \texttt{required}, sehingga klien wajib
+memeriksanya sebelum dipakai. Daftar nilai pada \texttt{status} datang dari
+\texttt{enum}, sehingga membandingkan status dengan nilai yang tidak ada di
+kontrak pun tertolak compiler.
+
+Gunanya terlihat ketika kontraknya berubah. Pada versi 2, field
+\texttt{harga} berganti nama menjadi \texttt{harga\_rupiah}. Klien lama yang
+masih membaca \texttt{harga} langsung ditolak, seperti pada Listing
+\ref{lst:tsc12}.
+
+\begin{lstlisting}[language=bash, caption={Kesalahan yang tertangkap sebelum program jalan, memakai \berkas{sources/chapter12/pakai-tipe-salah.ts}}, label={lst:tsc12}]
+../chapter06/node_modules/.bin/tsc --noEmit --strict --ignoreConfig \
+  pakai-tipe-salah.ts
+
+# Keluarannya:
+# pakai-tipe-salah.ts(15,15): error TS2339: Property 'harga' does not
+# exist on type 'Buku'.
+\end{lstlisting}
+
+\section{Model Error, Pagination, dan Filtering}
+
+Bentuk \textit{error} yang seragam membuat klien cukup menulis satu
+penanganan kesalahan. Demo bab ini memakai Problem Details, yaitu
+\texttt{application/problem+json} dengan field \texttt{type},
+\texttt{title}, \texttt{status}, dan \texttt{detail} \cite{rfc9457}. Nilai
+\texttt{detail} berisi pesan dari validator, sehingga klien tahu field mana
+yang salah tanpa menebak.
+
+\textit{Pagination} dan \textit{filtering} ditulis di kontrak sebagai
+parameter, lengkap dengan batasnya. Parameter \texttt{per\_halaman} punya
+nilai bawaan 10 dan batas 50, dan batas itu bukan hiasan: permintaan
+\texttt{per\_halaman=99} dijawab 422 beserta alasannya. Tabel
+\ref{tab:paging} memuat ketiga jawaban yang diukur.
+
+\begin{table}[!htb]
+  \centering
+  \caption{\textit{Pagination}, \textit{filtering}, dan batasnya, hasil
+           pengukuran nyata pada katalog 48 buku}
+  \label{tab:paging}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Permintaan} & \textbf{Status} & \textbf{Isi jawaban} \\
+    \hline
+    \texttt{/v1/buku} & 200 & 10 item, total 48, ada \texttt{berikutnya} \\
+    \hline
+    \texttt{/v1/buku?halaman=2} & 200 & 10 item, halaman 2 \\
+    \hline
+    \texttt{/v1/buku?per\_halaman=99} & 422 & Problem Details, batas 50 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Ketiga jawaban itu divalidasi terhadap skema di kontrak, dan ketiganya
+sesuai. Pengujian seperti itu murah dan sering menyelamatkan: jawaban yang
+bentuknya menyimpang dari kontrak ketahuan di mesin pengembang, bukan di
+aplikasi klien.
+
+\section{Idempotency}
+
+Metode \texttt{GET} tidak mengubah apa pun, sehingga mengulanginya aman.
+\texttt{POST} tidak punya jaminan itu \cite{rfc9110}. Pada jaringan yang
+putus sesudah permintaan terkirim tetapi sebelum jawabannya tiba, klien tidak
+tahu pesanannya sudah masuk atau belum, dan satu-satunya pilihannya adalah
+mengirim ulang.
+
+Analoginya seperti menyetor uang kuliah di loket. Mahasiswa membawa nomor
+setoran, dan petugas mencatat nomor itu. Ketika mahasiswa yang sama datang
+lagi dengan nomor yang sama karena struknya hilang, petugas tidak mencatat
+setoran kedua, melainkan mencetak ulang struk yang sudah ada.
+
+Nomor itulah \textit{idempotency key}. Listing \ref{lst:idempoten12}
+memperlihatkan penanganannya, termasuk kasus yang mudah terlewat: kunci yang
+sama dipakai untuk isi yang berbeda.
+
+\begin{lstlisting}[style=PythonStyle, caption={Satu kunci, satu pesanan, tersedia di \berkas{sources/chapter12/aplikasi.py}}, label={lst:idempoten12}]
+def buat_pesanan(versi, isi, kunci):
+  """Membuat satu pesanan, atau mengembalikan pesanan lama untuk kunci sama.
+
+  Mengembalikan pasangan (pesanan, status). Status 200 berarti kunci yang
+  sama sudah pernah dipakai dengan isi yang sama, sehingga tidak ada pesanan
+  baru yang dibuat.
+  """
+  sidik = json.dumps(isi, sort_keys=True)
+  if kunci in IDEMPOTENSI:
+    sidik_lama, id_pesanan = IDEMPOTENSI[kunci]
+    if sidik_lama != sidik:
+      return None, 409
+    return PESANAN[id_pesanan], 200
+  id_pesanan = f"psn-{len(PESANAN) + 1:04d}"
+  pesanan = {"id": id_pesanan, "id_buku": isi["id_buku"],
+             "jumlah": isi["jumlah"], "status": "diterima"}
+  PESANAN[id_pesanan] = pesanan
+  IDEMPOTENSI[kunci] = (sidik, id_pesanan)
+  return pesanan, 201
+\end{lstlisting}
+
+Tabel \ref{tab:idempoten} memuat hasilnya pada server yang baru menyala.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Tiga permintaan dengan kunci idempotensi, hasil pengukuran nyata}
+  \label{tab:idempoten}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Permintaan} & \textbf{Status} & \textbf{Hasil} \\
+    \hline
+    kunci baru & 201 & pesanan \texttt{psn-0002} dibuat \\
+    \hline
+    kunci sama, isi sama & 200 & \texttt{psn-0002} dikembalikan, bukan pesanan baru \\
+    \hline
+    kunci sama, isi beda & 409 & ditolak, kunci sudah dipakai \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Perhatikan status pada baris kedua. Jawabannya 200, bukan 201, karena tidak
+ada yang dibuat. Selisih satu angka itu yang membedakan "pesanan Anda sudah
+masuk" dari "pesanan Anda masuk dua kali".
+
+\section{Kompatibilitas dan Versioning}
+
+Perubahan kontrak dibagi dua. Perubahan yang aman hanya menambah hal
+opsional, sehingga klien lama tidak merasakan apa-apa. Perubahan yang merusak
+menghapus atau mengganti hal yang wajib, dan klien lama berhenti bekerja
+walaupun servernya sehat.
+
+Pembagian itu dapat diperiksa mesin, bukan diingat orang. Demo bab ini
+membandingkan kedua kontrak lalu menamai tiap perubahannya, seperti pada
+Tabel \ref{tab:beda-versi}.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Perubahan kontrak versi 1 ke versi 2, hasil perbandingan otomatis}
+  \label{tab:beda-versi}
+  \begin{tabularx}{\textwidth}{Xl}
+    \hline
+    \textbf{Perubahan} & \textbf{Akibat} \\
+    \hline
+    \texttt{Buku.harga} wajib dihapus & merusak klien lama \\
+    \hline
+    \texttt{Buku.harga\_rupiah} wajib ditambah & merusak klien lama \\
+    \hline
+    \texttt{Buku.penerbit} opsional ditambah & aman \\
+    \hline
+    \texttt{Pesanan.status} enum menerima \texttt{dibatalkan} & merusak klien lama \\
+    \hline
+    \texttt{PesananBaru.jumlah} batas naik ke 20 & aman bagi klien lama \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Baris terakhir perlu dibaca dua arah. Batas yang dilonggarkan aman bagi klien
+lama, karena permintaan lamanya tetap sah. Arah sebaliknya tidak aman: klien
+versi 2 yang memesan 15 buku ditolak 422 oleh versi 1, sebab di sana batasnya
+masih 10.
+
+Tabel \ref{tab:uji-versi} memuat pengujiannya pada server yang berjalan.
+Keempat baris itu diukur sekali jalan, dengan skema versi 1 sebagai pemeriksa.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Klien lama dan klien baru diuji ke kedua versi, hasil pengukuran
+           nyata}
+  \label{tab:uji-versi}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Yang diuji} & \textbf{Status} & \textbf{Hasil} \\
+    \hline
+    klien v1 membaca \texttt{/v1/buku} & 200 & jalan \\
+    \hline
+    klien v1 membaca \texttt{/v2/buku} & 200 & gagal, \texttt{harga} tidak ada \\
+    \hline
+    klien v2 memesan 15 ke \texttt{/v2} & 201 & diterima \\
+    \hline
+    klien v2 memesan 15 ke \texttt{/v1} & 422 & isi tidak sesuai \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Baris kedua memuat pelajaran terpentingnya. Statusnya 200, dan servernya
+tidak salah sedikit pun. Yang rusak adalah kesepakatannya, dan kerusakan itu
+hanya terlihat bila ada yang memvalidasi jawaban terhadap kontrak lama. Karena
+itu versi lama tetap dilayani di alamatnya sendiri, dan klien dipindahkan
+ketika siap, bukan ketika servernya di-\textit{deploy}.
+
+\section{Rate Limiting dan API Gateway}
+
+\textit{Gateway} adalah satu pintu masuk di depan beberapa layanan. Tugasnya
+hal-hal yang berlaku bagi semua permintaan: membatasi laju, menempelkan
+penanda permintaan, memeriksa penanda identitas, lalu meneruskan sisanya.
+Dengan begitu aturan itu ditulis sekali, bukan di tiap layanan.
+
+Pembatasan lajunya memakai \textit{token bucket}. Tiap klien punya ember
+berisi token, satu permintaan memakai satu token, dan embernya terisi ulang
+dengan laju tetap. Analoginya seperti kupon fotokopi gratis di sekretariat:
+jatahnya diisi berkala, boleh dipakai sekaligus atau sedikit-sedikit, dan
+begitu habis harus menunggu pengisian berikutnya.
+
+Gambar \ref{fig:ember} memperlihatkan jalannya satu permintaan pada demo ini,
+yang embernya berisi 20 token dan terisi 5 token per detik.
+
+\begin{figure}[!htb]
+  \centering
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    kotak/.style={draw, rounded corners, minimum height=0.85cm,
+                  minimum width=2.3cm, align=center, font=\scriptsize\bfseries},
+    panah/.style={-{Stealth[length=2mm]}, thick}
+  ]
+    \node[kotak, fill=blue!8] (klien) at (0,0) {Klien};
+    \node[kotak, fill=orange!12, minimum height=1.1cm] (ember) at (3.3,0) {Gateway\\{\tiny\mdseries ember 20 token}\\{\tiny\mdseries isi 5 per detik}};
+    \node[kotak, fill=praditagreen!15] (aplikasi) at (7.0,0.7) {Aplikasi 8090\\{\tiny\mdseries v1 dan v2}};
+    \node[kotak, fill=red!22] (tolak) at (7.0,-0.8) {429\\{\tiny\mdseries Retry-After}};
+
+    \draw[panah] (klien) -- (ember);
+    \draw[panah] (ember.east) -- ++(0.3,0) |- node[font=\tiny, above, pos=0.75] {token ada} (aplikasi.west);
+    \draw[panah] (ember.east) -- ++(0.3,0) |- node[font=\tiny, below, pos=0.75] {token habis} (tolak.west);
+  \end{tikzpicture}
+  \caption{\textit{Token bucket} di \textit{gateway}: lonjakan pendek
+           dilayani, laju rata-rata dibatasi}
+  \label{fig:ember}
+\end{figure}
+
+Tabel \ref{tab:gateway} memuat hasil pengukurannya. Tiga tahap diukur
+berurutan, dan angkanya cocok dengan pengaturan embernya.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lonjakan permintaan di \textit{gateway}, hasil pengukuran nyata}
+  \label{tab:gateway}
+  \begin{tabularx}{\textwidth}{Xllll}
+    \hline
+    \textbf{Tahap} & \textbf{200} & \textbf{429} & \textbf{Retry-After} & \textbf{Lama} \\
+    \hline
+    30 permintaan sekaligus & 20 & 10 & 0,19 s & 0,02 s \\
+    \hline
+    setelah menunggu 2 detik & 10 & 20 & 0,16 s & 0,02 s \\
+    \hline
+    klien lain, ember sendiri & 20 & 10 & 0,19 s & 0,02 s \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Ketiga baris itu dapat dihitung sebelum diukur, dan itulah sebabnya layak
+dibaca teliti. Baris pertama melayani 20 permintaan karena embernya berisi 20
+token. Baris kedua melayani 10, karena menunggu 2 detik mengisi $2 \times 5$
+token. Baris ketiga melayani 20 lagi karena embernya milik klien lain, bukan
+milik sistem.
+
+Pola BFF (Backend for Frontend) duduk satu lapis di atasnya, dan sudah
+dibahas di Bab 8. Bedanya begini. \textit{Gateway} tidak tahu kebutuhan
+layarnya dan memperlakukan semua klien sama, sedangkan BFF memang dibuat
+untuk satu jenis klien dan boleh menggabungkan beberapa jawaban menjadi satu
+\cite{newman-bff}.
+
+\section{Gaya API: REST, GraphQL, dan RPC}
+
+Tiga gaya API dipakai luas, dan ketiganya menjawab pertanyaan yang sama
+dengan cara berbeda. REST menyusun API sebagai kumpulan sumber daya beralamat
+sendiri, dengan metode HTTP sebagai kata kerjanya \cite{fielding2000rest}.
+GraphQL menyediakan satu alamat, dan kliennya yang menyebutkan field apa saja
+yang diinginkan \cite{graphql-spec}. RPC (Remote Procedure Call) memandang
+API sebagai pemanggilan fungsi, dan gRPC menuliskan kontraknya sebagai berkas
+\textit{protocol buffer} \cite{grpc-docs}.
+
+Tabel \ref{tab:gaya-api} membandingkan ketiganya pada hal-hal yang biasanya
+menentukan pilihan.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Tiga gaya API dan \textit{tradeoff}-nya}
+  \label{tab:gaya-api}
+  \begin{tabularx}{\textwidth}{lXXX}
+    \hline
+    \textbf{Hal} & \textbf{REST} & \textbf{GraphQL} & \textbf{RPC} \\
+    \hline
+    Bentuk & sumber daya beralamat & satu alamat, \textit{query} klien & daftar fungsi \\
+    \hline
+    Kontrak & OpenAPI & skema GraphQL & \textit{protocol buffer} \\
+    \hline
+    Cache HTTP & langsung dapat dipakai & perlu usaha tambahan & umumnya tidak \\
+    \hline
+    Ambil data berlebih & sering & jarang & tergantung fungsinya \\
+    \hline
+    Cocok untuk & API publik & layar dengan kebutuhan beragam & layanan ke layanan \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Pilihan gayanya jarang menjadi penentu mutu API. Yang menentukan adalah hal
+yang sama pada ketiganya, yaitu ada kontrak yang dapat dibaca mesin, bentuk
+\textit{error} yang seragam, batas laju yang jelas, dan perubahan versi yang
+tidak diam-diam.
 
 \section{Ringkasan}
 
-% TODO
+Kontrak memindahkan kesepakatan API dari ingatan ke dokumen. Pada demo bab
+ini, satu dokumen OpenAPI berisi lima skema dan dua jalur dipakai empat kali:
+meng-\textit{generate} 50 baris tipe TypeScript, memvalidasi isi permintaan
+di batas sistem, memvalidasi jawaban server, dan membandingkan dua versi
+kontrak. Tidak ada aturan yang ditulis dua kali, sehingga tidak ada aturan
+yang dapat menyimpang sendiri.
+
+Validasi \textit{runtime} dan pemeriksaan \textit{compile-time} menangkap
+kesalahan yang berbeda. Dari lima isi permintaan yang diuji, empat ditolak
+422, termasuk satu yang hanya menambah field asing. Pemeriksaan
+\textit{compile-time} menangkap hal yang tidak pernah dilihat server, yaitu
+klien yang membaca field \texttt{harga} pada kontrak versi 2, dan menolaknya
+sebagai TS2339 sebelum program jalan.
+
+Idempotensi mengubah pengiriman ulang dari risiko menjadi hal biasa. Kunci
+yang sama dengan isi yang sama dijawab 200 beserta pesanan yang sudah ada,
+bukan 201 beserta pesanan kedua. Kunci yang sama dengan isi berbeda dijawab
+409, karena menerima permintaan itu diam-diam berarti mencatat sesuatu yang
+tidak diminta siapa pun.
+
+Kompatibilitas dapat diperiksa mesin. Perbandingan kedua kontrak menamai lima
+perubahan: dua menghapus dan menambah field wajib, satu menambah field
+opsional yang aman, satu menambah nilai enum, dan satu melonggarkan batas.
+Pada server yang berjalan, klien versi 1 membaca jawaban versi 2 dengan
+status 200 tetapi gagal memakainya, dan kegagalan seperti itu hanya terlihat
+bila ada yang memvalidasinya terhadap kontrak lama.
+
+Pesan utama bab ini adalah tempat aturan disimpan. Aturan yang hidup di
+kontrak dapat di-\textit{generate}, divalidasi, dibandingkan, dan diuji.
+Aturan yang hidup di kepala penulisnya hanya dapat diingat, dan ingatan tidak
+pernah menjadi bagian dari \textit{pipeline}.
 
 \section{Latihan}
 
+Seluruh file yang dipakai pada latihan ini tersedia di
+\berkas{sources/chapter12/}, dihitung relatif terhadap akar repositori.
+Latihan ini membutuhkan Python 3 beserta \texttt{jsonschema}, dan
+\texttt{tsc} yang sudah terpasang di Bab 6. Tidak ada Docker dan tidak ada
+pemasangan npm baru.
+
+Seluruh permintaan diarahkan ke aplikasi dan \textit{gateway} yang berjalan
+di komputer sendiri, dan sifatnya mengamati, bukan membebani. Status dan
+klasifikasi perubahan akan sama pada tiap mahasiswa, sedangkan lama
+pengukuran dan nilai \texttt{Retry-After} akan berbeda sedikit.
+
+Penyiapannya dua perintah, seperti pada Listing \ref{lst:c12-siapkan}.
+
+\begin{lstlisting}[language=bash, caption={Menyalakan aplikasi dan gateway, tersedia di \berkas{sources/chapter12/}}, label={lst:c12-siapkan}]
+cd sources/chapter12
+python3 aplikasi.py &
+python3 gateway.py &
+
+# Keluarannya:
+# Melayani di http://127.0.0.1:8090/v1/buku dengan 48 buku
+# Gateway di http://127.0.0.1:8091/ dengan ember 20 token dan 5 token per detik
+\end{lstlisting}
+
+\subsection*{Latihan 1: Meng-generate Tipe dari Kontrak}
+
+Latihan ini membuktikan bahwa tipe klien dapat diturunkan dari kontrak, dan
+bahwa perubahan kontrak tertangkap compiler sebelum program jalan.
+
 \begin{enumerate}
-  \item % TODO
-  \item % TODO
+  \item Jalankan generatornya untuk kedua kontrak, seperti pada Listing
+        \ref{lst:c12-lat1-jalan}, lalu catat jumlah skema dan jumlah baris
+        hasilnya.
+  \item Periksa seluruh tipe dengan \texttt{tsc} memakai
+        \berkas{tsconfig.json}, lalu catat hasilnya.
+  \item Periksa \berkas{pakai-tipe-salah.ts} sendiri, lalu catat kode
+        kesalahan beserta nomor barisnya.
+  \item Tambahkan satu field opsional pada skema \texttt{Buku} di
+        \berkas{kontrak.json}, jalankan ulang generatornya, lalu catat
+        perubahan pada file tipenya.
+  \item Isi Tabel \ref{tab:c12-lat1-hasil}. Tabel \ref{tab:c12-lat1-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab dua pertanyaan berikut. Pertama, mengapa field yang tidak ada
+        di \texttt{required} di-\textit{generate} dengan tanda tanya? Kedua,
+        kesalahan apa yang tetap lolos dari \texttt{tsc} tetapi tertangkap
+        validasi di server?
 \end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Meng-generate tipe lalu memeriksanya, tersedia di \berkas{sources/chapter12/buat\_tipe.py}}, label={lst:c12-lat1-jalan}]
+python3 buat_tipe.py kontrak.json tipe-katalog.ts
+python3 buat_tipe.py kontrak-v2.json tipe-katalog-v2.ts
+../chapter06/node_modules/.bin/tsc --noEmit -p tsconfig.json
+
+# Keluarannya:
+# 5 skema dan 2 jalur di-generate menjadi tipe-katalog.ts
+# 5 skema dan 2 jalur di-generate menjadi tipe-katalog-v2.ts
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 1 yang sudah terisi}
+  \label{tab:c12-lat1-contoh}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Yang diperiksa} & \textbf{Hasil} & \textbf{Keterangan} \\
+    \hline
+    Jumlah skema dan jalur & 5 dan 2 & dari \berkas{kontrak.json} \\
+    \hline
+    Baris tipe hasil generate & 50 & versi 2 menjadi 51 \\
+    \hline
+    \texttt{tsc} pada seluruh tipe & lolos & tanpa kesalahan \\
+    \hline
+    \texttt{tsc} pada file salah & TS2339 & baris 15, field \texttt{harga} \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 1}
+  \label{tab:c12-lat1-hasil}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Yang diperiksa} & \textbf{Hasil} & \textbf{Keterangan} \\
+    \hline
+    Jumlah skema dan jalur & \dots & \dots \\
+    \hline
+    Baris tipe hasil generate & \dots & \dots \\
+    \hline
+    \texttt{tsc} pada seluruh tipe & \dots & \dots \\
+    \hline
+    \texttt{tsc} pada file salah & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection*{Latihan 2: Validasi di Batas dan Idempotensi}
+
+Latihan ini membuktikan bahwa satu pemeriksaan di pintu masuk cukup untuk
+menolak lima bentuk isi yang salah, dan bahwa pengiriman ulang tidak membuat
+pesanan kedua.
+
+\begin{enumerate}
+  \item Nyalakan ulang aplikasinya, agar nomor pesanannya dimulai dari awal.
+  \item Jalankan \berkas{uji-kontrak.py}, seperti pada Listing
+        \ref{lst:c12-lat2-jalan}, lalu catat sebelas barisnya.
+  \item Kirim satu permintaan dengan kunci idempotensi pilihan sendiri dua
+        kali, lalu catat kedua statusnya dan nomor pesanannya.
+  \item Kirim permintaan ketiga dengan kunci yang sama tetapi
+        \texttt{id\_buku} berbeda, lalu catat statusnya.
+  \item Isi Tabel \ref{tab:c12-lat2-hasil}. Tabel \ref{tab:c12-lat2-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa pengiriman kedua
+        dijawab 200, bukan 201? Kedua, mengapa field asing ditolak, bukan
+        diabaikan? Ketiga, apa yang terjadi bila kunci idempotensinya dibuat
+        dari isi permintaan, bukan dibuat klien?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Menguji validasi dan idempotensi, tersedia di \berkas{sources/chapter12/uji-kontrak.py}}, label={lst:c12-lat2-jalan}]
+python3 uji-kontrak.py
+
+# Keluarannya:
+#   Yang diuji                   Status  Hasil
+#   GET /v1/buku                    200  sesuai skema
+#   sesuai kontrak                  201  sesuai, diterima
+#   field asing                     422  sesuai, isi tidak sesuai
+#   kunci baru                      201  pesanan psn-0002 dibuat
+#   kunci sama, isi sama            200  pesanan psn-0002 dikembalikan, sama
+#   kunci sama, isi beda            409  kunci idempotensi dipakai ulang
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 2 yang sudah terisi}
+  \label{tab:c12-lat2-contoh}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Yang dikirim} & \textbf{Status} & \textbf{Hasil} \\
+    \hline
+    isi sesuai kontrak & 201 & diterima \\
+    \hline
+    field wajib hilang & 422 & isi tidak sesuai \\
+    \hline
+    field asing \texttt{catatan} & 422 & isi tidak sesuai \\
+    \hline
+    kunci sama, isi sama & 200 & pesanan yang sama dikembalikan \\
+    \hline
+    kunci sama, isi beda & 409 & ditolak \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 2}
+  \label{tab:c12-lat2-hasil}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Yang dikirim} & \textbf{Status} & \textbf{Hasil} \\
+    \hline
+    isi sesuai kontrak & \dots & \dots \\
+    \hline
+    field wajib hilang & \dots & \dots \\
+    \hline
+    field asing \texttt{catatan} & \dots & \dots \\
+    \hline
+    kunci sama, isi sama & \dots & \dots \\
+    \hline
+    kunci sama, isi beda & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection*{Latihan 3: Memisahkan Perubahan Aman dari yang Merusak}
+
+Latihan ini membuktikan bahwa jenis perubahan kontrak dapat diputuskan mesin,
+dan bahwa klien lama dapat rusak walaupun server menjawab 200.
+
+\begin{enumerate}
+  \item Jalankan \berkas{uji-kompatibilitas.py}, seperti pada Listing
+        \ref{lst:c12-lat3-jalan}, lalu catat lima perubahan beserta
+        akibatnya.
+  \item Catat keempat baris pengujian pada server, terutama statusnya.
+  \item Tambahkan satu field opsional pada skema \texttt{Buku} di
+        \berkas{kontrak-v2.json}, jalankan ulang, lalu catat perubahannya di
+        tabel perbandingan.
+  \item Ganti nama satu field wajib di \berkas{kontrak-v2.json}, jalankan
+        ulang, lalu catat berapa baris "merusak klien lama" yang muncul.
+  \item Isi Tabel \ref{tab:c12-lat3-hasil}. Tabel \ref{tab:c12-lat3-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa mengganti nama satu
+        field menghasilkan dua baris perubahan? Kedua, mengapa menambah nilai
+        enum merusak klien lama? Ketiga, apa yang harus disiapkan sebelum
+        versi 1 dimatikan?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Membandingkan kontrak lalu mengujinya, tersedia di \berkas{sources/chapter12/uji-kompatibilitas.py}}, label={lst:c12-lat3-jalan}]
+python3 uji-kompatibilitas.py
+
+# Keluarannya:
+#   Perubahan kontrak v1 ke v2                     Akibat
+#   Buku.harga wajib dihapus                       merusak klien lama
+#   Buku.penerbit opsional ditambah                aman
+#   PesananBaru.jumlah batas naik ke 20            aman bagi klien lama
+#
+#   Yang diuji pada server             Status  Hasil
+#   klien v1 membaca /v2/buku             200  gagal: 'harga' is a required
+#   klien v2 memesan 15 ke /v1            422  isi tidak sesuai
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 3 yang sudah terisi}
+  \label{tab:c12-lat3-contoh}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Yang diamati} & \textbf{Hasil} & \textbf{Keterangan} \\
+    \hline
+    Perubahan terdeteksi & 5 & 2 aman, 3 merusak \\
+    \hline
+    Klien v1 ke \texttt{/v2/buku} & 200 & gagal dipakai \\
+    \hline
+    Klien v2 ke \texttt{/v1/pesanan} & 422 & batas lama 10 \\
+    \hline
+    Ganti nama satu field wajib & 2 baris & dihapus dan ditambah \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 3}
+  \label{tab:c12-lat3-hasil}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Yang diamati} & \textbf{Hasil} & \textbf{Keterangan} \\
+    \hline
+    Perubahan terdeteksi & \dots & \dots \\
+    \hline
+    Klien v1 ke \texttt{/v2/buku} & \dots & \dots \\
+    \hline
+    Klien v2 ke \texttt{/v1/pesanan} & \dots & \dots \\
+    \hline
+    Ganti nama satu field wajib & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\subsection*{Latihan 4: Batas Laju di Gateway}
+
+Latihan ini mengukur perilaku \textit{token bucket}: lonjakan pendek yang
+masih dilayani, penolakan sesudah embernya habis, dan pengisian ulangnya.
+
+\begin{enumerate}
+  \item Pastikan aplikasi dan \textit{gateway} menyala, lalu jalankan
+        \berkas{ukur-gateway.py} seperti pada Listing
+        \ref{lst:c12-lat4-jalan}.
+  \item Catat jumlah 200 dan 429 pada ketiga tahapnya, beserta
+        \texttt{Retry-After} yang diterima.
+  \item Hitung sendiri jumlah yang seharusnya dilayani pada tahap kedua dari
+        lama menunggu dan laju pengisiannya, lalu bandingkan dengan hasil
+        pengukuran.
+  \item Ubah \texttt{KAPASITAS\_EMBER} menjadi 5 di \berkas{gateway.py},
+        nyalakan ulang \textit{gateway}-nya, lalu ukur sekali lagi.
+  \item Isi Tabel \ref{tab:c12-lat4-hasil}. Tabel \ref{tab:c12-lat4-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa klien lain tetap
+        dilayani 20 permintaan? Kedua, apa akibatnya bila embernya dibuat
+        satu untuk seluruh sistem? Ketiga, mengapa penolakannya memakai 429
+        beserta \texttt{Retry-After}, bukan 503 tanpa keterangan?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Mengukur batas laju gateway, tersedia di \berkas{sources/chapter12/ukur-gateway.py}}, label={lst:c12-lat4-jalan}]
+python3 ukur-gateway.py
+
+# Keluarannya:
+#   Tahap                            200   429  Retry-After  Lama detik
+#   30 permintaan sekaligus           20    10         0.19        0.02
+#   setelah menunggu 2 detik          10    20         0.16        0.02
+#   klien lain, ember sendiri         20    10         0.19        0.02
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 4 yang sudah terisi}
+  \label{tab:c12-lat4-contoh}
+  \begin{tabularx}{\textwidth}{Xlll}
+    \hline
+    \textbf{Tahap} & \textbf{200} & \textbf{429} & \textbf{Hitungan sendiri} \\
+    \hline
+    30 sekaligus & 20 & 10 & kapasitas ember 20 \\
+    \hline
+    setelah 2 detik & 10 & 20 & $2 \times 5$ token \\
+    \hline
+    klien lain & 20 & 10 & ember terpisah \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 4}
+  \label{tab:c12-lat4-hasil}
+  \begin{tabularx}{\textwidth}{Xlll}
+    \hline
+    \textbf{Tahap} & \textbf{200} & \textbf{429} & \textbf{Hitungan sendiri} \\
+    \hline
+    30 sekaligus & \dots & \dots & \dots \\
+    \hline
+    setelah 2 detik & \dots & \dots & \dots \\
+    \hline
+    klien lain & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}

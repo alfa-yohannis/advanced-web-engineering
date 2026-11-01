@@ -1,0 +1,15 @@
+{
+  // Pemeriksaan tipe Bab 12. Mode strict dipakai, karena tipe hasil generate
+  // hanya berguna bila field opsional benar-benar wajib diperiksa.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true
+  },
+  "include": ["*.ts"],
+  // File ini sengaja salah, dan diperiksa sendiri dengan --ignoreConfig.
+  "exclude": ["pakai-tipe-salah.ts"]
+}

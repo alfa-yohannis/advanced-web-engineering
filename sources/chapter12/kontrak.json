@@ -1,0 +1,166 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Katalog Buku",
+    "version": "1.0.0",
+    "description": "Kontrak versi 1. Seluruh tipe, validasi, dan uji kompatibilitas di Bab 12 diturunkan dari file ini, bukan dari kodenya."
+  },
+  "servers": [
+    { "url": "http://127.0.0.1:8090" }
+  ],
+  "paths": {
+    "/v1/buku": {
+      "get": {
+        "operationId": "ambilBuku",
+        "summary": "Mengambil satu halaman daftar buku",
+        "parameters": [
+          {
+            "name": "halaman",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "default": 1 }
+          },
+          {
+            "name": "per_halaman",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "maximum": 50, "default": 10 }
+          },
+          {
+            "name": "saring",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Satu halaman daftar buku",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HalamanBuku" }
+              }
+            }
+          },
+          "422": {
+            "description": "Parameter tidak sesuai kontrak",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Kesalahan" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/pesanan": {
+      "post": {
+        "operationId": "buatPesanan",
+        "summary": "Membuat satu pesanan, idempoten terhadap Idempotency-Key",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string", "minLength": 8 }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PesananBaru" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Pesanan dibuat, atau pesanan sama dikembalikan",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Pesanan" }
+              }
+            }
+          },
+          "409": {
+            "description": "Idempotency-Key sama dipakai untuk isi yang berbeda",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Kesalahan" }
+              }
+            }
+          },
+          "422": {
+            "description": "Isi permintaan tidak sesuai kontrak",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Kesalahan" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Buku": {
+        "type": "object",
+        "required": ["id", "judul", "harga", "stok"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "integer", "minimum": 1 },
+          "judul": { "type": "string", "minLength": 1 },
+          "harga": { "type": "integer", "minimum": 0 },
+          "stok": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "HalamanBuku": {
+        "type": "object",
+        "required": ["item", "halaman", "per_halaman", "total"],
+        "additionalProperties": false,
+        "properties": {
+          "item": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Buku" }
+          },
+          "halaman": { "type": "integer", "minimum": 1 },
+          "per_halaman": { "type": "integer", "minimum": 1 },
+          "total": { "type": "integer", "minimum": 0 },
+          "berikutnya": { "type": "string" }
+        }
+      },
+      "PesananBaru": {
+        "type": "object",
+        "required": ["id_buku", "jumlah"],
+        "additionalProperties": false,
+        "properties": {
+          "id_buku": { "type": "integer", "minimum": 1 },
+          "jumlah": { "type": "integer", "minimum": 1, "maximum": 10 }
+        }
+      },
+      "Pesanan": {
+        "type": "object",
+        "required": ["id", "id_buku", "jumlah", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "id_buku": { "type": "integer", "minimum": 1 },
+          "jumlah": { "type": "integer", "minimum": 1 },
+          "status": { "type": "string", "enum": ["diterima", "diproses"] }
+        }
+      },
+      "Kesalahan": {
+        "type": "object",
+        "required": ["type", "title", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "type": { "type": "string" },
+          "title": { "type": "string" },
+          "status": { "type": "integer" },
+          "detail": { "type": "string" }
+        }
+      }
+    }
+  }
+}
