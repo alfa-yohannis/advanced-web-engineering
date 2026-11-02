@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentScriptType="application/ecmascript" contentStyleType="text/css" height="468px" preserveAspectRatio="none" style="width:903px;height:468px;" version="1.1" viewBox="0 0 903 468" width="903px" zoomAndPan="magnify"><defs/><g><line style="stroke: #999999; stroke-width: 1.0; stroke-dasharray: 5.0,5.0;" x1="451" x2="451" y1="47.9641" y2="414.762"/><line style="stroke: #999999; stroke-width: 1.0; stroke-dasharray: 5.0,5.0;" x1="849.5" x2="849.5" y1="47.9641" y2="414.762"/><rect fill="#FFF4E0" height="43.9641" style="stroke: #333333; stroke-width: 1.5;" width="106" x="398" y="3"/><text fill="#000000" font-family="Sans" font-size="22" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="92" x="405" y="33.5181">Browser</text><rect fill="#FFF4E0" height="43.9641" style="stroke: #333333; stroke-width: 1.5;" width="106" x="398" y="413.762"/><text fill="#000000" font-family="Sans" font-size="22" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="92" x="405" y="444.2801">Browser</text><rect fill="#DEE9E3" height="43.9641" style="stroke: #333333; stroke-width: 1.5;" width="85" x="807.5" y="3"/><text fill="#000000" font-family="Sans" font-size="22" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="71" x="814.5" y="33.5181">Server</text><rect fill="#DEE9E3" height="43.9641" style="stroke: #333333; stroke-width: 1.5;" width="85" x="807.5" y="413.762"/><text fill="#000000" font-family="Sans" font-size="22" font-weight="bold" lengthAdjust="spacingAndGlyphs" textLength="71" x="814.5" y="444.2801">Server</text><polygon fill="#333333" points="838,87.2041,848,91.2041,838,95.2041,842,91.2041" style="stroke: #333333; stroke-width: 1.0;"/><line style="stroke: #333333; stroke-width: 1.0;" x1="451" x2="844" y1="91.2041" y2="91.2041"/><text fill="#000000" font-family="Sans" font-size="20" lengthAdjust="spacingAndGlyphs" textLength="114" x="458" y="83.3441">GET /islands</text><polygon fill="#333333" points="462,155.684,452,159.684,462,163.684,458,159.684" style="stroke: #333333; stroke-width: 1.0;"/><line style="stroke: #333333; stroke-width: 1.0; stroke-dasharray: 2.0,2.0;" x1="456" x2="849" y1="159.684" y2="159.684"/><text fill="#000000" font-family="Sans" font-size="20" lengthAdjust="spacingAndGlyphs" textLength="375" x="468" y="124.5841">HTML 625 byte, 6 judul sudah tergambar</text><text fill="#000000" font-family="Sans" font-size="20" lengthAdjust="spacingAndGlyphs" textLength="368" x="468" y="151.824">(server component yang menyusunnya)</text><path d="M8,172.684 L8,207.684 L446,207.684 L446,182.684 L436,172.684 L8,172.684 " fill="#EBEBFF" style="stroke: #6B86A3; stroke-width: 1.0;"/><path d="M436,172.684 L436,182.684 L446,182.684 L436,172.684 " fill="#EBEBFF" style="stroke: #6B86A3; stroke-width: 1.0;"/><text fill="#000000" font-family="Sans" font-size="19" lengthAdjust="spacingAndGlyphs" textLength="417" x="14" y="197.9951">isi tampil, belum ada satu baris JavaScript pun</text><polygon fill="#333333" points="838,242.8021,848,246.8021,838,250.8021,842,246.8021" style="stroke: #333333; stroke-width: 1.0;"/><line style="stroke: #333333; stroke-width: 1.0;" x1="451" x2="844" y1="246.8021" y2="246.8021"/><text fill="#000000" font-family="Sans" font-size="20" lengthAdjust="spacingAndGlyphs" textLength="167" x="458" y="238.9421">GET /aset/pulau.js</text><polygon fill="#333333" points="462,311.282,452,315.282,462,319.282,458,315.282" style="stroke: #333333; stroke-width: 1.0;"/><line style="stroke: #333333; stroke-width: 1.0; stroke-dasharray: 2.0,2.0;" x1="456" x2="849" y1="315.282" y2="315.282"/><text fill="#000000" font-family="Sans" font-size="20" lengthAdjust="spacingAndGlyphs" textLength="294" x="468" y="280.1821">697 byte, satu pulau dihidupkan</text><text fill="#000000" font-family="Sans" font-size="20" lengthAdjust="spacingAndGlyphs" textLength="334" x="468" y="307.422">(client component: kotak penyaring)</text><line style="stroke: #333333; stroke-width: 1.0;" x1="451" x2="493" y1="383.762" y2="383.762"/><line style="stroke: #333333; stroke-width: 1.0;" x1="493" x2="493" y1="383.762" y2="396.762"/><line style="stroke: #333333; stroke-width: 1.0;" x1="452" x2="493" y1="396.762" y2="396.762"/><polygon fill="#333333" points="462,392.762,452,396.762,462,400.762,458,396.762" style="stroke: #333333; stroke-width: 1.0;"/><text fill="#000000" font-family="Sans" font-size="20" lengthAdjust="spacingAndGlyphs" textLength="339" x="458" y="348.662">pengguna mengetik, 6 baris disaring</text><text fill="#000000" font-family="Sans" font-size="20" lengthAdjust="spacingAndGlyphs" textLength="323" x="458" y="375.902">di browser, tanpa permintaan baru</text><!--MD5=[ef3974d13143a80f5d87d6b5ae8f1a98]
+@startuml
+skinparam backgroundColor transparent
+skinparam shadowing false
+skinparam defaultFontName Sans
+skinparam defaultFontSize 22
+skinparam sequence {
+  ArrowColor #333333
+  ArrowFontSize 20
+  LifeLineBorderColor #999999
+  ParticipantBorderColor #333333
+  ParticipantFontStyle bold
+  ParticipantPadding 30
+}
+skinparam note {
+  BorderColor #6B86A3
+  FontSize 19
+}
+
+participant "Browser" as B #FFF4E0
+participant "Server" as S #DEE9E3
+
+B -> S : GET /islands
+S - -> B : HTML 625 byte, 6 judul sudah tergambar\n(server component yang menyusunnya)
+note left of B #EBEBFF: isi tampil, belum ada satu baris JavaScript pun
+B -> S : GET /aset/pulau.js
+S - -> B : 697 byte, satu pulau dihidupkan\n(client component: kotak penyaring)
+B -> B : pengguna mengetik, 6 baris disaring\ndi browser, tanpa permintaan baru
+@enduml
+
+PlantUML version 1.2020.02(Sun Mar 01 17:22:07 WIB 2020)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Java Version: 17.0.20.1+1-1-24.04-Ubuntu
+Operating System: Linux
+Default Encoding: UTF-8
+Language: en
+Country: GB
+--></g></svg>

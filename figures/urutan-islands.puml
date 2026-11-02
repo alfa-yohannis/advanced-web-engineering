@@ -1,0 +1,35 @@
+' Diagram urutan varian islands Bab 8: siapa mengerjakan apa, dan berapa
+' byte yang berpindah di tiap langkah. Angkanya diambil dari pengukuran
+' sources/chapter08/ukur-varian.py.
+'
+' Dibuat ulang dengan:
+'   plantuml -tsvg figures/urutan-islands.puml
+'   rsvg-convert -f pdf -o figures/urutan-islands.pdf figures/urutan-islands.svg
+@startuml
+skinparam backgroundColor transparent
+skinparam shadowing false
+skinparam defaultFontName Sans
+skinparam defaultFontSize 22
+skinparam sequence {
+  ArrowColor #333333
+  ArrowFontSize 20
+  LifeLineBorderColor #999999
+  ParticipantBorderColor #333333
+  ParticipantFontStyle bold
+  ParticipantPadding 30
+}
+skinparam note {
+  BorderColor #6B86A3
+  FontSize 19
+}
+
+participant "Browser" as B #FFF4E0
+participant "Server" as S #DEE9E3
+
+B -> S : GET /islands
+S --> B : HTML 625 byte, 6 judul sudah tergambar\n(server component yang menyusunnya)
+note left of B #EBEBFF: isi tampil, belum ada satu baris JavaScript pun
+B -> S : GET /aset/pulau.js
+S --> B : 697 byte, satu pulau dihidupkan\n(client component: kotak penyaring)
+B -> B : pengguna mengetik, 6 baris disaring\ndi browser, tanpa permintaan baru
+@enduml

@@ -96,6 +96,10 @@ konsekuensi praktis. Pertama, ... Kedua, ...".
 
 - Tiap seksi materi punya minimal satu gambar TikZ atau satu tabel.
 - Gambar dibuat dengan TikZ, bukan gambar raster, kecuali tangkapan layar.
+  Diagram urutan boleh dibuat dengan PlantUML, karena tata letaknya
+  dihitung sendiri. Sumbernya disimpan sebagai `.puml` di `figures/`, dan
+  hasilnya PDF vektor: `plantuml -tsvg figures/nama.puml` lalu
+  `rsvg-convert -f pdf -o figures/nama.pdf figures/nama.svg`.
 - Palet tetap: `blue!8` untuk tahap biasa, `orange!12` untuk tahap yang
   ditekankan, `green!10` untuk hasil akhir, `praditagreen!15` untuk node
   induk, `red!22` dan `gray!35` untuk penanda masalah.
