@@ -257,6 +257,46 @@ HTML, dan kodenya tidak pernah ikut terunduh ke browser.
 \textit{Client component} dikirim sebagai JavaScript dan dijalankan di
 browser \cite{react-server-components}.
 
+Gambar \ref{fig:urutan-islands} memperlihatkan pembagian itu pada satu
+kasus, yaitu halaman katalog varian \textit{islands}, beserta byte yang
+terukur pada tiap langkahnya.
+
+\begin{figure}[!htb]
+  \centering
+\begin{tikzpicture}[
+    font=\scriptsize,
+    pihak/.style={draw, rounded corners, minimum height=0.6cm,
+                  minimum width=2.6cm, align=center,
+                  font=\scriptsize\bfseries},
+    hidup/.style={densely dashed, gray},
+    panah/.style={-{Stealth[length=2mm]}, thick},
+    catatan/.style={draw, fill=blue!8, rounded corners, inner sep=2pt,
+                    font=\tiny, align=center}
+  ]
+    \node[pihak, fill=orange!12] (klien) at (0,0) {Browser};
+    \node[pihak, fill=praditagreen!15] (server) at (7.4,0) {Server};
+    \draw[hidup] (klien.south) -- ++(0,-4.9);
+    \draw[hidup] (server.south) -- ++(0,-4.9);
+
+    \draw[panah] (0,-0.7) -- node[font=\tiny, above] {GET /islands} (7.4,-0.7);
+    \node[catatan, fill=praditagreen!15, anchor=west] at (4.6,-1.25)
+      {server component: baca data, susun HTML};
+    \draw[panah] (7.4,-1.9) -- node[font=\tiny, above] {HTML 625 byte, 6 judul sudah tergambar} (0,-1.9);
+    \node[catatan, anchor=west] at (-1.3,-2.45)
+      {isi tampil, belum ada satu baris JavaScript pun};
+    \draw[panah] (0,-3.0) -- node[font=\tiny, above] {GET /aset/pulau.js} (7.4,-3.0);
+    \draw[panah] (7.4,-3.6) -- node[font=\tiny, above] {697 byte} (0,-3.6);
+    \node[catatan, fill=orange!12, anchor=west] at (-1.3,-4.15)
+      {client component: satu pulau dihidupkan, yaitu kotak penyaring};
+    \draw[panah] (0.6,-4.6) arc (90:-90:0.35) node[font=\tiny, right, xshift=2pt]
+      {pengguna mengetik, 6 baris disaring di browser, tanpa permintaan baru};
+  \end{tikzpicture}
+  \caption{Satu kasus halaman katalog varian \textit{islands}: daftar
+           bukunya dikerjakan \textit{server component}, kotak penyaringnya
+           \textit{client component}}
+  \label{fig:urutan-islands}
+\end{figure}
+
 Tabel \ref{tab:komponen} merangkum pembagian tugasnya. Pembagian ini yang
 membuat \textit{islands} dapat ditulis tanpa memisahkan dua proyek: komponen
 yang perlu berinteraksi ditandai sebagai komponen klien, sisanya tetap di
@@ -289,6 +329,47 @@ server.
 \textit{Edge} adalah titik yang jauh lebih dekat ke pengunjung, dan
 jumlahnya banyak. Bab 4 sudah memakai \textit{edge} dalam bentuk Content Delivery Network (CDN) untuk
 file statis; bagian ini menanyakan apa lagi yang pantas dipindahkan ke sana.
+
+Gambar \ref{fig:edge-origin} memperlihatkan pembagiannya. Contoh
+sehariannya begini: pengunjung dari Jakarta membuka halaman katalog hasil
+SSG, dan titik \textit{edge} Jakarta yang menjawabnya; begitu pengunjung itu
+menekan tombol Pesan, permintaannya menempuh \textit{origin}, karena di
+sanalah basis datanya. Di produk nyata, kode \textit{edge} berjalan di
+layanan seperti Cloudflare Workers, Fastly Compute, atau Vercel Edge
+Functions, sedangkan \textit{origin} berupa satu container beserta basis
+datanya di satu region.
+
+\begin{figure}[!htb]
+  \centering
+\begin{tikzpicture}[
+    font=\scriptsize,
+    kotak/.style={draw, rounded corners, minimum height=0.62cm,
+                  minimum width=1.9cm, align=center, font=\scriptsize\bfseries},
+    panah/.style={-{Stealth[length=2mm]}, thick}
+  ]
+    \node[kotak, fill=blue!8] (jkt) at (0,1.25) {Jakarta};
+    \node[kotak, fill=blue!8] (syd) at (0,0) {Sydney};
+    \node[kotak, fill=blue!8] (fra) at (0,-1.25) {Frankfurt};
+    \node[kotak, fill=orange!12] (e1) at (3.1,1.25) {Edge JKT};
+    \node[kotak, fill=orange!12] (e2) at (3.1,0) {Edge SYD};
+    \node[kotak, fill=orange!12] (e3) at (3.1,-1.25) {Edge FRA};
+    \node[kotak, fill=praditagreen!15, minimum height=1.5cm,
+          minimum width=2.4cm] (origin) at (7.0,0)
+      {Origin\\{\tiny\mdseries aplikasi dan basis data}};
+
+    \draw[panah] (jkt) -- node[font=\tiny, above] {dekat} (e1);
+    \draw[panah] (syd) -- node[font=\tiny, above] {dekat} (e2);
+    \draw[panah] (fra) -- node[font=\tiny, above] {dekat} (e3);
+    \draw[panah, densely dashed] (e1.east) -- (origin.north west);
+    \draw[panah, densely dashed] (e2.east) -- (origin.west);
+    \draw[panah, densely dashed] (e3.east) -- (origin.south west);
+    \node[font=\tiny, gray, anchor=north, align=center] at (5.1,-1.35)
+      {hanya untuk yang tidak dapat dijawab di edge};
+  \end{tikzpicture}
+  \caption{\textit{Edge} dekat ke pengunjung dan jumlahnya banyak,
+           sedangkan \textit{origin} satu tempat asal beserta basis datanya}
+  \label{fig:edge-origin}
+\end{figure}
 
 Aturannya satu kalimat: yang pantas pindah ke \textit{edge} adalah pekerjaan
 yang tidak butuh data tulis dan tidak butuh kedekatan dengan basis data.
