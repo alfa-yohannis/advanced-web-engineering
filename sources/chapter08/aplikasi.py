@@ -1,16 +1,16 @@
 """Satu halaman katalog yang disajikan dengan lima arsitektur berbeda.
 
 Alamat yang dilayani:
-    GET /ssr        HTML dirakit server pada tiap permintaan
-    GET /ssg        HTML yang sudah dirakit sebelumnya, dibaca dari file
-    GET /isr        seperti SSG, tetapi dirakit ulang setelah file kedaluwarsa
+    GET /ssr        HTML di-render server pada tiap permintaan
+    GET /ssg        HTML yang sudah di-render sebelumnya, dibaca dari file
+    GET /isr        seperti SSG, tetapi di-render ulang setelah file kedaluwarsa
     GET /spa        kerangka kosong, isinya diambil JavaScript lewat JSON
     GET /islands    HTML berisi isi lengkap, ditambah satu widget kecil
     GET /api/katalog  data JSON untuk varian SPA dan islands
     GET /aset/<file>  file JavaScript
 
 Kelima varian memakai data dan kerangka halaman yang sama, sehingga selisih
-yang terukur benar-benar berasal dari tempat HTML-nya dirakit.
+yang terukur benar-benar berasal dari tempat HTML-nya di-render.
 
 Pemakaian (dari sources/chapter08):
     python3 bangun-statis.py
@@ -32,37 +32,37 @@ FILE_ISR = DIREKTORI_STATIS / "katalog-isr.html"
 JENIS_ISI_HTML = "text/html; charset=utf-8"
 JENIS_ISI_JSON = "application/json"
 JENIS_ISI_JS = "text/javascript"
-# Umur file ISR sebelum dirakit ulang. Dipilih pendek agar pengaruhnya
+# Umur file ISR sebelum di-render ulang. Dipilih pendek agar pengaruhnya
 # terlihat dalam satu sesi latihan.
 UMUR_ISR_DETIK = 10
-# Perakitan sengaja diperlambat sedikit, meniru halaman yang isinya mahal
+# Rendering sengaja diperlambat sedikit, meniru halaman yang isinya mahal
 # dihitung. Tanpa ini, selisih SSR dan SSG tidak terbaca pengukur waktu.
 LAMA_RAKIT_DETIK = 0.05
 
 
-def rakit_halaman_katalog():
-  """Merakit halaman katalog lengkap, yaitu pekerjaan yang dihemat SSG.
+def render_halaman_katalog():
+  """Me-render halaman katalog lengkap, yaitu pekerjaan yang dihemat SSG.
 
   Jeda di dalamnya mewakili pekerjaan nyata sebuah halaman, misalnya
   memanggil basis data dan menyusun ringkasannya.
   """
   time.sleep(LAMA_RAKIT_DETIK)
-  isi = f"    <ul>\n      {katalog.rakit_baris_html()}\n    </ul>"
-  return katalog.rakit_halaman("Katalog", isi)
+  isi = f"    <ul>\n      {katalog.render_baris_html()}\n    </ul>"
+  return katalog.render_halaman("Katalog", isi)
 
 
-def baca_atau_rakit_isr():
-  """Membaca file ISR, dan merakitnya ulang bila umurnya sudah lewat.
+def baca_atau_render_isr():
+  """Membaca file ISR, dan me-render-nya ulang bila umurnya sudah lewat.
 
   Inilah inti Incremental Static Regeneration: pengunjung tetap dilayani
-  file yang sudah jadi, sedangkan perakitan ulang hanya terjadi sesekali.
+  file yang sudah jadi, sedangkan rendering ulang hanya terjadi sesekali.
   """
   if FILE_ISR.exists():
     umur = time.time() - FILE_ISR.stat().st_mtime
     if umur < UMUR_ISR_DETIK:
       return FILE_ISR.read_bytes(), "file lama dipakai"
-  FILE_ISR.write_text(rakit_halaman_katalog(), encoding="utf-8")
-  return FILE_ISR.read_bytes(), "dirakit ulang"
+  FILE_ISR.write_text(render_halaman_katalog(), encoding="utf-8")
+  return FILE_ISR.read_bytes(), "di-render ulang"
 
 
 class PenanganVarian(BaseHTTPRequestHandler):
@@ -74,20 +74,20 @@ class PenanganVarian(BaseHTTPRequestHandler):
   def do_GET(self):
     """Mengarahkan permintaan ke varian yang sesuai dengan jalurnya."""
     if self.path == "/ssr":
-      self.kirim(200, rakit_halaman_katalog().encode(), JENIS_ISI_HTML, [])
+      self.kirim(200, render_halaman_katalog().encode(), JENIS_ISI_HTML, [])
       return
     if self.path == "/ssg":
       self.kirim(200, FILE_SSG.read_bytes(), JENIS_ISI_HTML, [])
       return
     if self.path == "/isr":
-      isi, keterangan = baca_atau_rakit_isr()
+      isi, keterangan = baca_atau_render_isr()
       self.kirim(200, isi, JENIS_ISI_HTML, [("X-ISR", keterangan)])
       return
     if self.path == "/spa":
-      self.kirim(200, self.rakit_kerangka_spa(), JENIS_ISI_HTML, [])
+      self.kirim(200, self.render_kerangka_spa(), JENIS_ISI_HTML, [])
       return
     if self.path == "/islands":
-      self.kirim(200, self.rakit_halaman_islands(), JENIS_ISI_HTML, [])
+      self.kirim(200, self.render_halaman_islands(), JENIS_ISI_HTML, [])
       return
     if self.path == "/api/katalog":
       isi = json.dumps(katalog.DAFTAR_BUKU).encode()
@@ -106,25 +106,25 @@ class PenanganVarian(BaseHTTPRequestHandler):
     """
     self.do_GET()
 
-  def rakit_kerangka_spa(self):
-    """Merakit kerangka SPA, yaitu halaman tanpa isi katalog sama sekali.
+  def render_kerangka_spa(self):
+    """Me-render kerangka SPA, yaitu halaman tanpa isi katalog sama sekali.
 
     Isinya baru ada sesudah browser mengunduh skripnya, menjalankannya, lalu
     meminta data lewat permintaan kedua.
     """
     isi = '    <ul id="daftar"></ul>'
-    return katalog.rakit_halaman("Katalog", isi, "/aset/spa.js").encode()
+    return katalog.render_halaman("Katalog", isi, "/aset/spa.js").encode()
 
-  def rakit_halaman_islands(self):
-    """Merakit halaman islands, yaitu isi lengkap ditambah satu widget kecil.
+  def render_halaman_islands(self):
+    """Me-render halaman islands, yaitu isi lengkap ditambah satu widget kecil.
 
     Isinya sudah ada di HTML yang pertama tiba, sedangkan skripnya hanya
     menghidupkan satu bagian, yaitu kotak penyaring.
     """
     isi = ('    <input id="saring" placeholder="Saring judul" />\n'
-           f'    <ul id="daftar">\n      {katalog.rakit_baris_html()}\n'
+           f'    <ul id="daftar">\n      {katalog.render_baris_html()}\n'
            '    </ul>')
-    return katalog.rakit_halaman("Katalog", isi, "/aset/pulau.js").encode()
+    return katalog.render_halaman("Katalog", isi, "/aset/pulau.js").encode()
 
   def layani_aset(self, nama_file):
     """Mengirim satu file JavaScript dari direktori statis."""

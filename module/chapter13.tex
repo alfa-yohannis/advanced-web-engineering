@@ -22,14 +22,14 @@ Kebutuhan kedua, pekerjaan yang lama tidak boleh menahan jawaban, sehingga
 harus dikerjakan di belakang.
 
 Keduanya menolak pola permintaan dan jawaban yang biasa. Yang pertama
-menuntut jalan dari server ke klien, padahal HTTP dirancang untuk arah
+menuntut jalan dari server ke klien, padahal HyperText Transfer Protocol (HTTP) dirancang untuk arah
 sebaliknya. Yang kedua menuntut pekerjaan hidup lebih lama daripada
 permintaan yang memulainya, sehingga harus dititipkan ke tempat lain.
 
 Demonya dua bagian yang berjalan bersama: satu server peristiwa yang
 melayani tiga cara pengiriman, dan satu alur asinkron berisi antrean,
 \textit{worker}, dan penerima \textit{webhook}. Referensi utamanya adalah
-HTML Standard untuk SSE beserta \texttt{EventSource} \cite{whatwg-html}, RFC
+HyperText Markup Language (HTML) Standard untuk SSE beserta \texttt{EventSource} \cite{whatwg-html}, RFC
 6455 untuk WebSocket \cite{rfc6455}, RFC 9110 untuk arti metode yang
 idempoten \cite{rfc9110}, dan dokumentasi Amazon SQS untuk
 \textit{visibility timeout} beserta akibatnya \cite{aws-sqs-visibility}.

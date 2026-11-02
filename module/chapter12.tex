@@ -29,7 +29,7 @@ bentuk \textit{error}, \textit{pagination}, idempotensi, dan pembatasan laju.
 
 Demonya satu API katalog berisi 48 buku, dilayani dalam dua versi sekaligus,
 dengan satu \textit{gateway} di depannya. Referensi utamanya adalah OpenAPI
-3.1 untuk bentuk kontraknya \cite{openapi-31}, JSON Schema 2020-12 untuk
+3.1 untuk bentuk kontraknya \cite{openapi-31}, JavaScript Object Notation (JSON) Schema 2020-12 untuk
 skemanya \cite{jsonschema-2020}, RFC 9457 untuk bentuk \textit{error}
 \cite{rfc9457}, RFC 9110 untuk arti metode yang idempoten \cite{rfc9110},
 dan disertasi Fielding untuk \textit{constraint} REST (Representational
@@ -464,7 +464,7 @@ untuk satu jenis klien dan boleh menggabungkan beberapa jawaban menjadi satu
 
 Tiga gaya API dipakai luas, dan ketiganya menjawab pertanyaan yang sama
 dengan cara berbeda. REST menyusun API sebagai kumpulan sumber daya beralamat
-sendiri, dengan metode HTTP sebagai kata kerjanya \cite{fielding2000rest}.
+sendiri, dengan metode HyperText Transfer Protocol (HTTP) sebagai kata kerjanya \cite{fielding2000rest}.
 GraphQL menyediakan satu alamat, dan kliennya yang menyebutkan field apa saja
 yang diinginkan \cite{graphql-spec}. RPC (Remote Procedure Call) memandang
 API sebagai pemanggilan fungsi, dan gRPC menuliskan kontraknya sebagai berkas

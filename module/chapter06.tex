@@ -129,7 +129,7 @@ berjalan. Namanya diambil dari \textit{stunt double} di film: pemeran
 pengganti yang dipakai pada adegan yang tidak perlu dikerjakan pemeran
 aslinya.
 
-Aplikasi bab ini memanggil layanan biaya kirim milik pihak lain lewat HTTP.
+Aplikasi bab ini memanggil layanan biaya kirim milik pihak lain lewat HyperText Transfer Protocol (HTTP).
 Memanggil layanan itu sungguhan membuat pengujiannya lambat, bergantung pada
 jaringan, dan tidak dapat dijalankan ketika layanan tersebut sedang
 \textit{down}. Tabel \ref{tab:double} memuat empat jenis penggantinya beserta
@@ -238,7 +238,7 @@ kontrak selesai dalam 1,27 detik.
 
 Pengujian kontrak memeriksa bentuk \textit{response}, bukan isinya. Yang
 dijaga adalah janji yang dipegang klien: nama field, tipenya, dan field mana
-yang selalu ada. Janji itu ditulis sebagai JSON Schema
+yang selalu ada. Janji itu ditulis sebagai JavaScript Object Notation (JSON) Schema
 \cite{jsonschema-2020} di \berkas{sources/chapter06/kontrak/pesanan.schema.json},
 lalu dipakai pengujian untuk memeriksa server.
 

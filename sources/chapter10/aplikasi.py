@@ -9,7 +9,7 @@ Alamat yang dilayani:
     GET  /api/pesanan             daftar pesanan, disaring menurut hak akses
     GET  /api/pesanan/<id>        satu pesanan, diperiksa secara ABAC
     GET  /api/laporan             hanya untuk peran yang punya izin laporan
-    POST /segarkan                menukar refresh token dengan pasangan baru
+    POST /refresh                menukar refresh token dengan pasangan baru
     POST /keluar                  mencabut sesi, hanya berlaku pada cara sesi
 
 Seluruh data ada di pengguna.json dan di memori, sehingga latihan tidak
@@ -137,8 +137,8 @@ class PenanganIdentitas(BaseHTTPRequestHandler):
     if bagian.path == "/masuk":
       self.layani_masuk(parameter)
       return
-    if bagian.path == "/segarkan":
-      self.layani_segarkan(parameter)
+    if bagian.path == "/refresh":
+      self.layani_refresh(parameter)
       return
     if bagian.path == "/keluar":
       self.layani_keluar()
@@ -182,7 +182,7 @@ class PenanganIdentitas(BaseHTTPRequestHandler):
                      "panjang_access": len(access),
                      "umur_access_detik": UMUR_ACCESS_DETIK}, [])
 
-  def layani_segarkan(self, parameter):
+  def layani_refresh(self, parameter):
     """Menukar refresh token dengan pasangan baru, sambil merotasinya.
 
     Refresh token yang sudah terpakai dianggap bocor bila dipakai lagi,

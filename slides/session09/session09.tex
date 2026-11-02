@@ -153,7 +153,7 @@
           \textit{rollback} lewat satu \textit{reverse proxy}, lalu mengukur
           pembagian permintaan yang benar-benar terjadi.
     \item Menginstrumentasi layanan dengan \textit{log}, metrik, dan
-          \textit{trace}, lalu menilainya terhadap SLO sebagai alarm yang
+          \textit{trace}, lalu menilainya terhadap Service Level Objective (SLO) sebagai alarm yang
           keluar dengan status gagal.
   \end{itemize}
 \end{frame}
@@ -289,8 +289,9 @@
         run: docker build -t awe9-layanan sources/chapter09
 \end{lstlisting}
   \vspace{4pt}
-  {\small Urutannya sama seperti Bab 6: yang paling murah dan paling sering
-  gagal dijalankan lebih dahulu. IaC membawa gagasan yang sama ke
+  {\small Urutan tahap Continuous Integration / Continuous Delivery (CI/CD)
+  ini sama seperti Bab 6: yang paling murah dan paling sering gagal
+  dijalankan lebih dahulu. IaC membawa gagasan yang sama ke
   infrastrukturnya, dan \texttt{docker-compose.yml} adalah bentuk paling
   sederhananya.}
 \end{frame}
@@ -446,7 +447,7 @@ grep -h "300a032b60413b55e53009cc0660f240" proxy.log hijau.log
 \begin{frame}{{\Large Batas yang Disepakati Lebih Dahulu}}
   \vspace{12pt}
   \begin{itemize}
-    \item \textbf{SLI} adalah angka yang mewakili pengalaman pengguna,
+    \item \textbf{Service Level Indicator (SLI)} adalah angka yang mewakili pengalaman pengguna,
           misalnya persentase permintaan yang berhasil.
     \item \textbf{SLO} adalah batas yang disepakati untuk angka itu,
           misalnya 99 persen.

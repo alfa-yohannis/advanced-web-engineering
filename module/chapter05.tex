@@ -325,7 +325,7 @@ dua segmen Transmission Control Protocol (TCP) yang terpisah. Nagle menahan segm
 kecil kedua sampai segmen pertama menerima ACK (\textit{acknowledge}),
 yaitu tanda terima dari penerima, sedangkan penerima menunda
 ACK-nya. Keduanya bertemu pada tambahan tetap sekitar 40 milidetik untuk tiap
-\textit{response} kecil. Angka 40 milidetik itu bukan angka HTTP dan bukan angka
+\textit{response} kecil. Angka 40 milidetik itu bukan angka HyperText Transfer Protocol (HTTP) dan bukan angka
 aplikasi, melainkan timer \textit{delayed ACK} milik sistem operasi. Di Linux
 batas terkecilnya 40 milidetik dan batas terbesarnya 200 milidetik, sedangkan
 standarnya hanya menetapkan paling lama 500 milidetik \cite{rfc1122}. Karena
@@ -515,7 +515,7 @@ tiba. Pergeseran itu terbaca sebagai CLS pada pengukur di Listing
 
 \section{Streaming Server-Side Rendering}
 
-Pada halaman yang dirakit di server, seluruh halaman biasanya dikirim setelah
+Pada halaman yang di-\textit{render} di server, seluruh halaman biasanya dikirim setelah
 seluruh datanya siap. Akibatnya pengguna menatap layar kosong selama server
 bekerja. \textit{Streaming} mengubah urutannya: bagian yang sudah siap
 dikirim lebih dahulu, sedangkan bagian yang masih dihitung menyusul dalam

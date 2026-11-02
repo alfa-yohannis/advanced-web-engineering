@@ -1,12 +1,12 @@
-"""Data katalog dan perakit HTML-nya, dipakai bersama seluruh varian Bab 8.
+"""Data katalog dan perender HTML-nya, dipakai bersama seluruh varian Bab 8.
 
 Datanya sengaja hanya daftar di memori, karena yang dibandingkan bab ini
-adalah tempat HTML dirakit, bukan cara data diambil. Dengan begitu kelima
+adalah tempat HTML di-render, bukan cara data diambil. Dengan begitu kelima
 varian memakai data yang sama persis, dan selisih yang terukur benar-benar
 berasal dari arsitekturnya.
 
 Pemakaian (dari sources/chapter08):
-    python3 -c "import katalog; print(katalog.rakit_baris_html())"
+    python3 -c "import katalog; print(katalog.render_baris_html())"
 """
 
 import html
@@ -25,8 +25,8 @@ DAFTAR_BUKU = [
 PENANDA_ISI = "Rekayasa Web Lanjut"
 
 
-def rakit_baris_html():
-  """Merakit baris katalog menjadi potongan HTML siap tempel.
+def render_baris_html():
+  """Me-render baris katalog menjadi potongan HTML siap tempel.
 
   Judul di-escape lebih dahulu, sehingga tanda kurung siku pada judul tidak
   ikut terbaca sebagai markup.
@@ -38,8 +38,8 @@ def rakit_baris_html():
   return "\n      ".join(baris).replace(",", ".")
 
 
-def rakit_halaman(judul_halaman, isi_badan, skrip=""):
-  """Merakit satu halaman utuh dari potongan badannya.
+def render_halaman(judul_halaman, isi_badan, skrip=""):
+  """Me-render satu halaman utuh dari potongan badannya.
 
   Kelima varian memakai kerangka halaman yang sama, sehingga selisih
   ukurannya berasal dari isi dan skripnya saja, bukan dari kerangkanya.

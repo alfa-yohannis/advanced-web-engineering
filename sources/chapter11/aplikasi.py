@@ -44,8 +44,8 @@ def ambil_saringan(query_terurai):
   return query_terurai.get("saring", [""])[0]
 
 
-def rakit_halaman(skrip, state, daftar, saringan):
-  """Merakit halaman katalog dengan blok state dan skrip yang diminta."""
+def render_halaman(skrip, state, daftar, saringan):
+  """Me-render halaman katalog dengan blok state dan skrip yang diminta."""
   isi = "\n".join([
       komponen.blok_state(state),
       komponen.penyaring(saringan),
@@ -61,8 +61,8 @@ def ambil_id_buku(sisa_jalur):
   return int(nomor) if nomor.isdigit() else None
 
 
-def rakit_fragmen(sisa_jalur, saringan):
-  """Merakit isi wilayah untuk satu alamat, beserta status yang pantas.
+def render_fragmen(sisa_jalur, saringan):
+  """Me-render isi wilayah untuk satu alamat, beserta status yang pantas.
 
   Alamat yang isinya tidak ada tetap mengembalikan fragmen, bukan halaman
   kosong, sehingga kerangka di browser punya sesuatu untuk ditampilkan.
@@ -106,12 +106,12 @@ class PenanganKatalog(BaseHTTPRequestHandler):
       return
     if alamat.path == "/kerangka" or alamat.path.startswith("/kerangka/"):
       sisa = alamat.path[len("/kerangka"):]
-      status, fragmen = rakit_fragmen(sisa, saringan)
+      status, fragmen = render_fragmen(sisa, saringan)
       self.kirim(status, komponen.kerangka(fragmen).encode(),
                  JENIS_ISI_HTML)
       return
     if alamat.path.startswith("/fragmen"):
-      status, fragmen = rakit_fragmen(alamat.path[len("/fragmen"):], saringan)
+      status, fragmen = render_fragmen(alamat.path[len("/fragmen"):], saringan)
       self.kirim(status, fragmen.encode(), JENIS_ISI_HTML)
       return
     if alamat.path == "/api/katalog":
@@ -129,7 +129,7 @@ class PenanganKatalog(BaseHTTPRequestHandler):
   def layani_varian(self, skrip, state, saringan):
     """Mengirim satu varian hidrasi beserta daftar yang sudah disaring."""
     daftar = komponen.saring_daftar(DAFTAR, saringan)
-    self.kirim(200, rakit_halaman(skrip, state, daftar, saringan),
+    self.kirim(200, render_halaman(skrip, state, daftar, saringan),
                JENIS_ISI_HTML)
 
   def layani_aset(self, nama_file):

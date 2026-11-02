@@ -174,7 +174,7 @@
     \hline
     Relasional & Data dipecah menjadi tabel normal, pemetaan relasi disusun saat \textit{query} lewat penggabungan \\
     \hline
-    Dokumen & Satu entitas beserta banyak atributnya disimpan utuh sebagai satu dokumen JSON \\
+    Dokumen & Satu entitas beserta banyak atributnya disimpan utuh sebagai satu dokumen JavaScript Object Notation (JSON) \\
     \hline
     \textit{Key-Value} di memori & \textit{Value} disimpan di memori dan dicari lewat \textit{Key}-nya, tanpa pemindaian \\
     \hline
@@ -1048,7 +1048,7 @@ def ambil_dengan_dua_query(koneksi, id_pelanggan, batas):
     \item Pengukuran tadi memakai basis data di komputer yang sama, sehingga
           satu perjalanan hampir tidak berbiaya.
     \item Di produksi, aplikasi dan basis data berada di mesin berbeda dengan
-          RTT sekitar 1 milidetik.
+          Round-Trip Time (RTT) sekitar 1 milidetik.
     \item 26 \textit{query} menanggung tambahan 26 milidetik, 2 \textit{query} hanya 2
           milidetik. Pada 100 baris, selisihnya 100 milidetik lawan 2
           milidetik.

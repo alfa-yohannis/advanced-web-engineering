@@ -1,6 +1,6 @@
 """Mengukur kelima varian arsitektur pada halaman yang sama.
 
-Yang diukur bukan selera, melainkan empat hal yang dapat dihitung: berapa
+Yang diukur bukan preference, melainkan empat hal yang dapat dihitung: berapa
 byte yang tiba, apakah isinya sudah ada di response pertama, berapa
 permintaan lagi yang dibutuhkan sampai isinya tampil, dan berapa lama
 seluruhnya.

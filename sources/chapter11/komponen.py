@@ -111,7 +111,7 @@ def kartu_buku(buku):
 
 
 def daftar_buku(daftar):
-  """Menyusun daftar kartu, yaitu komponen yang dirakit dari komponen lain."""
+  """Menyusun daftar kartu, yaitu komponen yang di-render dari komponen lain."""
   isi = "\n".join(kartu_buku(buku) for buku in daftar)
   return f'    <ul id="daftar" data-komponen="daftar">\n{isi}\n    </ul>'
 

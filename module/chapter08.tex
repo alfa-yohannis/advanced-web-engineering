@@ -3,7 +3,7 @@
 
 \section*{Tujuan Pembelajaran}
 \begin{itemize}
-  \item Membedakan tempat HTML dirakit pada SPA, SSR, SSG, ISR, dan
+  \item Membedakan tempat HyperText Markup Language (HTML) di-\textit{render} pada Single-Page Application (SPA), Server-Side Rendering (SSR), Static Site Generation (SSG), Incremental Static Regeneration (ISR), dan
         \textit{islands}, lalu menyebut akibatnya pada jumlah permintaan dan
         waktu sampai isi tampil.
   \item Mengukur kelima varian tersebut pada halaman yang sama, lalu membaca
@@ -17,18 +17,18 @@
 
 Bab 2 sampai Bab 7 memperbaiki satu aplikasi dari dalam: kuerinya, ingatannya,
 kecepatannya, pengujiannya, dan pertahanannya. Bab ini mundur satu langkah dan
-menanyakan hal yang lebih awal, yaitu di mana halaman sebaiknya dirakit.
+menanyakan hal yang lebih awal, yaitu di mana halaman sebaiknya di-\textit{render}.
 Jawabannya menentukan banyak hal sesudahnya, termasuk berapa byte yang harus
 diunduh pengunjung sebelum melihat isi.
 
-Perbedaan antarpilihan itu sering dibahas sebagai selera, padahal sebagian
+Perbedaan antarpilihan itu sering dibahas sebagai \textit{preference}, padahal sebagian
 besarnya dapat dihitung. Satu halaman yang sama dapat disajikan dengan lima
 cara, lalu keempat angkanya dibandingkan: byte yang tiba, apakah isinya sudah
 ada di \textit{response} pertama, berapa permintaan lagi yang dibutuhkan, dan
 berapa lama seluruhnya. Bab ini melakukan persis itu.
 
 Demonya sengaja dibuat sekecil mungkin, yaitu satu file Python tanpa basis
-data dan tanpa container, karena yang dibandingkan adalah tempat perakitannya,
+data dan tanpa container, karena yang dibandingkan adalah tempat \textit{rendering}-nya,
 bukan cara datanya diambil. Referensi utamanya adalah uraian
 \textit{islands architecture} \cite{patterns-islands}, dokumentasi
 \textit{server component} React \cite{react-server-components}, dokumentasi
@@ -37,7 +37,7 @@ ISR Next.js \cite{nextjs-isr}, dan catatan Fowler tentang memulai dari
 
 \section{Dari Aplikasi Web Tradisional ke Single-Page Application}
 
-Aplikasi web tradisional merakit HTML di server pada tiap permintaan. Browser
+Aplikasi web tradisional me-\textit{render} HTML di server pada tiap permintaan. Browser
 menerima halaman yang sudah jadi, menggambarnya, lalu mengulang seluruh
 proses itu ketika pengunjung pindah halaman. Pola ini disebut
 \textit{Server-Side Rendering} (SSR).
@@ -83,13 +83,13 @@ lewat permintaan ketiga.
          Generation, dan Incremental Static Regeneration}
 
 Ketiganya sama-sama mengirim HTML yang sudah berisi, dan hanya berbeda pada
-kapan HTML itu dirakit. SSR merakitnya pada tiap permintaan.
-\textit{Static Site Generation} (SSG) merakitnya sekali saat \textit{build},
+kapan HTML itu di-\textit{render}. SSR me-\textit{render}-nya pada tiap permintaan.
+\textit{Static Site Generation} (SSG) me-\textit{render}-nya sekali saat \textit{build},
 lalu melayani file yang sama berulang kali. \textit{Incremental Static
-Regeneration} (ISR) melayani file yang sudah jadi, tetapi merakitnya ulang
+Regeneration} (ISR) melayani file yang sudah jadi, tetapi me-\textit{render}-nya ulang
 sesekali ketika umurnya lewat \cite{nextjs-isr}.
 
-Gambar \ref{fig:tempat-rakit} merangkum ketiganya beserta dua varian lain
+Gambar \ref{fig:tempat-render} merangkum ketiganya beserta dua varian lain
 dalam satu garis.
 
 \begin{figure}[!htb]
@@ -109,15 +109,15 @@ dalam satu garis.
     \draw[panah] (sesekali) -- (tiap);
     \draw[panah] (tiap) -- (browser);
     \node[font=\tiny, gray, anchor=north] at (4.9,-0.65)
-      {makin ke kanan, makin segar isinya dan makin mahal tiap permintaannya};
+      {makin ke kanan, makin \textit{fresh} isinya dan makin mahal tiap permintaannya};
   \end{tikzpicture}
   \caption{Kelima varian berbeda pada satu hal: kapan dan di mana HTML-nya
-           dirakit}
-  \label{fig:tempat-rakit}
+           di-\textit{render}}
+  \label{fig:tempat-render}
 \end{figure}
 
 Tabel \ref{tab:varian} memuat pengukuran kelimanya pada halaman yang sama.
-Perakitan halaman pada demo ini sengaja diberi jeda 50 milidetik, mewakili
+\textit{Rendering} halaman pada demo ini sengaja diberi jeda 50 milidetik, mewakili
 halaman yang isinya mahal dihitung.
 
 \begin{table}[!htb]
@@ -142,29 +142,41 @@ halaman yang isinya mahal dihitung.
   \end{tabularx}
 \end{table}
 
+Dua kolom pada tabel itu perlu dijelaskan lebih dahulu. Kolom \textbf{Isi
+di HTML} menjawab satu hal: judul buku sudah tercetak di HTML yang pertama
+tiba, atau belum. Kolom \textbf{Minta} menghitung permintaan sampai isinya
+tampil, dan hitungannya mengikuti yang dikerjakan browser: satu permintaan
+untuk HTML-nya, satu lagi bila HTML itu merujuk skrip, dan satu lagi bila
+isinya belum ada sehingga datanya harus diambil. Karena itu Islands
+membutuhkan dua permintaan, yaitu HTML lalu skrip pulaunya, sedangkan SPA
+membutuhkan tiga, yaitu kerangka, skrip, lalu data katalognya. Kolom
+\textbf{Total ms} menjumlahkan lama seluruh permintaan tersebut, diukur dari
+sisi klien, sehingga varian yang membutuhkan lebih banyak permintaan ikut
+menanggung waktu jaringan tiap permintaannya.
+
 Dua baris pada tabel itu perlu dibaca pelan. Baris ISR tercatat 52,9
 milidetik karena pengukurannya kebetulan jatuh pada permintaan pertama
 sesudah file lamanya kedaluwarsa, sehingga permintaan itulah yang menanggung
-perakitan ulang. Baris SPA tercatat paling singkat justru karena yang diukur
+\textit{rendering} ulang. Baris SPA tercatat paling singkat justru karena yang diukur
 hanya waktu jaringannya; pekerjaan menjalankan skrip dan menggambar isi
 terjadi di browser dan tidak tertangkap alat ukur ini.
 
 Listing \ref{lst:isr} memuat inti mekanismenya, yaitu delapan baris yang
-memutuskan kapan file lama cukup dan kapan halamannya dirakit ulang.
+memutuskan kapan file lama cukup dan kapan halamannya di-\textit{render} ulang.
 
 \begin{lstlisting}[style=PythonStyle, caption={Inti Incremental Static Regeneration, tersedia di \berkas{sources/chapter08/aplikasi.py}}, label={lst:isr}]
-def baca_atau_rakit_isr():
-  """Membaca file ISR, dan merakitnya ulang bila umurnya sudah lewat.
+def baca_atau_render_isr():
+  """Membaca file ISR, dan me-render-nya ulang bila umurnya sudah lewat.
 
   Inilah inti Incremental Static Regeneration: pengunjung tetap dilayani
-  file yang sudah jadi, sedangkan perakitan ulang hanya terjadi sesekali.
+  file yang sudah jadi, sedangkan rendering ulang hanya terjadi sesekali.
   """
   if FILE_ISR.exists():
     umur = time.time() - FILE_ISR.stat().st_mtime
     if umur < UMUR_ISR_DETIK:
       return FILE_ISR.read_bytes(), "file lama dipakai"
-  FILE_ISR.write_text(rakit_halaman_katalog(), encoding="utf-8")
-  return FILE_ISR.read_bytes(), "dirakit ulang"
+  FILE_ISR.write_text(render_halaman_katalog(), encoding="utf-8")
+  return FILE_ISR.read_bytes(), "di-render ulang"
 \end{lstlisting}
 
 Tabel \ref{tab:isr} memperlihatkan perilaku ISR itu sendiri, diukur lima
@@ -179,30 +191,30 @@ permintaan berurutan dengan jeda sebelas detik sesudah permintaan ketiga.
     \hline
     \textbf{Permintaan} & \textbf{Keterangan dari header \texttt{X-ISR}} & \textbf{Waktu} \\
     \hline
-    1 & dirakit ulang & 53,5 ms \\
+    1 & \texttt{di-render ulang} & 52,2 ms \\
     \hline
-    2 & file lama dipakai & 1,9 ms \\
+    2 & file lama dipakai & 1,2 ms \\
     \hline
     3 & file lama dipakai & 0,7 ms \\
     \hline
-    4 & dirakit ulang, sesudah jeda sebelas detik & 51,5 ms \\
+    4 & \texttt{di-render ulang}, sesudah jeda sebelas detik & 52,6 ms \\
     \hline
-    5 & file lama dipakai & 1,0 ms \\
+    5 & file lama dipakai & 0,8 ms \\
     \hline
   \end{tabularx}
 \end{table}
 
-Pola itulah inti ISR. Biaya perakitan tidak hilang, melainkan ditanggung satu
+Pola itulah inti ISR. Biaya \textit{rendering} tidak hilang, melainkan ditanggung satu
 pengunjung saja tiap satu periode, sedangkan sisanya dilayani secepat SSG.
 Pertanyaan yang kemudian muncul: siapa pengunjung yang menanggungnya, dan
-apakah itu dapat diterima. Bila tidak, perakitan ulang dipindahkan ke latar
+apakah itu dapat diterima. Bila tidak, \textit{rendering} ulang dipindahkan ke latar
 belakang, sehingga pengunjung yang datang tepat sesudah kedaluwarsa tetap
 menerima file lama.
 
 \section{Islands Architecture}
 
 \textit{Islands architecture} mengambil jalan tengah \cite{patterns-islands}.
-Seluruh halaman dirakit di server seperti SSR, lalu hanya bagian yang
+Seluruh halaman di-\textit{render} di server seperti SSR, lalu hanya bagian yang
 benar-benar perlu berinteraksi yang dihidupkan JavaScript. Bagian kecil itu
 disebut pulau, dan sisanya tetap HTML biasa.
 
@@ -275,7 +287,7 @@ server.
 
 \textit{Origin} adalah server asal tempat aplikasi dan basis datanya berada.
 \textit{Edge} adalah titik yang jauh lebih dekat ke pengunjung, dan
-jumlahnya banyak. Bab 4 sudah memakai \textit{edge} dalam bentuk CDN untuk
+jumlahnya banyak. Bab 4 sudah memakai \textit{edge} dalam bentuk Content Delivery Network (CDN) untuk
 file statis; bagian ini menanyakan apa lagi yang pantas dipindahkan ke sana.
 
 Aturannya satu kalimat: yang pantas pindah ke \textit{edge} adalah pekerjaan
@@ -386,7 +398,7 @@ memperlihatkan satu catatan yang sudah terisi untuk halaman katalog bab ini.
     \hline
     Konsekuensi & Satu pengunjung tiap periode menanggung 52,9 ms, dan isi dapat \textit{stale} paling lama sepuluh menit \\
     \hline
-    Yang membatalkan & Bila isi wajib segar seketika, atau bila perakitannya menjadi jauh lebih mahal \\
+    Yang membatalkan & Bila isi wajib \textit{fresh} seketika, atau bila \textit{rendering}-nya menjadi jauh lebih mahal \\
     \hline
   \end{tabularx}
 \end{table}
@@ -398,15 +410,15 @@ perdebatan baru: cukup diperiksa apakah syarat pembatalnya sudah terjadi.
 \section{Ringkasan}
 
 Kelima varian arsitektur pada bab ini berbeda pada satu hal, yaitu kapan dan
-di mana HTML dirakit. SSG merakitnya saat \textit{build}, ISR sesekali, SSR
+di mana HTML di-\textit{render}. SSG me-\textit{render}-nya saat \textit{build}, ISR sesekali, SSR
 pada tiap permintaan, \textit{islands} di server dengan sedikit bagian yang
 dihidupkan di browser, dan SPA seluruhnya di browser.
 
 Selisihnya dapat dihitung, bukan dikira-kira. Pada halaman yang sama, SSR
 menanggung 51,8 milidetik tiap permintaan sedangkan SSG hanya 1,9 milidetik,
-karena pekerjaan merakitnya sudah dibayar sekali saat \textit{build} dalam
-0,3 milidetik. ISR mengambil keduanya: 53,5 milidetik pada permintaan
-pertama sesudah kedaluwarsa, lalu 0,7 sampai 1,9 milidetik pada permintaan
+karena pekerjaan me-\textit{render}-nya sudah dibayar sekali saat \textit{build} dalam
+0,5 milidetik. ISR mengambil keduanya: 52,2 milidetik pada permintaan
+pertama sesudah kedaluwarsa, lalu 0,7 sampai 1,2 milidetik pada permintaan
 berikutnya.
 
 Ukuran yang paling menentukan bukan byte, melainkan ada atau tidaknya isi di
@@ -433,7 +445,7 @@ mengulang perdebatan.
 Seluruh file yang dipakai pada latihan ini tersedia di
 \berkas{sources/chapter08/}, dihitung relatif terhadap akar repositori.
 Latihan ini hanya membutuhkan Python 3, tanpa Docker dan tanpa Node.js,
-karena yang dibandingkan adalah tempat HTML dirakit.
+karena yang dibandingkan adalah tempat HTML di-\textit{render}.
 
 Seluruh pengukuran diarahkan ke aplikasi yang berjalan di komputer sendiri,
 dengan beban setara satu pengunjung membuka halaman. Hasil tiap mahasiswa
@@ -450,7 +462,7 @@ python3 aplikasi.py &
 # Keluarannya:
 # Dibangun     : katalog-ssg.html
 # Ukuran       : 511 byte
-# Lama merakit : 0.3 ms
+# Lama render  : 0.5 ms
 # Melayani di http://127.0.0.1:8040/ssr  (Ctrl+C untuk berhenti)
 \end{lstlisting}
 
@@ -523,7 +535,7 @@ python3 ukur-varian.py
 
 \subsection*{Latihan 2: Membaca Perilaku ISR}
 
-Latihan ini membuktikan bahwa biaya perakitan pada ISR tidak hilang,
+Latihan ini membuktikan bahwa biaya \textit{rendering} pada ISR tidak hilang,
 melainkan ditanggung satu pengunjung tiap periode.
 
 \begin{enumerate}
@@ -537,7 +549,7 @@ melainkan ditanggung satu pengunjung tiap periode.
   \item Isi Tabel \ref{tab:c8-lat2-hasil}. Tabel \ref{tab:c8-lat2-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Jawab dua pertanyaan berikut. Pertama, pengunjung mana yang
-        menanggung biaya perakitan, dan apakah itu adil? Kedua, apa yang
+        menanggung biaya \textit{rendering}, dan apakah itu adil? Kedua, apa yang
         berubah bila umurnya dinaikkan menjadi satu jam?
 \end{enumerate}
 
@@ -546,8 +558,8 @@ curl -s -D - -o /dev/null -w "%{time_total}\n" http://127.0.0.1:8040/isr \
   | grep -iE "^(x-isr|[0-9])"
 
 # Keluarannya:
-# X-ISR: dirakit ulang
-# 0.053519
+# X-ISR: di-render ulang
+# 0.052217
 \end{lstlisting}
 
 \begin{table}[!htb]
@@ -558,11 +570,11 @@ curl -s -D - -o /dev/null -w "%{time_total}\n" http://127.0.0.1:8040/isr \
     \hline
     \textbf{Permintaan} & \textbf{Keterangan \texttt{X-ISR}} & \textbf{Waktu} \\
     \hline
-    1 & dirakit ulang & 53,5 ms \\
+    1 & \texttt{di-render ulang} & 52,2 ms \\
     \hline
-    2 & file lama dipakai & 1,9 ms \\
+    2 & file lama dipakai & 1,2 ms \\
     \hline
-    4 & dirakit ulang, sesudah jeda & 51,5 ms \\
+    4 & \texttt{di-render ulang}, sesudah jeda & 52,6 ms \\
     \hline
   \end{tabularx}
 \end{table}
@@ -685,7 +697,7 @@ keputusan yang dapat dipertanggungjawabkan.
     \hline
     Konsekuensi & Satu pengunjung tiap periode menanggung 52,9 ms, isi dapat \textit{stale} sampai sepuluh menit \\
     \hline
-    Yang membatalkan & Isi wajib segar seketika, atau perakitannya menjadi jauh lebih mahal \\
+    Yang membatalkan & Isi wajib \textit{fresh} seketika, atau \textit{rendering}-nya menjadi jauh lebih mahal \\
     \hline
   \end{tabularx}
 \end{table}

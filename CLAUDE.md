@@ -27,12 +27,14 @@ sebagai satu suara.
   `\textit{worker}`, `\textit{conflict}`, `\textit{disk}`, `\textit{node}`,
   `\textit{noise}`, `\textit{refresh}`, `\textit{throttling}`, `\textit{gate}`, `\textit{query}`,
   `\textit{stale}`, `\textit{fresh}`, `\textit{copy}`, `\textit{down}`,
-  `\textit{tradeoff}`, `\textit{crash}`, `\textit{slow}`, `\textit{bandwidth}`, `\textit{sanity check}`, `\textit{warmup}`, `\textit{verdict}`, bukan kolam,
+  `\textit{tradeoff}`, `\textit{crash}`, `\textit{slow}`, `\textit{bandwidth}`, `\textit{sanity check}`, `\textit{warmup}`, `\textit{verdict}`,
+  `\textit{render}`, `\textit{rendering}`, `\textit{preference}`, bukan kolam,
   pemutus sirkuit, pengulangan, balapan, sumber kebenaran, pemanggilan,
   kunci-nilai, dimampatkan, papan pemantauan, jaringan pertemanan,
   dibangkitkan, galat, pekerja, benturan, cakram, simpul, derau,
   menyegarkan, pembatasan, gerbang, kueri, basi, segar, salinan, mati,
   harga dalam arti untung rugi, menjatuhkan, pita, kewarasan, pemanasan, vonis,
+  dirakit, merakit, perakitan, selera,
   batasan
   dalam arti \textit{constraint} basis data, atau rentang dalam arti
   \textit{range} pada query dan penyimpanan. Judul slide dan

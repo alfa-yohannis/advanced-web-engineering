@@ -363,7 +363,7 @@ function kirimLaporan(): void {
   keamanan, sehingga \texttt{renderTime}-nya nol dan \texttt{startTime} jatuh
   ke \texttt{loadTime} yang selalu lebih awal. LCP pun terbaca sedikit lebih
   cepat daripada kenyataan, dan obatnya menambahkan \texttt{Timing-Allow-Origin}
-  di CDN.}
+  di Content Delivery Network (CDN).}
 \end{frame}
 
 \begin{frame}{{\Large Mengapa Dikirim Saat Halaman Ditinggalkan}}
@@ -564,7 +564,7 @@ def ulangi_pekerjaan(pekerjaan, pool_koneksi, jumlah_ulangan):
   \end{itemize}
   \vspace{8pt}
   {\small Angka 40 milidetik itu timer \textit{delayed ACK} milik sistem
-  operasi, bukan angka HTTP dan bukan angka aplikasi. Buktinya pengukuran ini
+  operasi, bukan angka HyperText Transfer Protocol (HTTP) dan bukan angka aplikasi. Buktinya pengukuran ini
   berjalan lewat \textit{localhost}, yang perjalanan pulang-perginya hanya
   0,049 milidetik.}
 \end{frame}
@@ -791,7 +791,7 @@ def compress_bila_diminta(isi_response, nilai_accept_encoding):
 \begin{frame}{{\Large Mengirim Bagian yang Sudah Siap}}
   \vspace{12pt}
   \begin{itemize}
-    \item Halaman yang dirakit di server biasanya dikirim setelah seluruh
+    \item Halaman yang di-\textit{render} di server biasanya dikirim setelah seluruh
           datanya siap, sehingga pengguna menatap layar kosong.
     \item \textit{Streaming} mengubah urutannya: bagian yang siap dikirim
           lebih dahulu, sisanya menyusul dalam potongan berikutnya.

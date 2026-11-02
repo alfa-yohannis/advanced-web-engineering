@@ -114,7 +114,7 @@
 
 \begin{frame}{\hfill}
   \centering
-  \Huge{\textbf{Di mana sebaiknya\\halaman dirakit?}}
+  \Huge{\textbf{Di mana sebaiknya\\halaman di-render?}}
 \end{frame}
 
 \section{Tujuan dan Kerangka Bahasan}
@@ -127,7 +127,7 @@
 \begin{frame}{{\Large Tujuan Pembelajaran}}
   \vspace{10pt}
   \begin{itemize}
-    \item Membedakan tempat HTML dirakit pada SPA, SSR, SSG, ISR, dan
+    \item Membedakan tempat HyperText Markup Language (HTML) di-\textit{render} pada Single-Page Application (SPA), Server-Side Rendering (SSR), Static Site Generation (SSG), Incremental Static Regeneration (ISR), dan
           \textit{islands}, lalu menyebut akibatnya pada jumlah permintaan
           dan waktu sampai isi tampil.
     \item Mengukur kelima varian pada halaman yang sama, lalu membaca
@@ -138,17 +138,21 @@
 \end{frame}
 
 \begin{frame}{{\Large Yang Dibandingkan Bab Ini}}
-  \vspace{12pt}
+  \vspace{10pt}
   \begin{itemize}
     \item Bab 2 sampai 7 memperbaiki satu aplikasi dari dalam. Bab ini mundur
-          satu langkah: di mana halaman sebaiknya dirakit.
-    \item Perbedaannya sering dibahas sebagai selera, padahal sebagian besar
-          dapat dihitung.
+          satu langkah: di mana halaman sebaiknya di-\textit{render}.
+    \item Perbedaannya sering dibahas sebagai \textit{preference}, padahal
+          empat angkanya dapat dihitung pada halaman yang sama:
   \end{itemize}
-  \vspace{8pt}
-  {\small Demonya sengaja kecil: satu file Python, tanpa basis data dan tanpa
-  container, karena yang dibandingkan tempat perakitannya, bukan cara datanya
-  diambil.}
+  \vspace{2pt}
+  {\small
+  \begin{enumerate}
+    \item Byte HTML yang pertama tiba, terukur 229 sampai 625 byte.
+    \item Isi katalog sudah ada di \textit{response} pertama atau belum.
+    \item Berapa permintaan lagi sampai isinya tampil, terukur 1 sampai 3.
+    \item Berapa lama seluruhnya, terukur 1,7 sampai 52,9 milidetik.
+  \end{enumerate}}
 \end{frame}
 
 \section{Dari Tradisional ke SPA}
@@ -161,7 +165,7 @@
 \begin{frame}{{\Large Dua Pembagian Tugas}}
   \vspace{12pt}
   \begin{itemize}
-    \item \textbf{SSR}: server merakit HTML pada tiap permintaan, browser
+    \item \textbf{SSR}: server me-\textit{render} HTML pada tiap permintaan, browser
           menerima halaman yang sudah jadi.
     \item \textbf{SPA}: server mengirim kerangka hampir kosong beserta
           JavaScript, lalu browser yang meminta data dan menggambar isinya.
@@ -202,7 +206,7 @@
   \Huge{\textbf{SSR, SSG, dan ISR}}
 \end{frame}
 
-\begin{frame}{{\Large Bedanya Hanya Kapan Dirakit}}
+\begin{frame}{{\Large Bedanya Hanya Kapan Di-\textit{render}}}
   \vspace{10pt}
   \centering
   \begin{tikzpicture}[
@@ -220,12 +224,12 @@
     \draw[panah] (sesekali) -- (tiap);
     \draw[panah] (tiap) -- (browser);
     \node[font=\tiny, gray, anchor=north] at (5.0,-0.65)
-      {makin ke kanan, makin segar isinya dan makin mahal tiap permintaannya};
+      {makin ke kanan, makin \textit{fresh} isinya dan makin mahal tiap permintaannya};
   \end{tikzpicture}
 
   \vspace{10pt}
-  {\small SSG merakit sekali saat \textit{build}, ISR merakit ulang sesekali,
-  SSR merakit pada tiap permintaan.}
+  {\small SSG me-\textit{render} sekali saat \textit{build}, ISR me-\textit{render} ulang sesekali,
+  SSR me-\textit{render} pada tiap permintaan.}
 \end{frame}
 
 \begin{frame}{{\Large Lima Varian, Halaman yang Sama}}
@@ -249,27 +253,61 @@
   \end{tabularx}}
 
   \vspace{6pt}
-  {\footnotesize Perakitan halaman diberi jeda 50 milidetik, mewakili halaman
-  yang isinya mahal dihitung. Baris ISR mahal karena pengukurannya jatuh pada
-  permintaan pertama sesudah kedaluwarsa. Baris SPA terlihat singkat karena
-  yang diukur hanya waktu jaringannya.}
+  {\footnotesize Arti tiap kolomnya, dan angka yang perlu dijelaskan, ada di
+  dua slide berikutnya.}
+\end{frame}
+
+\begin{frame}{{\Large Arti Tiap Kolomnya}}
+  \vspace{10pt}
+  \begin{itemize}
+    \item \textbf{HTML} dan \textbf{Total}: byte HTML yang pertama tiba, lalu
+          byte seluruhnya sampai isi katalognya tampil.
+    \item \textbf{Isi di HTML}: judul buku sudah tercetak di HTML yang
+          pertama tiba, atau belum.
+    \item \textbf{Minta}: permintaan sampai isinya tampil. Satu untuk
+          HTML-nya, satu lagi bila HTML itu merujuk skrip, dan satu lagi bila
+          isinya belum ada sehingga datanya harus diambil.
+    \item \textbf{Total ms}: jumlah lama seluruh permintaan itu, diukur dari
+          sisi klien.
+  \end{itemize}
+  \vspace{6pt}
+  {\small Karena itu Islands minta dua, yaitu HTML lalu skrip pulaunya, dan
+  SPA minta tiga, yaitu kerangka, skrip, lalu data katalognya.}
+\end{frame}
+
+\begin{frame}{{\Large Tiga Angka yang Perlu Dijelaskan}}
+  \vspace{10pt}
+  \begin{itemize}
+    \item \textbf{SPA 229 byte}, paling kecil di kolom HTML, tetapi di
+          dalamnya tidak ada satu judul buku pun. Totalnya justru paling
+          besar, 1.551 byte.
+    \item \textbf{ISR 52,9 ms}, paling mahal, karena pengukurannya jatuh
+          pada permintaan pertama sesudah filenya kedaluwarsa. Permintaan
+          sesudahnya secepat SSG, yaitu 0,7 sampai 1,2 ms.
+    \item \textbf{SPA 1,7 ms}, terlihat paling cepat, karena yang terukur
+          hanya waktu jaringannya. Pekerjaan menggambar isinya di browser
+          tidak ikut terhitung di sana.
+  \end{itemize}
+  \vspace{6pt}
+  {\small \textit{Rendering} halaman pada demo ini diberi jeda 50 milidetik,
+  mewakili halaman yang isinya mahal dihitung.}
 \end{frame}
 
 \begin{frame}[fragile]{{\Large Inti ISR dalam Delapan Baris}}
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
-def baca_atau_rakit_isr():
-  """Membaca file ISR, dan merakitnya ulang bila umurnya sudah lewat.
+def baca_atau_render_isr():
+  """Membaca file ISR, dan me-render-nya ulang bila umurnya sudah lewat.
 
   Inilah inti Incremental Static Regeneration: pengunjung tetap dilayani
-  file yang sudah jadi, sedangkan perakitan ulang hanya terjadi sesekali.
+  file yang sudah jadi, sedangkan rendering ulang hanya terjadi sesekali.
   """
   if FILE_ISR.exists():
     umur = time.time() - FILE_ISR.stat().st_mtime
     if umur < UMUR_ISR_DETIK:
       return FILE_ISR.read_bytes(), "file lama dipakai"
-  FILE_ISR.write_text(rakit_halaman_katalog(), encoding="utf-8")
-  return FILE_ISR.read_bytes(), "dirakit ulang"
+  FILE_ISR.write_text(render_halaman_katalog(), encoding="utf-8")
+  return FILE_ISR.read_bytes(), "di-render ulang"
 \end{lstlisting}
 \end{frame}
 
@@ -281,20 +319,20 @@ def baca_atau_rakit_isr():
     \hline
     \textbf{Permintaan} & \textbf{Keterangan dari header \texttt{X-ISR}} & \textbf{Waktu} \\
     \hline
-    1 & dirakit ulang & 53,5 ms \\
+    1 & \texttt{di-render ulang} & 52,2 ms \\
     \hline
-    2 & file lama dipakai & 1,9 ms \\
+    2 & file lama dipakai & 1,2 ms \\
     \hline
     3 & file lama dipakai & 0,7 ms \\
     \hline
-    4 & dirakit ulang, sesudah jeda sebelas detik & 51,5 ms \\
+    4 & \texttt{di-render ulang}, sesudah jeda sebelas detik & 52,6 ms \\
     \hline
-    5 & file lama dipakai & 1,0 ms \\
+    5 & file lama dipakai & 0,8 ms \\
     \hline
   \end{tabularx}}
 
   \vspace{8pt}
-  {\small Biaya perakitan tidak hilang, melainkan ditanggung satu pengunjung
+  {\small Biaya \textit{rendering} tidak hilang, melainkan ditanggung satu pengunjung
   tiap satu periode. Sisanya dilayani secepat SSG.}
 \end{frame}
 
@@ -429,7 +467,8 @@ def baca_atau_rakit_isr():
 
   \vspace{10pt}
   {\small Urutannya juga urutan yang disarankan ketika ragu: mulai dari
-  \textit{monolith}, pecah ketika batasnya sudah kelihatan.}
+  \textit{monolith}, pecah ketika batasnya sudah kelihatan. Backend for
+  Frontend (BFF) duduk satu lapis di atasnya, dibuat untuk satu jenis klien.}
 \end{frame}
 
 \section{Trade-off dan Catatan Keputusan}
@@ -455,7 +494,7 @@ def baca_atau_rakit_isr():
     \hline
     Konsekuensi & Satu pengunjung tiap periode menanggung 52,9 ms, isi dapat \textit{stale} sampai sepuluh menit \\
     \hline
-    Yang membatalkan & Isi wajib segar seketika, atau perakitannya jauh lebih mahal \\
+    Yang membatalkan & Isi wajib \textit{fresh} seketika, atau \textit{rendering}-nya jauh lebih mahal \\
     \hline
   \end{tabularx}}
 
@@ -481,7 +520,7 @@ python3 aplikasi.py &
 # Keluarannya:
 # Dibangun     : katalog-ssg.html
 # Ukuran       : 511 byte
-# Lama merakit : 0.3 ms
+# Lama render  : 0.5 ms
 # Melayani di http://127.0.0.1:8040/ssr  (Ctrl+C untuk berhenti)
 \end{lstlisting}
   \vspace{2pt}
@@ -554,8 +593,8 @@ curl -s -D - -o /dev/null -w "%{time_total}\n" http://127.0.0.1:8040/isr \
   | grep -iE "^(x-isr|[0-9])"
 
 # Keluarannya:
-# X-ISR: dirakit ulang
-# 0.053519
+# X-ISR: di-render ulang
+# 0.052217
 \end{lstlisting}
   \vspace{4pt}
   {\small Minta tiga kali berurutan, tunggu sebelas detik, lalu minta dua
@@ -585,7 +624,7 @@ curl -s -D - -o /dev/null -w "%{time_total}\n" http://127.0.0.1:8040/isr \
 
   \vspace{6pt}
   {\footnotesize Pertanyaan: pengunjung mana yang menanggung biaya
-  perakitan, dan apa yang berubah bila umurnya dinaikkan menjadi satu jam?}
+  \textit{rendering}, dan apa yang berubah bila umurnya dinaikkan menjadi satu jam?}
 \end{frame}
 
 \section{Latihan 3: Menambah Pulau}
@@ -704,12 +743,12 @@ wc -c statis/pulau.js statis/spa.js
   \vspace{8pt}
   \begin{itemize}
     \item Kelima varian berbeda pada satu hal: kapan dan di mana HTML
-          dirakit.
+          di-\textit{render}.
     \item Pada halaman yang sama, SSR menanggung 51,8 ms tiap permintaan,
-          SSG hanya 1,9 ms, karena perakitannya sudah dibayar 0,3 ms saat
-          \textit{build}.
-    \item ISR mengambil keduanya: 53,5 ms pada permintaan pertama sesudah
-          kedaluwarsa, lalu 0,7 sampai 1,9 ms sesudahnya.
+          SSG hanya 1,9 ms, karena \textit{rendering}-nya sudah dibayar 0,5 ms
+          saat \textit{build}.
+    \item ISR mengambil keduanya: 52,2 ms pada permintaan pertama sesudah
+          kedaluwarsa, lalu 0,7 sampai 1,2 ms sesudahnya.
     \item Ukuran yang paling menentukan bukan byte, melainkan ada atau
           tidaknya isi di HTML yang pertama tiba.
     \item Keputusan arsitektur ditutup dengan catatan yang menyebut

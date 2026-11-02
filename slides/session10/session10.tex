@@ -132,7 +132,7 @@
     \item Merancang pasangan \textit{access token} dan \textit{refresh
           token} beserta rotasinya, lalu membuktikan pemakaian ulang penanda
           lama tertangkap.
-    \item Menegakkan hak akses dengan RBAC dan ABAC sekaligus, lalu
+    \item Menegakkan hak akses dengan Role-Based Access Control (RBAC) dan Attribute-Based Access Control (ABAC) sekaligus, lalu
           mengukurnya sebagai matriks pengguna lawan alamat.
   \end{itemize}
 \end{frame}
@@ -460,9 +460,9 @@ curl -s -X POST "http://127.0.0.1:8070/masuk?cara=token&nama=budi&sandi=budi123"
 \begin{frame}[fragile]{{\Large Rotasi dan Pemakaian Ulang}}
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
-curl -s -X POST "http://127.0.0.1:8070/segarkan?refresh=PENANDA_LAMA"
-curl -s -X POST "http://127.0.0.1:8070/segarkan?refresh=PENANDA_LAMA"
-curl -s -X POST "http://127.0.0.1:8070/segarkan?refresh=PENANDA_BARU"
+curl -s -X POST "http://127.0.0.1:8070/refresh?refresh=PENANDA_LAMA"
+curl -s -X POST "http://127.0.0.1:8070/refresh?refresh=PENANDA_LAMA"
+curl -s -X POST "http://127.0.0.1:8070/refresh?refresh=PENANDA_BARU"
 
 # Keluarannya:
 # {"access_token": "eyJhbGciOi...", "refresh_token": "50dbfff1..."}

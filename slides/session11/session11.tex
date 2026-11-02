@@ -126,7 +126,7 @@
 \begin{frame}{{\Large Satu Halaman, Dua Biaya}}
   \vspace{12pt}
   \begin{itemize}
-    \item Hidrasi adalah pekerjaan sesudah HTML tampil: skrip menghidupkan
+    \item Hidrasi adalah pekerjaan sesudah HyperText Markup Language (HTML) tampil: skrip menghidupkan
           bagian halaman agar dapat diklik dan diketik.
     \item Menghidupkan seluruh halaman dan menghidupkan dua kotak saja
           menghasilkan tampilan yang sama persis di mata pengguna.
@@ -295,10 +295,10 @@ TOKEN = {
   \vspace{12pt}
   \begin{itemize}
     \item Pada hidrasi penuh, data buku tiba dua kali: sebagai HTML yang
-          sudah tercetak, dan sebagai JSON di dalam blok \textit{state}.
+          sudah tercetak, dan sebagai JavaScript Object Notation (JSON) di dalam blok \textit{state}.
     \item Halaman 200 buku tumbuh dari \textbf{55.674} byte menjadi
           \textbf{71.950} byte, naik 16.276 byte atau 29 persen.
-    \item Angka keranjang disimpan di DOM wilayah, sehingga kembali ke nol
+    \item Angka keranjang disimpan di Document Object Model (DOM) wilayah, sehingga kembali ke nol
           begitu wilayahnya diganti.
   \end{itemize}
   \vspace{8pt}
@@ -578,7 +578,7 @@ async function muatWilayah(alamat) {
   \end{tabularx}}
   \vspace{6pt}
   {\small Kedua kolom angkanya sama, dan kesamaan itulah hasilnya: tidak ada
-  satu baris katalog pun yang bergantung pada skrip. Pengujiannya memakai CSP
+  satu baris katalog pun yang bergantung pada skrip. Pengujiannya memakai Content Security Policy (CSP)
   penolak skrip, seperti ketika file JavaScript-nya gagal diunduh.}
 \end{frame}
 
