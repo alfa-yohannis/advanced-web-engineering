@@ -14,3 +14,22 @@
 | `ringkas-har.py` | Meringkas rekaman HAR dari panel Network, menghitung permintaan, koneksi, protokol, dan waktu |
 
 Seluruh skrip dijalankan dari direktori ini.
+
+## Menjalankan skrip Python
+
+`rekam-har.py` membutuhkan Google Chrome dan pustaka `websockets`, sedangkan
+`ringkas-har.py` hanya memakai pustaka standar. Keduanya memakai venv bersama
+di `sources/.venv`. Bila belum ada, buat sekali saja dari direktori ini:
+
+```bash
+python3 -m venv ../.venv
+../.venv/bin/pip install websockets
+```
+
+Selanjutnya, dari direktori ini:
+
+```bash
+source ../.venv/bin/activate
+./rekam-har.py https://www.pradita.ac.id/ rekaman.har
+./ringkas-har.py rekaman.har www.pradita.ac.id
+```

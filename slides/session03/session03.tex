@@ -1687,6 +1687,7 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pesanan_pelanggan_waktu
 \begin{lstlisting}[language=bash, basicstyle=\ttfamily\fontsize{7}{8.5}\selectfont]
 cd sources/chapter03
 docker compose up -d
+until docker compose exec -T db pg_isready -h localhost -q; do sleep 1; done
 DSN="postgresql://admin:admin123@localhost/toko"
 docker compose exec -T db psql "$DSN" < 01-skema.sql
 docker compose exec -T db psql "$DSN" < 02-data-uji.sql

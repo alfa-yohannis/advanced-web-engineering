@@ -1414,6 +1414,7 @@ Penyiapannya dilakukan sekali, seperti pada Listing \ref{lst:c3-siapkan}.
 \begin{lstlisting}[language=bash, caption={Menyiapkan basis data dan data uji, dijalankan sekali di awal}, label={lst:c3-siapkan}]
 cd sources/chapter03
 docker compose up -d
+until docker compose exec -T db pg_isready -h localhost -q; do sleep 1; done
 DSN="postgresql://admin:admin123@localhost/toko"
 docker compose exec -T db psql "$DSN" < 01-skema.sql
 docker compose exec -T db psql "$DSN" < 02-data-uji.sql
@@ -1427,6 +1428,12 @@ docker compose exec -T db psql "$DSN" < 02-data-uji.sql
 #  pesanan      | 200000
 #  item_pesanan | 600000
 \end{lstlisting}
+
+Baris \texttt{until} pada Listing \ref{lst:c3-siapkan} menunggu PostgreSQL
+benar-benar menerima koneksi Transmission Control Protocol (TCP).
+Container yang baru menyala sempat
+menjalankan server sementara yang hanya mendengar lewat soket lokal, sehingga
+\texttt{psql} yang dijalankan terlalu cepat ditolak.
 
 DSN pada Listing \ref{lst:c3-siapkan} tidak mencantumkan port, sedangkan DSN
 di skrip Python memakai port 5433. Perintah \texttt{psql} pada listing itu

@@ -22,10 +22,15 @@
 ```bash
 cd sources/chapter03
 docker compose up -d
+until docker compose exec -T db pg_isready -h localhost -q; do sleep 1; done
 DSN="postgresql://admin:admin123@localhost/toko"
 docker compose exec -T db psql "$DSN" < 01-skema.sql
 docker compose exec -T db psql "$DSN" < 02-data-uji.sql
 ```
+
+Baris `until` menunggu PostgreSQL benar-benar menerima koneksi TCP. Container
+yang baru menyala sempat menjalankan server sementara yang hanya mendengar
+lewat soket lokal, sehingga `psql` yang dijalankan terlalu cepat ditolak.
 
 Pengisian data memakan sekitar lima belas detik. Basis data dapat dihubungi dari
 luar container pada port 5433.
