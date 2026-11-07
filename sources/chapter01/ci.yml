@@ -1,0 +1,28 @@
+# Kerangka CI Bab 1 untuk monorepo mata kuliah.
+# File ini bahan bacaan, bukan pipeline yang aktif. Untuk mengaktifkannya,
+# salin ke .github/workflows/ci.yml di repositori tim sendiri.
+#
+# Langkahnya dijalankan lewat ci-lokal.py, sehingga yang hijau di komputer
+# sendiri juga hijau di server CI. Filter paths membuat pipeline ini hanya
+# berjalan ketika bagian monorepo miliknya berubah.
+
+name: ci-bab-1
+
+on:
+  push:
+    branches: [main]
+    paths: ["sources/chapter01/**"]
+  pull_request:
+    paths: ["sources/chapter01/**"]
+
+jobs:
+  periksa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Sintaks, uji unit, dan uji API
+        run: python3 sources/chapter01/ci-lokal.py

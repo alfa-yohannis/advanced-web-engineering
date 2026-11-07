@@ -1,43 +1,957 @@
 \chapter{Overview Mata Kuliah dan Alur Rekayasa}
+\label{ch:overview}
 
 \section*{Tujuan Pembelajaran}
 \begin{itemize}
-  \item % TODO
-  \item % TODO
-  \item % TODO
+  \item Menjelaskan beda mata kuliah ini dengan pemrograman web pengantar,
+        yaitu pergeseran dari aplikasi yang berjalan menjadi aplikasi yang
+        diukur, beserta peta empat belas pertemuannya.
+  \item Memeriksa kesiapan lingkungan kerja untuk keempat belas bab dengan
+        satu \textit{smoke test}, lalu menjelaskan sebab tiap pemeriksaan yang
+        gagal.
+  \item Merancang alur kerja tim berupa monorepo, cabang berumur pendek,
+        \textit{code review}, dan Continuous Integration (CI) yang menolak
+        perubahan cacat, berdasarkan hasil pengukuran.
 \end{itemize}
 
 \section{Pendahuluan}
 
-% TODO
+Mata kuliah pemrograman web pengantar bertanya apakah aplikasinya berjalan.
+Mata kuliah ini bertanya seberapa baik aplikasi itu berjalan: seberapa cepat,
+seberapa tahan ketika sebagian sistemnya gagal, seberapa aman, dan bagaimana
+membuktikan semuanya. Jawabannya selalu berupa angka yang diukur sendiri,
+bukan kesan.
+
+Bab ini adalah orientasi. Isinya peta keempat belas pertemuan, perkakas yang
+dipakai beserta alasannya, dan alur kerja rekayasa yang berlaku sepanjang
+semester. Bab ini juga menyiapkan tiga hal yang dipakai bab-bab berikutnya:
+lingkungan kerja yang sudah diperiksa, alur Git dengan cabang berumur pendek,
+dan kerangka Application Programming Interface (API) kecil yang dijaga CI.
+
+Referensi utamanya adalah Winters dkk.\ untuk alur rekayasa pada tim yang
+besar \cite{winters2020swe}, Chacon dan Straub untuk Git
+\cite{chacon2014progit}, Humble dan Farley untuk CI \cite{humble2010cd}, dan
+Fowler untuk pola \textit{repository} \cite{fowler2002poeaa}.
 
 \section{Cakupan dan Posisi Mata Kuliah}
 
-% TODO
+Kata "lanjut" pada mata kuliah ini tidak berarti fitur yang lebih rumit. Yang
+berubah adalah pertanyaannya. Fitur yang sama, misalnya katalog toko buku,
+dinilai dari sifat yang tidak terlihat di layar: cepatnya ketika diakses
+ratusan orang, perilakunya ketika basis datanya lambat, ketahanannya terhadap
+serangan, dan kemudahannya diubah tanpa merusak bagian lain.
+
+Analoginya seperti beda menyetir mobil sendiri dengan mengemudikan bus kampus.
+Keduanya sama-sama sampai tujuan. Namun bus harus tepat waktu setiap hari,
+mengangkut banyak penumpang sekaligus, dan tetap jalan ketika satu bannya
+bocor, sehingga sopirnya dinilai dari catatan perjalanan, bukan dari satu
+perjalanan yang lancar.
+
+Tabel \ref{tab:posisi01} merangkum pergeseran itu.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Pertanyaan pemrograman web pengantar lawan mata kuliah ini}
+  \label{tab:posisi01}
+  \begin{tabularx}{\textwidth}{lXX}
+    \hline
+    \textbf{Aspek} & \textbf{Pengantar} & \textbf{Mata kuliah ini} \\
+    \hline
+    pertanyaan utama & apakah fiturnya berjalan & seberapa baik berjalan, dan buktinya \\
+    \hline
+    bukti & demo di depan kelas & angka hasil pengukuran, misalnya p95 \\
+    \hline
+    lingkungan & satu laptop, satu proses & \textit{container}, beberapa layanan, beban \\
+    \hline
+    kegagalan & dihindari & disengaja, diukur, lalu diredam \\
+    \hline
+    mutu kode & lulus bila berjalan & diuji otomatis dan dijaga CI \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Persentil 50 dan 95, ditulis p50 dan p95, muncul di hampir setiap bab. Nilai
+p50 adalah waktu yang tidak dilampaui separuh permintaan, sedangkan p95 adalah
+waktu yang tidak dilampaui 95 dari tiap 100 permintaan. Yang kedua lebih
+jujur, karena pengguna yang paling lama menunggu justru yang paling sering
+pergi.
+
+Dua contoh dari bab-bab berikutnya memperlihatkan jenis jawaban yang dicari:
+\begin{enumerate}
+  \item Bab 13 mengirim sepuluh peristiwa yang sama dengan tiga cara.
+        \textit{Polling} berjeda setengah detik menyerahkannya dalam 199,8
+        milidetik, sedangkan sambungan yang mendorong menyerahkannya dalam
+        1,8 milidetik. Keduanya "berjalan", tetapi angkanya berbeda seratus
+        kali lipat.
+  \item Bab 14 menambah replika aplikasi dari satu menjadi delapan.
+        \textit{Throughput} naik dari 106,8 menjadi 198,0 permintaan per
+        detik lalu berhenti, karena basis data di belakangnya penuh. Tanpa
+        pengukuran, empat replika tambahan itu terlihat seperti perbaikan.
+\end{enumerate}
+
+Karena itu tiap bab ditutup dengan Latihan yang menghasilkan angka. Angka
+tiap mahasiswa akan berbeda, sedangkan yang dinilai adalah pola
+perbandingannya dan penjelasan atas kejanggalannya.
 
 \section{Peta Empat Belas Pertemuan}
 
-% TODO
+Keempat belas pertemuan dibagi menjadi empat bagian. Bagian pertama
+menyiapkan alat ukur. Bagian kedua menyusun lapisan data, \textit{cache}, dan
+performa. Bagian ketiga berjalan berselang-seling di antara tiga jalur:
+pengujian dan operasi, keamanan, dan arsitektur \textit{frontend}. Bagian
+keempat menutup dengan sistem asinkron dan penskalaan. Gambar
+\ref{fig:peta01} memperlihatkan urutannya.
+
+\begin{figure}[!htb]
+  \centering
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    kotak/.style={draw, rounded corners, minimum height=1.5cm,
+                  text width=2.25cm, align=center, font=\scriptsize\bfseries},
+    panah/.style={-{Stealth[length=2mm]}, thick}
+  ]
+    \node[kotak, fill=blue!8] (bagian1) at (0,0) {Fondasi dan pengukuran\\{\tiny\mdseries pertemuan 1--2}};
+    \node[kotak, fill=blue!8] (bagian2) at (3.1,0) {Data, \textit{cache}, dan performa\\{\tiny\mdseries pertemuan 3--5}};
+    \node[kotak, fill=orange!12] (bagian3) at (6.2,0) {Tiga jalur berselang\\{\tiny\mdseries pertemuan 6--12}};
+    \node[kotak, fill=green!10] (bagian4) at (9.3,0) {Asinkron dan skala\\{\tiny\mdseries pertemuan 13--14}};
+
+    \draw[panah] (bagian1) -- (bagian2);
+    \draw[panah] (bagian2) -- (bagian3);
+    \draw[panah] (bagian3) -- (bagian4);
+    \node[font=\tiny, gray] at (3.1,-1.1) {topik 1 siap};
+    \node[font=\tiny, gray, align=center] at (6.2,-1.2) {pengujian, keamanan,\\\textit{frontend} bergantian};
+  \end{tikzpicture}
+  \caption{Empat bagian dari keempat belas pertemuan}
+  \label{fig:peta01}
+\end{figure}
+
+Seluruh pertemuan memakai satu aplikasi yang sama, yaitu toko buku kampus.
+Mulai Bab 3, basis datanya berisi 20 kategori, 50.000 buku, 20.000 pelanggan,
+200.000 pesanan, dan 600.000 baris pesanan, sehingga \textit{query} yang
+lambat benar-benar terasa lambat. Bab-bab sesudahnya menambahkan
+\textit{cache}, pengujian, keamanan, identitas pengguna, kontrak API, fitur
+\textit{real-time}, dan rencana penskalaannya.
+
+Urutan pertemuan disusun untuk menopang enam topik penelitian. Materi yang
+paling dibutuhkan diletakkan paling awal, sehingga sebagian topik sudah dapat
+dimulai sebelum semester selesai. Tabel \ref{tab:topik01} memuat keenam topik
+beserta pertemuan yang menopangnya.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Enam topik penelitian dan pertemuan yang menopangnya}
+  \label{tab:topik01}
+  \begin{tabularx}{\textwidth}{lXll}
+    \hline
+    \textbf{Topik} & \textbf{Masalah yang diteliti} & \textbf{Pertemuan} & \textbf{Siap sesudah} \\
+    \hline
+    T1 & invalidasi \textit{cache} hibrida & 3, 4, 5 & pertemuan 5 \\
+    \hline
+    T2 & pencabutan token di \textit{gateway} & 7, 10, 12 & pertemuan 12 \\
+    \hline
+    T3 & transport \textit{real-time} adaptif & 5, 13 & pertemuan 13 \\
+    \hline
+    T4 & \textit{semantic cache} untuk Large Language Model (LLM) & 4, 5, 14 & pertemuan 14 \\
+    \hline
+    T5 & hidrasi selektif & 5, 8, 11 & pertemuan 11 \\
+    \hline
+    T6 & \textit{gate} kinerja di CI & 3, 6, 9 & pertemuan 9 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Keenam topik memakai pola argumen yang sama: satu masalah, satu solusi yang
+menimbulkan efek samping, lalu satu komponen yang ditambahkan untuk menekan
+efek samping itu. Rincian tiap topik ada di \texttt{README.md} akar
+repositori.
 
 \section{Tech Stack dan Alasan Pemilihannya}
 
-% TODO
+Perkakas dipilih dengan satu prinsip: yang terukur harus mekanismenya, bukan
+\textit{framework}-nya. Karena itu sebagian besar server dan alat ukur ditulis
+dengan pustaka standar Python, termasuk server HyperText Transfer Protocol
+(HTTP)-nya. Server WebSocket di Bab 13, misalnya, ditulis
+tanpa pustaka tambahan, sehingga jabat tangan dan bentuk \textit{frame}-nya
+terlihat langsung di kode. Tabel \ref{tab:stack01} memuat perkakas lainnya.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Perkakas yang dipakai beserta alasan pemilihannya}
+  \label{tab:stack01}
+  \begin{tabularx}{\textwidth}{llX}
+    \hline
+    \textbf{Kebutuhan} & \textbf{Pilihan} & \textbf{Alasan} \\
+    \hline
+    server dan alat ukur & Python 3 & kode terbaca, pustaka standarnya cukup untuk HTTP \\
+    \hline
+    kode di browser & JavaScript, TypeScript & memang berjalan di browser, tipenya diperiksa di Bab 12 \\
+    \hline
+    basis data & PostgreSQL 16 & rencana \textit{query} dan \textit{isolation level} terlihat jelas \\
+    \hline
+    \textit{cache} & Redis 7 & \textit{cache} di luar proses yang dipakai bersama \\
+    \hline
+    lingkungan & Docker Compose & basis data yang sama di tiap laptop \\
+    \hline
+    pengukuran browser & Google Chrome, Playwright & membuka halaman tanpa jendela, lalu diukur \\
+    \hline
+    versi & Git, satu monorepo & naskah, slide, dan kode berubah bersama \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Perkakas sebanyak itu harus diperiksa sebelum praktikum pertama, bukan ketika
+praktikum Bab 5 sudah berjalan setengah. Pemeriksaan singkat seperti itu
+disebut \textit{smoke test}: belum menguji apa pun secara mendalam, hanya
+memastikan tidak ada yang langsung berasap begitu dinyalakan.
+
+Analoginya seperti daftar periksa di laboratorium kimia. Sebelum percobaan
+dimulai, asisten memeriksa gas, air, dan alat ukur satu per satu. Alat yang
+rusak ketahuan dalam lima menit, bukan di tengah percobaan yang bahannya sudah
+telanjur dicampur.
+
+\textit{Smoke test} bab ini memeriksa versi tiap perkakas, apakah Docker
+benar-benar dapat dihubungi, apakah pustaka basis data sudah ada di venv
+bersama, dan apakah port yang dipakai bab-bab berikutnya masih kosong.
+Pemeriksaan port tertulis pada Listing \ref{lst:port01}.
+
+\begin{lstlisting}[style=PythonStyle, caption={Memeriksa satu port tanpa mengirim data, tersedia di \berkas{sources/chapter01/periksa-lingkungan.py}}, label={lst:port01}]
+def port_terpakai(port):
+  """Mencoba memesan satu port di seluruh alamat, lalu langsung melepasnya.
+
+  SO_REUSEADDR dipasang agar sambungan lama yang sedang ditutup tidak
+  dianggap pemakai. Yang gagal dipesan hanya port yang sedang didengarkan
+  proses lain.
+  """
+  with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as soket:
+    soket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    try:
+      soket.bind(("", port))
+    except OSError:
+      return True
+  return False
+\end{lstlisting}
+
+Tabel \ref{tab:lingkungan01} memuat hasilnya pada laptop yang dipakai menulis
+modul ini.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Hasil \textit{smoke test} lingkungan, hasil pengukuran nyata}
+  \label{tab:lingkungan01}
+  \begin{tabularx}{\textwidth}{XlX}
+    \hline
+    \textbf{Pemeriksaan} & \textbf{Hasil} & \textbf{Keterangan} \\
+    \hline
+    Python 3.11 atau lebih baru & lolos & 3.15.2 \\
+    \hline
+    Node.js 20 atau lebih baru & lolos & v22.23.4 \\
+    \hline
+    npm 10 atau lebih baru & lolos & 10.9.9 \\
+    \hline
+    Git 2.30 atau lebih baru & lolos & 2.43.0 \\
+    \hline
+    Docker 24 atau lebih baru & lolos & server 29.9.3 \\
+    \hline
+    Docker Compose 2 atau lebih baru & lolos & 5.7.0 \\
+    \hline
+    Chrome atau Chromium & lolos & 157.0.8103.38 \\
+    \hline
+    psycopg di \texttt{sources/.venv} & lolos & 3.3.5 \\
+    \hline
+    port bab 1 sampai 14 & gagal & 3 dari 37 terpakai: 5433, 8000, 8080 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Baris terakhir memuat kejanggalan. Seluruh perkakas lolos, tetapi tiga port
+sudah dipakai proyek lain di laptop yang sama: basis data di port 5433, server
+aplikasi di 8000, dan server file statis di 8080. Ketiganya port milik Bab 3,
+Bab 4, dan Bab 11. Tanpa pemeriksaan ini, kegagalannya baru muncul berminggu-minggu
+kemudian, sebagai pesan \textit{address already in use} di tengah praktikum
+bab yang bersangkutan.
+
+Hasil itu punya dua konsekuensi praktis. Pertama, versi minimum ditulis
+eksplisit di skripnya, sehingga "sudah terpasang" berarti sama bagi seluruh
+mahasiswa. Kedua, satu hasil merah cukup untuk menahan praktikum, sama
+seperti CI yang menahan penggabungan kode: masalahnya diselesaikan lebih
+dahulu, bukan diakali di tengah jalan.
 
 \section{Alur Kerja Rekayasa: Monorepo, Branching, dan Code Review}
 
-% TODO
+Monorepo berarti seluruh bagian sistem disimpan dalam satu repositori Git.
+Repositori mata kuliah ini sendiri berbentuk begitu, seperti pada Gambar
+\ref{fig:monorepo01}: naskah, slide, dan kode tiap bab tinggal bersama,
+sehingga satu perubahan pada kode dan pada naskah yang mengutipnya masuk
+dalam satu commit. Winters dkk.\ mencatat manfaat yang sama pada skala jauh
+lebih besar: satu versi untuk tiap pustaka, dan perubahan lintas proyek yang
+dapat dilakukan sekaligus \cite{winters2020swe}.
+
+\begin{figure}[!htb]
+  \centering
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    kotak/.style={draw, rounded corners, minimum height=0.75cm,
+                  minimum width=2.3cm, align=center, font=\scriptsize\bfseries},
+    panah/.style={-{Stealth[length=2mm]}, thick}
+  ]
+    \node[kotak, fill=praditagreen!15, minimum width=4.2cm] (akar) at (4.2,1.4) {advanced-web-engineering};
+    \node[kotak, fill=blue!8] (module) at (0,0) {module/\\{\tiny\mdseries naskah 14 bab}};
+    \node[kotak, fill=blue!8] (slides) at (2.8,0) {slides/\\{\tiny\mdseries 14 sesi}};
+    \node[kotak, fill=orange!12] (sources) at (5.6,0) {sources/\\{\tiny\mdseries chapter01--14}};
+    \node[kotak, fill=blue!8] (figures) at (8.4,0) {figures/\\{\tiny\mdseries gambar bersama}};
+    \foreach \anak in {module, slides, sources, figures} {
+      \draw[thick] (akar.south) -- (\anak.north);
+    }
+    \node[font=\tiny, gray] at (5.6,-0.65) {kode tiap bab, satu CI};
+  \end{tikzpicture}
+  \caption{Repositori mata kuliah ini sebagai satu monorepo}
+  \label{fig:monorepo01}
+\end{figure}
+
+Analoginya seperti satu lemari arsip fakultas dengan laci untuk tiap program
+studi, alih-alih tiap dosen menyimpan arsipnya di rumah masing-masing. Ketika
+aturan akademik berubah, seluruh laci diperbarui sekaligus di satu tempat,
+dan tidak ada \textit{copy} aturan lama yang tertinggal di rumah seseorang.
+
+Monorepo tidak menentukan cara bekerja di dalamnya. Pertanyaan berikutnya:
+berapa lama sebuah cabang boleh hidup sebelum digabung ke \texttt{main}? Pada
+\textit{trunk-based development}, cabang hidup paling lama beberapa hari, dan
+Forsgren dkk.\ menemukan bahwa tim dengan kinerja pengiriman terbaik
+menggabungkan cabangnya ke trunk dalam waktu kurang dari sehari
+\cite{forsgren2018accelerate}. Alasannya terlihat ketika dua cabang yang
+sama-sama mengubah satu file digabung.
+
+Analoginya seperti dua mahasiswa yang menyunting satu laporan bersama,
+masing-masing di \textit{copy} sendiri. Bila disatukan tiap sore, paling
+banyak satu dua paragraf yang bertabrakan. Bila baru disatukan dua minggu
+kemudian, separuh hari terakhir habis untuk memilih kalimat mana yang menang.
+
+\berkas{simulasi-cabang.py} mengukurnya dengan Git sungguhan. Dua pengembang
+masing-masing mengubah tiga baris acak per hari pada katalog 300 baris, lalu
+cabang kedua digabung ke cabang pertama, dan blok konfliknya dihitung, seperti
+pada Listing \ref{lst:gabung01}.
+
+\begin{lstlisting}[style=PythonStyle, caption={Menggabungkan dua cabang lalu menghitung blok konflik, tersedia di \berkas{sources/chapter01/simulasi-cabang.py}}, label={lst:gabung01}]
+  git(direktori, "checkout", "-q", f"a-{umur_hari}")
+  hasil = git(direktori, "merge", "--no-edit", f"b-{umur_hari}",
+              boleh_gagal=True)
+  isi = (direktori / NAMA_FILE).read_text()
+  blok_konflik = sum(1 for baris in isi.splitlines()
+                     if baris.startswith(PENANDA_KONFLIK))
+  if hasil.returncode != 0:
+    git(direktori, "merge", "--abort")
+  git(direktori, "checkout", "-q", "main")
+\end{lstlisting}
+
+Tabel \ref{tab:cabang01} memuat hasilnya. Urutan acaknya sama pada tiap umur,
+sehingga cabang tiga hari adalah awal dari cabang tujuh hari, dan yang berbeda
+hanya kapan cabangnya digabung.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Umur cabang lawan konflik ketika digabung, hasil pengukuran nyata
+           dengan Git 2.43}
+  \label{tab:cabang01}
+  \begin{tabularx}{\textwidth}{Xllll}
+    \hline
+    \textbf{Umur cabang} & \textbf{Diubah A} & \textbf{Diubah B} & \textbf{Diubah keduanya} & \textbf{Blok konflik} \\
+    \hline
+    1 hari & 3 & 3 & 0 & 0 \\
+    \hline
+    3 hari & 9 & 9 & 0 & 0 \\
+    \hline
+    7 hari & 20 & 19 & 1 & 3 \\
+    \hline
+    14 hari & 40 & 39 & 2 & 11 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Dua contoh dari tabel itu:
+\begin{enumerate}
+  \item Cabang yang digabung sesudah satu atau tiga hari tidak menimbulkan
+        konflik sama sekali, walaupun keduanya mengubah file yang sama.
+  \item Cabang yang dibiarkan hidup dua minggu menimbulkan 11 blok konflik.
+        Umurnya dua kali umur cabang tujuh hari, tetapi konfliknya hampir
+        empat kali lipat.
+\end{enumerate}
+
+Baris terakhir memuat kejanggalan. Hanya dua baris yang diubah kedua
+pengembang, tetapi blok konfliknya sebelas. Git tidak hanya menolak dua
+perubahan pada baris yang sama, tetapi juga dua perubahan pada baris yang
+berdampingan, karena tidak ada baris tak berubah di antaranya yang dapat
+dijadikan patokan \cite{chacon2014progit}. Peluang dua perubahan berdampingan
+tumbuh jauh lebih cepat daripada peluang keduanya jatuh di baris yang sama.
+
+Cabang yang pendek baru separuh jalan. Separuh lainnya adalah
+\textit{code review}: tiap perubahan dibaca minimal satu orang lain sebelum
+digabung. Tabel \ref{tab:review01} memuat aturan yang berlaku sepanjang
+semester.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Aturan \textit{code review} sepanjang semester}
+  \label{tab:review01}
+  \begin{tabularx}{\textwidth}{XX}
+    \hline
+    \textbf{Aturan} & \textbf{Alasan} \\
+    \hline
+    satu perubahan, satu tujuan, sekitar 100 baris & perubahan 1.000 baris umumnya terlalu besar untuk dibaca dengan teliti \\
+    \hline
+    CI hijau sebelum diminta dibaca & pembaca tidak membuang waktu pada kesalahan yang dapat ditemukan mesin \\
+    \hline
+    minimal satu pembaca selain penulis & penulis paling sulit melihat kesalahannya sendiri \\
+    \hline
+    komentar tentang kode, bukan tentang orang & yang diperbaiki kodenya, dan penulisnya tetap mau meminta \textit{review} \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Batas 100 baris pada baris pertama mengikuti pedoman \textit{review} Google,
+yang menyebut 100 baris umumnya ukuran yang wajar dan 1.000 baris umumnya
+terlalu besar, dengan keputusan akhir tetap di tangan pembacanya
+\cite{google-small-cls}.
 
 \section{Kerangka Continuous Integration}
 
-% TODO
+Continuous Integration berarti tiap perubahan digabung ke cabang utama
+sesering mungkin, dan tiap penggabungan diperiksa otomatis dengan menjalankan
+seluruh pemeriksaan \cite{humble2010cd}. Pemeriksaan itu disusun sebagai
+\textit{pipeline}: rangkaian langkah yang berhenti di langkah pertama yang
+gagal.
+
+Analoginya seperti pemeriksa naskah di percetakan kampus. Naskah yang salah
+ketik di halaman pertama ditolak sebelum masuk mesin cetak, bukan sesudah 500
+eksemplar telanjur tercetak. Karena itu pemeriksaan yang paling murah dan
+paling sering menemukan kesalahan diletakkan paling depan.
+
+Gambar \ref{fig:ci01} memperlihatkan tiga langkah CI bab ini. Bab 6
+menambahkan analisis statis dan pengujian lewat browser, dan Bab 9
+menambahkan pembangunan \textit{image} serta rilisnya.
+
+\begin{figure}[!htb]
+  \centering
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    kotak/.style={draw, rounded corners, minimum height=0.85cm,
+                  minimum width=2.0cm, align=center, font=\scriptsize\bfseries},
+    panah/.style={-{Stealth[length=2mm]}, thick}
+  ]
+    \node[kotak, fill=blue!8] (commit) at (0,0) {Perubahan\\{\tiny\mdseries satu commit}};
+    \node[kotak, fill=blue!8] (sintaks) at (2.6,0) {Periksa\\sintaks};
+    \node[kotak, fill=orange!12] (unit) at (5.2,0) {Uji unit\\{\tiny\mdseries 10 uji}};
+    \node[kotak, fill=blue!8] (api) at (7.8,0) {Uji API\\{\tiny\mdseries 6 uji}};
+    \node[kotak, fill=green!10] (hijau) at (10.4,0) {Hijau\\{\tiny\mdseries boleh digabung}};
+    \node[kotak, fill=red!22] (merah) at (5.2,-1.5) {Merah\\{\tiny\mdseries berhenti di sini}};
+
+    \draw[panah] (commit) -- (sintaks);
+    \draw[panah] (sintaks) -- (unit);
+    \draw[panah] (unit) -- (api);
+    \draw[panah] (api) -- (hijau);
+    \draw[panah] (unit) -- node[font=\tiny, right] {satu uji gagal} (merah);
+  \end{tikzpicture}
+  \caption{\textit{Pipeline} CI bab ini: langkah termurah lebih dahulu, dan
+           berhenti di langkah pertama yang gagal}
+  \label{fig:ci01}
+\end{figure}
+
+Langkah-langkah itu ditulis dua kali dengan isi yang sama: sekali sebagai
+\textit{workflow} GitHub Actions untuk server CI, dan sekali sebagai skrip
+yang dijalankan di komputer sendiri. Listing \ref{lst:ciyml01} memperlihatkan
+yang pertama. Filter \texttt{paths} membuat \textit{pipeline} ini hanya
+berjalan ketika bagian monorepo miliknya berubah \cite{github-actions-syntax}.
+
+\begin{lstlisting}[language=yaml, caption={\textit{Workflow} CI bab ini, tersedia di \berkas{sources/chapter01/ci.yml}}, label={lst:ciyml01}]
+on:
+  push:
+    branches: [main]
+    paths: ["sources/chapter01/**"]
+  pull_request:
+    paths: ["sources/chapter01/**"]
+
+jobs:
+  periksa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Sintaks, uji unit, dan uji API
+        run: python3 sources/chapter01/ci-lokal.py
+\end{lstlisting}
+
+Langkah sesungguhnya tinggal di \berkas{ci-lokal.py}, seperti pada Listing
+\ref{lst:langkah01}. Karena server CI dan komputer sendiri menjalankan skrip
+yang sama, yang hijau di satu tempat juga hijau di tempat lain, dan kegagalan
+di server CI dapat diulang di laptop.
+
+\begin{lstlisting}[style=PythonStyle, caption={Tiga langkah CI, dari yang termurah, tersedia di \berkas{sources/chapter01/ci-lokal.py}}, label={lst:langkah01}]
+DAFTAR_LANGKAH = [
+    ("Periksa sintaks", ["-m", "compileall", "-q", "."]),
+    ("Uji unit service", ["-m", "unittest", "test_layanan"]),
+    ("Uji API lewat HTTP", ["-m", "unittest", "test_api"]),
+]
+\end{lstlisting}
+
+Tabel \ref{tab:ci01} memuat dua kali jalan. Jalan pertama memakai kode apa
+adanya. Jalan kedua memakai kode yang sengaja dirusak: aturan harga diubah
+sehingga buku seharga nol rupiah ikut diterima.
+
+\begin{table}[!htb]
+  \centering
+  \caption{CI pada kode utuh dan pada kode yang dirusak, hasil pengukuran
+           nyata}
+  \label{tab:ci01}
+  \begin{tabularx}{\textwidth}{Xllll}
+    \hline
+    \textbf{Langkah} & \textbf{Utuh} & \textbf{Detik} & \textbf{Dirusak} & \textbf{Detik} \\
+    \hline
+    periksa sintaks & lolos & 0,04 & lolos & 0,04 \\
+    \hline
+    uji unit \textit{service} & lolos & 0,06 & gagal & 0,07 \\
+    \hline
+    uji API lewat HTTP & lolos & 0,10 & tidak dijalankan & - \\
+    \hline
+    \textbf{hasil} & \textbf{hijau} & & \textbf{merah} & \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Dua contoh dari tabel itu:
+\begin{enumerate}
+  \item Kode utuh lolos ketiga langkah dalam 0,20 detik. Pemeriksaan
+        semurah itu tidak punya alasan untuk dilewati sebelum commit.
+  \item Kode yang dirusak berhenti di uji unit dengan satu nama uji yang
+        gagal, \texttt{test\_harga\_nol\_ditolak}. Kesalahannya ditemukan dalam
+        0,07 detik, sebelum ada orang yang membacanya, dan jauh sebelum ada
+        pembeli yang mendapat buku gratis.
+\end{enumerate}
+
+Langkah uji API pada jalan kedua tidak dijalankan, padahal salah satu ujinya
+juga akan gagal karena memakai harga nol. Itulah maksud urutan dari yang
+termurah: kesalahan yang dapat ditemukan uji unit tidak perlu menunggu server
+dinyalakan. CI baru bermakna bila hasil merahnya menahan penggabungan, sehingga
+cabang \texttt{main} dilindungi agar hanya menerima perubahan yang hijau.
+
+\section{Kerangka API Minimal: Route, Service, dan Repository}
+
+Praktikum bab-bab berikutnya membutuhkan sistem untuk diukur. Sistem itu
+dimulai dari API katalog kecil yang dipecah menjadi tiga lapisan. Lapisan
+\textit{route} menerjemahkan permintaan HTTP beserta isinya, yang berbentuk
+JavaScript Object Notation (JSON), menjadi panggilan. Lapisan \textit{service}
+memegang aturan bisnis. Lapisan \textit{repository} menyimpan data, dan
+hanya lapisan itulah yang tahu bentuk penyimpanannya \cite{fowler2002poeaa}.
+
+Analoginya seperti loket pembayaran uang kuliah. Petugas loket menerima
+formulir dan memberi tanda terima, tetapi tidak menghitung denda. Bagian
+keuangan menghitung denda menurut aturan, tetapi tidak menyimpan berkas.
+Arsip menyimpan berkas, tetapi tidak pernah memeriksa aturan. Ketika arsipnya
+pindah ke ruangan lain, loket dan bagian keuangan tetap bekerja seperti biasa.
+
+Gambar \ref{fig:lapisan01} memperlihatkan ketiga lapisan beserta dua
+\textit{repository} yang dapat dipasang di bawahnya.
+
+\begin{figure}[!htb]
+  \centering
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    kotak/.style={draw, rounded corners, minimum height=0.85cm,
+                  minimum width=2.4cm, align=center, font=\scriptsize\bfseries},
+    panah/.style={-{Stealth[length=2mm]}, thick}
+  ]
+    \node[kotak, fill=blue!8] (http) at (0,0) {Klien HTTP\\{\tiny\mdseries curl, browser}};
+    \node[kotak, fill=blue!8] (rute) at (3.6,0) {Route\\{\tiny\mdseries rute.py}};
+    \node[kotak, fill=orange!12] (layanan) at (7.4,0) {Service\\{\tiny\mdseries layanan.py}};
+    \node[kotak, fill=green!10] (memori) at (5.8,-1.6) {Repository memori\\{\tiny\mdseries uji unit}};
+    \node[kotak, fill=green!10] (sqlite) at (9.0,-1.6) {Repository SQLite\\{\tiny\mdseries aplikasi}};
+
+    \draw[panah] (http) -- node[font=\tiny, above] {JSON} (rute);
+    \draw[panah] (rute) -- node[font=\tiny, above] {panggilan} (layanan);
+    \draw[panah] (layanan.south) -- (memori.north);
+    \draw[panah] (layanan.south) -- (sqlite.north);
+    \node[font=\tiny, gray] at (7.4,0.75) {aturan bisnis};
+  \end{tikzpicture}
+  \caption{Tiga lapisan API, dengan \textit{repository} yang dapat diganti}
+  \label{fig:lapisan01}
+\end{figure}
+
+Aturan bisnisnya tertulis pada Listing \ref{lst:layanan01}. Tidak ada satu
+pun baris HTTP atau Structured Query Language (SQL) di sana, sehingga aturan ini dapat diuji tanpa server
+dan tanpa basis data.
+
+\begin{lstlisting}[style=PythonStyle, caption={Aturan buku yang sah di lapisan \textit{service}, tersedia di \berkas{sources/chapter01/layanan.py}}, label={lst:layanan01}]
+  def tambah_buku(self, judul, harga, stok):
+    """Memeriksa satu buku baru terhadap aturan katalog, lalu menyimpannya."""
+    judul = judul.strip() if isinstance(judul, str) else ""
+    if not judul:
+      raise KesalahanValidasi("judul wajib diisi")
+    if len(judul) > PANJANG_JUDUL_MAKSIMUM:
+      raise KesalahanValidasi(
+          f"judul paling panjang {PANJANG_JUDUL_MAKSIMUM} karakter")
+    if not bilangan_bulat(harga) or harga < HARGA_MINIMUM_RUPIAH:
+      raise KesalahanValidasi("harga harus bilangan bulat positif")
+    if not bilangan_bulat(stok) or stok < STOK_MINIMUM:
+      raise KesalahanValidasi("stok harus bilangan bulat, tidak negatif")
+    return self.repositori.simpan(judul, harga, stok)
+\end{lstlisting}
+
+Kesalahan dari \textit{service} diterjemahkan \textit{route} menjadi status
+HTTP. Listing \ref{lst:rute01} memperlihatkan satu terjemahan itu:
+\texttt{BukuTidakDitemukan} menjadi 404.
+
+\begin{lstlisting}[style=PythonStyle, caption={\textit{Route} menerjemahkan kesalahan menjadi status HTTP, tersedia di \berkas{sources/chapter01/rute.py}}, label={lst:rute01}]
+    nomor = self.path.removeprefix(AWALAN_BUKU)
+    if self.path.startswith(AWALAN_BUKU) and nomor.isdigit():
+      try:
+        self.kirim_json(200, layanan.cari(int(nomor)))
+      except BukuTidakDitemukan as kesalahan:
+        self.kirim_json(404, {"pesan": str(kesalahan)})
+      return
+    self.kirim_json(404, {"pesan": "alamat tidak dikenal"})
+\end{lstlisting}
+
+Pemisahan itu terlihat paling jelas pada pengujiannya. Tabel
+\ref{tab:uji01} membandingkan uji di lapisan \textit{service} dengan uji
+lewat HTTP pada aplikasi yang sama.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Uji di lapisan \textit{service} lawan uji lewat HTTP, hasil
+           pengukuran nyata}
+  \label{tab:uji01}
+  \begin{tabularx}{\textwidth}{Xlll}
+    \hline
+    \textbf{Lapisan yang diuji} & \textbf{Jumlah uji} & \textbf{Detik} & \textbf{Yang dibutuhkan} \\
+    \hline
+    \textit{service}, \textit{repository} memori & 10 & di bawah 0,001 & tidak ada \\
+    \hline
+    API lewat HTTP, SQLite & 6 & 0,016 & server dan basis data \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Tabel itu punya dua konsekuensi praktis. Pertama, aturan bisnis diuji di
+lapisan \textit{service}, karena di sanalah uji paling murah dan paling banyak
+dapat ditulis. Uji lewat HTTP cukup memeriksa hal yang memang hanya ada di
+HTTP: status, bentuk JSON, dan terjemahan
+kesalahan. Kedua, \textit{repository} dapat diganti tanpa menyentuh dua
+lapisan di atasnya. Bab 3 mengganti SQLite dengan PostgreSQL, dan
+\textit{service} serta \textit{route}-nya tidak perlu berubah.
+
+Angka API juga sempat menipu. Pada percobaan pertama, keenam uji API memakan
+0,506 detik, hampir seluruhnya menunggu server berhenti, karena server
+pustaka standar Python baru memeriksa perintah berhenti tiap setengah detik.
+Selang itu diperkecil di \berkas{test\_api.py}, dan angkanya turun menjadi
+0,016 detik. Uji yang lambat tanpa alasan akhirnya dilewati orang, sehingga
+lamanya pun perlu diukur.
 
 \section{Ringkasan}
 
-% TODO
+Mata kuliah ini menilai aplikasi web dari sifat yang tidak terlihat di layar:
+cepatnya, ketahanannya, keamanannya, dan kemudahannya diubah. Jawabannya
+selalu angka yang diukur sendiri, misalnya 199,8 lawan 1,8 milidetik untuk
+peristiwa yang sama pada Bab 13. Keempat belas pertemuannya dibagi menjadi
+empat bagian, dan urutannya disusun untuk menopang enam topik penelitian.
+
+Lingkungan kerja diperiksa sebelum praktikum pertama dengan satu
+\textit{smoke test}. Pada laptop penulisan modul ini, seluruh perkakas lolos,
+tetapi tiga dari 37 port sudah dipakai proyek lain, yaitu port milik Bab 3,
+Bab 4, dan Bab 11. Kegagalan seperti itu jauh lebih murah ditemukan pada
+pertemuan pertama daripada di tengah praktikum bab yang membutuhkannya.
+
+Alur kerjanya memakai satu monorepo, cabang berumur pendek, dan
+\textit{code review}. Pengukuran dengan Git memperlihatkan alasannya: cabang
+yang digabung sesudah satu atau tiga hari tidak menimbulkan konflik,
+sedangkan cabang dua minggu menimbulkan 11 blok konflik walaupun hanya dua
+baris yang diubah kedua pihak, karena perubahan pada baris yang berdampingan
+ikut bertabrakan.
+
+CI menjalankan pemeriksaan termurah lebih dahulu dan berhenti di langkah
+pertama yang gagal. Kode utuh lolos dalam 0,20 detik, sedangkan kode yang
+dirusak tertahan di uji unit dalam 0,07 detik dengan nama uji yang gagal.
+Kerangka API berpola \textit{route}, \textit{service}, dan \textit{repository}
+membuat aturan bisnis dapat diuji tanpa server: sepuluh uji selesai di bawah
+satu milidetik.
+
+Pesan utama bab ini adalah bahwa kebiasaan kerja ditetapkan sejak awal dan
+dijaga mesin. Lingkungan diperiksa \textit{smoke test}, cabang digabung
+selagi kecil, dan perubahan cacat ditolak CI sebelum sempat dibaca orang,
+sehingga tiga belas bab berikutnya dapat dipakai untuk mengukur, bukan untuk
+membereskan.
 
 \section{Latihan}
 
+Seluruh file yang dipakai pada latihan ini tersedia di
+\berkas{sources/chapter01/}, dihitung relatif terhadap akar repositori.
+Latihan ini hanya membutuhkan Python 3 dan Git. Docker, Node.js, dan Chrome
+hanya diperiksa keberadaannya.
+
+Seluruh skrip hanya menyentuh komputer sendiri. Pemeriksaan port mencoba
+memesan tiap port sebentar lalu melepasnya, tanpa mengirim data ke mana pun,
+dan percobaan Git berjalan di direktori sementara. Angka detik tiap mahasiswa
+akan berbeda, sedangkan pola perbandingannya akan sama.
+
+\subsection*{Latihan 1: Smoke Test Lingkungan}
+
+Latihan ini memastikan seluruh perkakas keempat belas bab sudah siap, dan
+memperlihatkan bahwa kegagalan yang ditemukan sekarang jauh lebih murah
+daripada yang ditemukan di tengah praktikum.
+
 \begin{enumerate}
-  \item % TODO
-  \item % TODO
+  \item Buat venv bersama bila belum ada, lalu pasang pustaka basis data,
+        seperti pada Listing \ref{lst:c01-lat1-jalan}.
+  \item Jalankan \berkas{periksa-lingkungan.py}, lalu catat seluruh barisnya.
+  \item Perbaiki tiap pemeriksaan yang gagal: pasang perkakas yang kurang,
+        nyalakan Docker, atau hentikan proses yang memakai port bab lain.
+  \item Jalankan ulang sampai hasilnya hijau, lalu catat apa saja yang
+        diperbaiki.
+  \item Isi Tabel \ref{tab:c01-lat1-hasil}. Tabel \ref{tab:c01-lat1-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa pemeriksaan Docker
+        menanyai server, bukan hanya mencari perintah \texttt{docker}?
+        Kedua, bab mana yang tertahan bila port 8080 sudah terpakai, dan
+        kapan kegagalannya akan muncul tanpa \textit{smoke test} ini?
+        Ketiga, mengapa versi minimum ditulis di skrip, bukan hanya di
+        naskah?
 \end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Menyiapkan venv lalu menjalankan \textit{smoke test}, tersedia di \berkas{sources/chapter01/periksa-lingkungan.py}}, label={lst:c01-lat1-jalan}]
+cd sources/chapter01
+python3 -m venv ../.venv
+../.venv/bin/pip install "psycopg[binary,pool]"
+# Dua perintah di atas cukup sekali, bila sources/.venv belum ada.
+python3 periksa-lingkungan.py
+
+# Keluarannya periksa-lingkungan.py:
+#   Pemeriksaan                      Hasil  Keterangan
+#   Python 3.11 atau lebih baru      lolos  3.15.2
+#   Node.js 20 atau lebih baru       lolos  v22.23.4
+#   npm 10 atau lebih baru           lolos  10.9.9
+#   Git 2.30 atau lebih baru         lolos  git version 2.43.0
+#   Docker 24 atau lebih baru        lolos  server 29.9.3
+#   Docker Compose 2 atau lebih baru lolos  5.7.0
+#   Chrome atau Chromium             lolos  Google Chrome 157.0.8103.38
+#   psycopg di sources/.venv         lolos  3.3.5
+#   Port bab 1 sampai 14             gagal  3 terpakai: 5433, 8000, 8080
+#     port 5433 milik Bab 3 sedang dipakai proses lain
+#     port 8000 milik Bab 4 sedang dipakai proses lain
+#     port 8080 milik Bab 11 sedang dipakai proses lain
+#
+#   Hasil: merah, 1 pemeriksaan gagal
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 1 yang sudah terisi}
+  \label{tab:c01-lat1-contoh}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Pemeriksaan} & \textbf{Hasil} & \textbf{Keterangan} \\
+    \hline
+    perkakas dan versinya, tujuh baris & lolos & seluruhnya di atas minimum \\
+    \hline
+    psycopg di venv & lolos & 3.3.5 \\
+    \hline
+    port bab 1 sampai 14 & gagal & 5433, 8000, 8080 \\
+    \hline
+    \textbf{hasil} & \textbf{merah} & 1 pemeriksaan gagal \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pemeriksaan Latihan 1}
+  \label{tab:c01-lat1-hasil}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Pemeriksaan} & \textbf{Hasil} & \textbf{Keterangan} \\
+    \hline
+    perkakas dan versinya, tujuh baris & \dots & \dots \\
+    \hline
+    psycopg di venv & \dots & \dots \\
+    \hline
+    port bab 1 sampai 14 & \dots & \dots \\
+    \hline
+    \textbf{hasil} & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Contoh di atas merah karena ketiga port dipakai proyek lain di laptop yang
+sama, bukan karena perkakasnya kurang. Hasil di laptop lain hampir pasti
+berbeda. Yang dilaporkan adalah pemeriksaan mana yang gagal dan apa yang
+dilakukan sampai hasilnya hijau.
+
+\subsection*{Latihan 2: Umur Cabang dan Konflik}
+
+Latihan ini membuktikan bahwa konflik tumbuh lebih cepat daripada umur
+cabangnya, sehingga cabang pantas digabung selagi pendek.
+
+\begin{enumerate}
+  \item Jalankan \berkas{simulasi-cabang.py}, seperti pada Listing
+        \ref{lst:c01-lat2-jalan}, lalu catat keempat barisnya.
+  \item Ubah \texttt{BARIS\_PER\_HARI} di \berkas{simulasi-cabang.py} menjadi
+        6, jalankan ulang, lalu catat kolom blok konfliknya.
+  \item Kembalikan \texttt{BARIS\_PER\_HARI} menjadi 3.
+  \item Isi Tabel \ref{tab:c01-lat2-hasil}. Tabel \ref{tab:c01-lat2-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa blok konflik pada 14
+        hari jauh lebih banyak daripada baris yang diubah kedua pengembang?
+        Kedua, apa yang terjadi pada konflik ketika tiap pengembang bekerja
+        dua kali lebih banyak per hari? Ketiga, berapa hari umur cabang
+        terpanjang yang masih bebas konflik pada kedua setelan?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Mengukur konflik menurut umur cabang, tersedia di \berkas{sources/chapter01/simulasi-cabang.py}}, label={lst:c01-lat2-jalan}]
+python3 simulasi-cabang.py
+
+# Keluarannya:
+#   300 baris, tiap pengembang mengubah 3 baris per hari, git version 2.43.0
+#
+#   Umur cabang  Diubah A  Diubah B  Diubah keduanya  Blok konflik
+#        1 hari         3         3                0             0
+#        3 hari         9         9                0             0
+#        7 hari        20        19                1             3
+#       14 hari        40        39                2            11
+#
+# Kolom blok konflik dengan BARIS_PER_HARI = 6: 0, 2, 10, 21
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 2 yang sudah terisi}
+  \label{tab:c01-lat2-contoh}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Umur cabang} & \textbf{Konflik, 3 baris per hari} & \textbf{Konflik, 6 baris per hari} \\
+    \hline
+    1 hari & 0 & 0 \\
+    \hline
+    3 hari & 0 & 2 \\
+    \hline
+    7 hari & 3 & 10 \\
+    \hline
+    14 hari & 11 & 21 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 2}
+  \label{tab:c01-lat2-hasil}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Umur cabang} & \textbf{Konflik, 3 baris per hari} & \textbf{Konflik, 6 baris per hari} \\
+    \hline
+    1 hari & \dots & \dots \\
+    \hline
+    3 hari & \dots & \dots \\
+    \hline
+    7 hari & \dots & \dots \\
+    \hline
+    14 hari & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Benih acaknya tetap, sehingga angka latihan ini sama persis pada komputer
+mana pun dengan Git versi yang sama. Versi Git yang berbeda dapat menghitung
+batas blok konflik sedikit berbeda, sedangkan polanya tetap: konflik tumbuh
+jauh lebih cepat daripada umur cabangnya.
+
+\subsection*{Latihan 3: Kerangka API dan CI yang Hijau}
+
+Latihan ini menyalakan kerangka API yang dipakai bab-bab berikutnya, lalu
+membuktikan bahwa CI menahan perubahan yang melanggar aturan bisnis.
+
+\begin{enumerate}
+  \item Jalankan \berkas{ci-lokal.py}, lalu catat ketiga langkahnya beserta
+        detiknya.
+  \item Nyalakan \berkas{aplikasi.py}, lalu kirim tiga permintaan seperti
+        pada Listing \ref{lst:c01-lat3-jalan}. Catat status HTTP tiap
+        permintaan.
+  \item Ubah \texttt{harga < HARGA\_MINIMUM\_RUPIAH} di \berkas{layanan.py}
+        menjadi \texttt{harga < 0}, jalankan \berkas{ci-lokal.py}, lalu catat
+        langkah tempatnya berhenti dan nama uji yang gagal.
+  \item Kembalikan \berkas{layanan.py}, lalu pastikan CI kembali hijau.
+  \item Buat repositori tim, salin direktori ini ke dalamnya, salin
+        \berkas{ci.yml} ke \berkas{.github/workflows/}, sesuaikan
+        \texttt{paths}-nya, lalu commit.
+  \item Isi Tabel \ref{tab:c01-lat3-hasil}. Tabel \ref{tab:c01-lat3-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa uji API tidak
+        dijalankan pada jalan yang merah, padahal salah satu ujinya juga
+        akan gagal? Kedua, lapisan mana yang berubah bila SQLite diganti
+        PostgreSQL? Ketiga, mengapa satu skrip CI yang sama dipakai di
+        laptop dan di server CI?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={CI lokal lalu tiga permintaan ke API, tersedia di \berkas{sources/chapter01/}}, label={lst:c01-lat3-jalan}]
+python3 ci-lokal.py
+
+# Keluarannya:
+#   Langkah              Hasil   Detik  Keterangan
+#   Periksa sintaks      lolos    0.04  seluruh file
+#   Uji unit service     lolos    0.06  10 uji
+#   Uji API lewat HTTP   lolos    0.10  6 uji
+#
+#   Hasil: hijau, seluruh langkah lolos
+
+python3 aplikasi.py &
+curl -s -X POST http://127.0.0.1:8050/buku \
+  -H 'Content-Type: application/json' \
+  -d '{"judul": "Basis Data Terapan", "harga": 85000, "stok": 4}'
+curl -s -X POST http://127.0.0.1:8050/buku \
+  -H 'Content-Type: application/json' \
+  -d '{"judul": "Struktur Data", "harga": 0, "stok": 2}'
+curl -s http://127.0.0.1:8050/buku/9
+
+# Keluarannya, dengan status HTTP di ujung tiap baris:
+# {"nomor": 1, "judul": "Basis Data Terapan", "harga": 85000, "stok": 4} 201
+# {"pesan": "harga harus bilangan bulat positif"} 400
+# {"pesan": "buku nomor 9 tidak ada"} 404
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 3 yang sudah terisi}
+  \label{tab:c01-lat3-contoh}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Pengamatan} & \textbf{Kode utuh} & \textbf{Kode dirusak} \\
+    \hline
+    hasil CI & hijau, 0,20 detik & merah, berhenti di uji unit \\
+    \hline
+    uji yang gagal & tidak ada & \texttt{test\_harga\_nol\_ditolak} \\
+    \hline
+    status buku sah, harga nol, nomor 9 & 201, 400, 404 & 201, 201, 404 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 3}
+  \label{tab:c01-lat3-hasil}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Pengamatan} & \textbf{Kode utuh} & \textbf{Kode dirusak} \\
+    \hline
+    hasil CI & \dots & \dots \\
+    \hline
+    uji yang gagal & \dots & \dots \\
+    \hline
+    status buku sah, harga nol, nomor 9 & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Kolom kode dirusak pada baris terakhir menunjukkan akibat yang ditahan CI.
+Pada kode yang dirusak, permintaan buku seharga nol dijawab 201, artinya buku
+gratis benar-benar masuk katalog. Karena itu \textit{route} dan
+\textit{repository} tidak cukup diuji sendiri-sendiri: aturan yang salah di
+\textit{service} tetap menghasilkan HTTP yang tampak sehat.

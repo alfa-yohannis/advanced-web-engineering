@@ -5,9 +5,9 @@ berikutnya tidak dimulai dari menebak-nebak.
 
 ## Yang sudah lengkap
 
-Bab 2 sampai Bab 14 sudah punya naskah, slide, file sumber, dan angka yang
+Bab 1 sampai Bab 14 sudah punya naskah, slide, file sumber, dan angka yang
 diukur sungguhan. Seluruh empat belas bab sudah masuk buku, dan bukunya
-terbangun di 261 halaman.
+terbangun di 275 halaman.
 
 ## Penyeragaman istilah
 
@@ -16,13 +16,6 @@ beserta slidenya, tetapi belum di bab lain. Yang tertinggal di Bab 2 sampai
 Bab 4 beserta slidenya: `berkas`, `jawaban`, `anggaran`, `latensi`, `gejala`,
 `pita`, `kewarasan`, `pemanasan`, dan `vonis`. Daftar lengkap istilahnya ada
 di `CLAUDE.md`.
-
-## Bab 1
-
-Naskah `module/chapter01.tex` masih kerangka berisi `% TODO`, padahal sudah
-aktif di buku, sehingga tercetak sebagai bab tanpa isi. Direktori
-`sources/chapter01` masih kosong, dan slide `session01` belum ada. Peta
-topiknya ada di `README.md` akar.
 
 ## Pemeriksaan sumber Bab 2 sampai Bab 13
 
@@ -93,3 +86,12 @@ teks peta pertemuan perlu disesuaikan atau dibahas lebih dahulu.
 - Biaya di `sources/chapter14/rencana.json` dan waktu token di
   `model-tiruan.py` sengaja ditetapkan, bukan diukur. Keduanya disebut terang
   di naskah Bab 14.
+- API kerangka Bab 1 memakai port 8050. `periksa-lingkungan.py` memeriksa
+  seluruh port bab 1 sampai 14, sehingga daftar `PORT_PER_BAB` di dalamnya
+  ikut diperbarui bila bab mana pun mengganti port.
+- Angka `simulasi-cabang.py` Bab 1 diukur dengan Git 2.43. Benih acaknya
+  tetap, tetapi versi Git lain dapat menghitung batas blok konflik sedikit
+  berbeda.
+- Slide sesi 1 dan sesi 14 memberi baris kosong sesudah tabel dan gambar,
+  agar jarak sebelum teks penjelasnya jatuh di tempat yang benar. Slide sesi
+  lain belum diperiksa untuk hal yang sama.

@@ -296,6 +296,7 @@ Diurutkan dari yang paling mudah dieksekusi sampai yang paling menuntut.
 | BFF | Backend for Frontend |
 | CAP | Consistency, Availability, Partition tolerance |
 | CDN | Content Delivery Network |
+| CI | Continuous Integration |
 | CI/CD | Continuous Integration / Continuous Delivery |
 | CLS | Cumulative Layout Shift |
 | CORS | Cross-Origin Resource Sharing |

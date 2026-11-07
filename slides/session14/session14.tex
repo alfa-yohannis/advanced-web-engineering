@@ -213,6 +213,7 @@ def baca_kesukaan(nomor_pengguna):
     8 & 198,0 & 161,4 & 168,9 & 23\% \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Dari empat ke delapan replika, \textit{throughput} tidak bergerak:
   198,2 lalu 198,0. Bagian yang tidak ikut bertambah menentukan batas seluruh
@@ -249,6 +250,7 @@ def baca_kesukaan(nomor_pengguna):
     8 & 347,8 & 87,4 & 41\% \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Batas basis data naik menjadi 800 \textit{query} per detik, tetapi
   delapan replika hanya bekerja 41\%. Laptop Intel Core i9-11900H mencapai 4,9
@@ -311,6 +313,7 @@ def baca_kesukaan(nomor_pengguna):
     HTTP, sambungan baru tiap kali & 3,1831 & 3,8629 & 2.701 \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Seluruhnya di 127.0.0.1, jaringan terbaik yang mungkin. Kolom kali
   lipat berubah jauh antarpengukuran karena penyebutnya amat kecil. Yang tetap
@@ -354,6 +357,7 @@ def baca_kesukaan(nomor_pengguna):
     akun & riwayat milik seorang pengguna & daftar keinginan, ulasan \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Batas layanan mengikuti batas makna, yang disebut \textit{bounded
   context}, bukan batas tabel. Sistem juga cenderung meniru jalur komunikasi
@@ -377,6 +381,7 @@ def baca_kesukaan(nomor_pengguna):
     normal & konsistensi & dibaca dari \textit{primary}, lebih lambat \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small CAP (Consistency, Availability, Partition tolerance) untuk dua baris
   pertama, PACELC untuk dua baris terakhir. Stok saat pembayaran memilih
@@ -436,6 +441,7 @@ def baca_kesukaan(nomor_pengguna):
     \textit{consistent hashing}, 100 titik & 20,2\% & 21,2\% & 26,9\% \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Satu titik per \textit{node} hanya memindahkan 2,1\%, dan itu tanda
   buruk: satu \textit{node} lama memegang 49,2\% kunci. Pelanggan teratas
@@ -474,6 +480,7 @@ def baca_kesukaan(nomor_pengguna):
     \textbf{Jumlah} & & \textbf{28} & & & \textbf{15} & \textbf{26,4} \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Pesanan butuh lima \textit{shard} karena 540 tulisan per detik
   melebihi 118,9. Tanpa \textit{cache}, katalog butuh 21 \textit{node} dan
@@ -505,6 +512,7 @@ def baca_kesukaan(nomor_pengguna):
     Virginia, Amerika Serikat & 16.338 km & 163,4 ms & 490,1 ms \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Dihitung dari Jakarta dengan cahaya di serat optik sekitar 200.000
   km per detik. Sambungan HTTP terenkripsi yang baru butuh tiga Round-Trip
@@ -594,6 +602,7 @@ async function jaringanLebihDahulu(permintaan) {
     4, profil baru & mati & 0 & gagal & - & 0 \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small \textit{Service worker} hanya melindungi pengguna yang pernah datang.
   Dua permintaan pada kunjungan kedua adalah data katalog dan navigasi yang
@@ -622,6 +631,7 @@ async function jaringanLebihDahulu(permintaan) {
     pekerjaan yang sama di browser dan di server & halaman yang harus tampil secepat mungkin pada kunjungan pertama \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Wasm tidak menyentuh Document Object Model (DOM) secara langsung, dan
   modulnya harus diunduh serta dikompilasi sebelum dipakai.}
@@ -642,6 +652,7 @@ async function jaringanLebihDahulu(permintaan) {
     \textit{cold start}, dengan dependensi & 105,565 & 118,585 & 8.911 \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Analoginya laboratorium yang dimatikan ketika kosong. Pekerjaan
   persiapan ditaruh di luar \textit{handler}, karena dikerjakan sekali per
@@ -697,6 +708,7 @@ async function jaringanLebihDahulu(permintaan) {
     \textit{streaming}, kalimat lain & 602,0 & 3.000,2 & 127 & MISS \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small \textit{Streaming} menyembunyikan \textit{latency}, tidak
   menghapusnya. \textit{Cache} kecocokan persis tidak mengenali makna, dan
@@ -722,6 +734,7 @@ async function jaringanLebihDahulu(permintaan) {
     LLM10 Unbounded Consumption & batasi token dan pasang \textit{rate limiting} \\
     \hline
   \end{tabularx}}
+
   \vspace{4pt}
   {\small Daftar dari Open Worldwide Application Security Project (OWASP)
   untuk aplikasi LLM 2025.}
