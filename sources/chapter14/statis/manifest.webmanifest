@@ -1,0 +1,18 @@
+{
+  "name": "Katalog Toko Buku",
+  "short_name": "Katalog",
+  "description": "Manifest demo Progressive Web App Bab 14. Membuat katalog dapat dipasang seperti aplikasi, dengan kerangka yang disimpan service worker.",
+  "lang": "id",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#257147",
+  "icons": [
+    {
+      "src": "/ikon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

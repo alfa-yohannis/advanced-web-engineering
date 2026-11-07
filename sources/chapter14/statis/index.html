@@ -1,0 +1,25 @@
+<!-- Kerangka katalog Bab 14 sebagai Progressive Web App. Dilayani aplikasi.py
+     di http://127.0.0.1:8120/, lalu disimpan sw.js agar tetap tampil offline. -->
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#257147">
+  <title>Katalog Toko Buku</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/ikon.svg" type="image/svg+xml">
+  <style>
+    body { font-family: sans-serif; margin: 1.5rem; color: #1d1d1d; }
+    h1 { color: #257147; font-size: 1.4rem; }
+    #keadaan { color: #555; }
+    .buku { padding: 0.3rem 0; border-bottom: 1px solid #ddd; }
+  </style>
+</head>
+<body>
+  <header><h1>Katalog Toko Buku</h1></header>
+  <p id="keadaan">Memuat katalog...</p>
+  <ul id="katalog"></ul>
+  <script src="/aplikasi.js"></script>
+</body>
+</html>

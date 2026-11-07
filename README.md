@@ -294,6 +294,7 @@ Diurutkan dari yang paling mudah dieksekusi sampai yang paling menuntut.
 | AVIF | AV1 Image File Format |
 | AWS | Amazon Web Services |
 | BFF | Backend for Frontend |
+| CAP | Consistency, Availability, Partition tolerance |
 | CDN | Content Delivery Network |
 | CI/CD | Continuous Integration / Continuous Delivery |
 | CLS | Cumulative Layout Shift |
@@ -307,6 +308,7 @@ Diurutkan dari yang paling mudah dieksekusi sampai yang paling menuntut.
 | DSN | Data Source Name |
 | DTO | Data Transfer Object |
 | E2E | End-to-End |
+| GIL | Global Interpreter Lock |
 | GraphQL | Graph Query Language |
 | gRPC | gRPC Remote Procedure Call, framework RPC dari Google |
 | HTML | HyperText Markup Language |
@@ -325,6 +327,7 @@ Diurutkan dari yang paling mudah dieksekusi sampai yang paling menuntut.
 | OIDC | OpenID Connect |
 | ORM | Object-Relational Mapping |
 | OWASP | Open Worldwide Application Security Project |
+| PACELC | Partition, Availability, Consistency, Else, Latency, Consistency |
 | PWA | Progressive Web App |
 | QPS | Query Per Second |
 | RBAC | Role-Based Access Control |
@@ -344,5 +347,7 @@ Diurutkan dari yang paling mudah dieksekusi sampai yang paling menuntut.
 | TLS | Transport Layer Security |
 | TTFB | Time To First Byte |
 | TTL | Time To Live |
+| UU PDP | Undang-Undang Pelindungan Data Pribadi |
+| W3C | World Wide Web Consortium |
 | Wasm | WebAssembly |
 | XSS | Cross-Site Scripting |
