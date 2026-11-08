@@ -145,11 +145,17 @@ murah dan paling sering gagal dijalankan lebih dahulu. Listing
 \ref{lst:ci9} memuat potongan contoh \textit{pipeline} pada bab ini.
 
 \begin{lstlisting}[language=yaml, caption={Potongan contoh pipeline, tersedia di \berkas{sources/chapter09/ci-contoh.yml}}, label={lst:ci9}]
+      - name: Pasang dependensi
+        run: python -m pip install ruff pytest hypothesis "psycopg[binary]"
+
       - name: Analisis statis
         run: ruff check sources/chapter09
 
-      - name: Uji unit dan integrasi
-        run: pytest -q sources/chapter06
+      # Pengujian integrasi Bab 6 membutuhkan PostgreSQL berisi data uji
+      # Bab 3, sehingga yang dijalankan di sini hanya lapisan unit.
+      - name: Uji unit
+        working-directory: sources/chapter06
+        run: pytest -q test_harga.py test_properti.py test_double.py
 
       - name: Bangun image
         run: docker build -t awe9-layanan sources/chapter09
@@ -566,7 +572,7 @@ tidak dapat dijawab metrik maupun \textit{log} sendirian.
   \item Ulangi untuk satu permintaan yang gagal, lalu catat di proses mana
         kegagalannya berasal.
   \item Jawab dua pertanyaan berikut. Pertama, berapa biaya penerusan
-        proxy, dan dari angka mana Anda mengetahuinya? Kedua, apa yang
+        proxy, dan dari angka mana biaya itu terbaca? Kedua, apa yang
         terjadi pada penelusuran bila proxy tidak meneruskan header
         \texttt{traceparent}?
 \end{enumerate}

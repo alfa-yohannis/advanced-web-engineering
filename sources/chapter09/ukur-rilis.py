@@ -46,7 +46,13 @@ def kirim_permintaan(jumlah):
 
 
 def hitung_persentil(daftar_angka, persentil):
-  """Menghitung persentil dengan cara yang sama seperti alat ukur Bab 5."""
+  """Menghitung persentil dengan cara nearest-rank, tanpa interpolasi.
+
+  Nilai yang diambil adalah nilai pada peringkat itu di daftar terurut,
+  sehingga hasilnya selalu salah satu angka yang benar-benar terukur. Alat
+  ukur Bab 5 memakai interpolasi linear, sehingga angkanya dapat sedikit
+  berbeda pada data yang sama.
+  """
   terurut = sorted(daftar_angka)
   posisi = min(int(len(terurut) * persentil / 100), len(terurut) - 1)
   return terurut[posisi]

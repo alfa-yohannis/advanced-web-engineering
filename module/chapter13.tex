@@ -240,9 +240,11 @@ def ambil(sekarang):
   digeser sejauh jeda backoff, sehingga pekerjaan itu kembali muncul bila
   worker-nya mati sebelum memanggil selesai. Di sanalah sifat at-least-once
   berasal: pekerjaan dapat terkirim lebih dari sekali, dan tidak pernah
-  hilang tanpa dikerjakan.
+  hilang tanpa dikerjakan. Pekerjaan yang jatah percobaannya habis
+  dipindahkan lebih dahulu, sehingga tidak diambil lagi.
   """
   keadaan = muat()
+  pindahkan_yang_habis(keadaan, sekarang)
   for pesan in keadaan["pesan"]:
     if pesan["siap_pada"] <= sekarang:
       pesan["percobaan"] += 1
@@ -317,9 +319,11 @@ adalah waktu sejak pengukuran mulai, sehingga selisihnya persis jeda dasar
 lalu dua kali jeda dasar.
 
 Pertanyaan berikutnya, sampai kapan dicoba ulang. Pada demo ini batasnya
-lima percobaan, dan pekerjaan yang tetap gagal sesudah itu pantas dipindahkan
-ke tempat terpisah, yang biasa disebut \textit{dead letter queue}, agar
-antreannya tidak tersumbat satu pekerjaan yang tidak akan pernah berhasil.
+lima percobaan. Pekerjaan yang tetap gagal sesudah itu dipindahkan ke tempat
+terpisah, yang biasa disebut \textit{dead letter queue}, agar antreannya
+tidak tersumbat satu pekerjaan yang tidak akan pernah berhasil. Pemindahan
+itu dikerjakan \texttt{pindahkan\_yang\_habis} di awal \texttt{ambil} pada
+Listing \ref{lst:ambil13}.
 
 \section{Consumer Idempoten dan Pengiriman At-Least-Once}
 
@@ -486,9 +490,9 @@ python3 webhook.py &
 python3 websocket.py &
 
 # Keluarannya:
-# Melayani di http://127.0.0.1:8100/sse dan /polling
-# Webhook di http://127.0.0.1:8102/webhook, dua percobaan pertama ditolak
-# WebSocket di ws://127.0.0.1:8101/
+# Melayani di http://127.0.0.1:8100/sse dan /polling  (Ctrl+C untuk berhenti)
+# Webhook di http://127.0.0.1:8102/webhook  (Ctrl+C untuk berhenti)
+# WebSocket di ws://127.0.0.1:8101/  (Ctrl+C untuk berhenti)
 \end{lstlisting}
 
 \subsection*{Latihan 1: Membandingkan Tiga Transport}
@@ -709,11 +713,11 @@ akibat gandanya hanya dapat ditahan \textit{consumer}.
 \end{enumerate}
 
 \begin{lstlisting}[language=bash, caption={Membandingkan percobaan dengan pengiriman yang tiba, tersedia di \berkas{sources/chapter13/ukur-antrean.py}}, label={lst:c13-lat4-jalan}]
-python3 ukur-antrean.py | tail -3
+python3 ukur-antrean.py | tail -2
 
 # Keluarannya:
-#   Percobaan worker: 6, pengiriman tiba: 5, pekerjaan tersisa: 0,
-#   ditandai diproses: 3
+#   Percobaan worker: 6, pengiriman tiba: 5
+#   Pekerjaan tersisa: 0, ditandai diproses: 3
 \end{lstlisting}
 
 \begin{table}[!htb]

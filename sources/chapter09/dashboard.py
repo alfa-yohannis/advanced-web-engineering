@@ -25,7 +25,7 @@ def baris_dashboard(nama, hasil):
   rata_ms = (hasil["total_ms"] / permintaan) if permintaan else 0.0
   p95 = metrik.persentil_dari_ember(hasil["ember"], permintaan, 95)
   return (f"  {nama:<{LEBAR_NAMA}} {permintaan:>8} {gagal:>7} "
-          f"{persen_gagal:>8.1f} {rata_ms:>9.1f} {str(p95):>8}")
+          f"{persen_gagal:>8.1f} {rata_ms:>9.1f} {p95!s:>8}")
 
 
 def main():

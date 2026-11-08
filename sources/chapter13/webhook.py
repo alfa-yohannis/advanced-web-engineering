@@ -93,8 +93,7 @@ class PenanganWebhook(BaseHTTPRequestHandler):
 def main():
   """Menyalakan penerima webhook sampai dihentikan dengan Ctrl+C."""
   server = ThreadingHTTPServer((HOST, PORT), PenanganWebhook)
-  print(f"Webhook di http://{HOST}:{PORT}/webhook, dua percobaan pertama "
-        f"jenis {JENIS_GAGAL_AWAL} ditolak  (Ctrl+C untuk berhenti)")
+  print(f"Webhook di http://{HOST}:{PORT}/webhook  (Ctrl+C untuk berhenti)")
   server.serve_forever()
 
 

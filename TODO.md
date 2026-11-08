@@ -7,7 +7,7 @@ berikutnya tidak dimulai dari menebak-nebak.
 
 Bab 1 sampai Bab 14 sudah punya naskah, slide, file sumber, dan angka yang
 diukur sungguhan. Seluruh empat belas bab sudah masuk buku, dan bukunya
-terbangun di 275 halaman.
+terbangun di 277 halaman.
 
 Seluruh perintah di README sumber dan di listing latihan Bab 1 sampai Bab 14
 sudah dijalankan pada 7 dan 8 November 2026, dan seluruhnya berjalan.
@@ -38,41 +38,21 @@ Beberapa kata lama sengaja dibiarkan, karena maknanya berbeda:
 Bagian topik penelitian di `README.md` juga belum diseragamkan, dan masih
 memakai `latensi`, `anggaran`, `basi`, `segar`, dan `jawaban`.
 
-## Temuan pemeriksaan sumber yang belum dibereskan
+## Listing yang belum sama persis dengan sumber atau keluarannya
 
-Pemeriksaan 8 November 2026 menemukan hal-hal berikut. Perintahnya tetap
-berjalan, tetapi naskah, langkah latihan, atau isi file belum sesuai.
+Masalah isi yang ditemukan pemeriksaan sumber 8 November 2026 sudah
+dibereskan. Yang tersisa hanya listing yang belum sama persis:
 
-- Bab 5: `lst:gate-jalan` disebut keluaran apa adanya, tetapi tidak memuat
-  baris "8 worker, 25 permintaan per worker".
-- Bab 6: langkah 4 Latihan 3 tidak dapat dikerjakan, karena seluruh 200.000
-  pesanan berisi tepat 3 item. Langkah 4 Latihan 4, mengarahkan ulang
-  `statis/pesanan.js`, tidak mengubah hasil *gate*, karena *gate* meminta
-  `/api/pesanan-n1/1` secara langsung dan tetap keluar dengan status 1.
-- Bab 7: langkah 4 Latihan 4 menghapus header dari `kebijakan.json`, sehingga
-  header itu hilang dari aplikasi dan dari syarat *gate* sekaligus. Hasilnya
-  15 dari 15 syarat, dengan status 0.
-- Bab 8: listing `wc` tidak memuat baris `1635 total`. Latihan 4 menyapa
-  pembaca dengan "Anda".
-- Bab 9: komentar `Dockerfile` menyebut dua file disalin, padahal hanya satu.
-  Docstring `ukur-rilis.py` menyebut cara persentil Bab 5, padahal yang
-  dipakai *nearest-rank*. `ci-contoh.yml` gagal bila dijalankan apa adanya:
-  tidak ada langkah pemasangan dependensi, pengujian Bab 6 butuh basis data,
-  dan ruff 0.17 menandai RUF010 di `alarm.py` dan `dashboard.py`. Latihan 3
-  dan `ci-contoh.yml` menyapa pembaca dengan "Anda".
-- Bab 10: `pengguna.json` menyebut password disimpan sebagai *hash*, padahal
-  isinya teks asli.
-- Bab 12: kontrak hanya mendeklarasikan 201, 409, dan 422 untuk `POST`
-  pesanan, padahal server dan naskah memakai 200 untuk permintaan ulang.
-  `lst:c12-siapkan` belum mengaktifkan venv, padahal README sudah.
-  `openapi.json | head -5` mencetak seluruh JSON, karena isinya satu baris.
-- Bab 13: `BATAS_PERCOBAAN = 5` di `antrean.py` tidak pernah dipakai, padahal
-  naskah menyebut batas lima percobaan. `LEBAR_HASIL` di `ukur-antrean.py`
-  juga tidak dipakai. `curl -sN .../sse | head -4` baru selesai sesudah dua
-  *event* atau *keep-alive* 15 detik, dan memotong blok kedua. Baris awal
-  `webhook.py` mencetak "jenis gagal-dua-kali" yang tidak ada di listing.
-  Listing `| tail -3` tidak memuat baris tabel dan baris kosong yang
-  sebenarnya tercetak.
+- Bab 12: baris pembuka server di `lst:c12-siapkan` dipendekkan, karena baris
+  aslinya lebih dari 78 karakter. Agar dapat dikutip apa adanya, pesan
+  programnya yang perlu dipendekkan. Slide sesi 12 memendekkan baris
+  *gateway* lebih jauh lagi, dan keluaran `uji-kontrak` di sana tidak memuat
+  ", sama".
+- Bab 13: listing Latihan 3 hanya memuat tabel pertama dari keluaran
+  `ukur-antrean.py`.
+- Beberapa listing kode lama bukan salinan persis file sumbernya, atau
+  panjangnya 79 sampai 80 karakter, misalnya `chapter05.tex` baris 125, 180,
+  409, dan 653.
 
 ## Catatan pemeliharaan
 
@@ -92,6 +72,20 @@ berjalan, tetapi naskah, langkah latihan, atau isi file belum sesuai.
   ulang dan mencetak label baru itu.
 - Kalimat hasil di `worker.py` Bab 13 dipendekkan, agar keluaran
   `ukur-antrean.py` muat utuh di listing 78 karakter tanpa dipotong tangan.
+- Kata sandi Bab 10 disimpan sebagai *salt* dan *hash* scrypt dengan biaya
+  2^14, sengaja kecil agar latihan tetap cepat. Nama yang tidak terdaftar
+  tetap menjalani satu scrypt, sehingga lama *response* tidak membocorkan
+  nama mana yang terdaftar. Ketiga jalurnya sama-sama sekitar 32 milidetik.
+- Langkah 4 Latihan 4 Bab 6 meminta mahasiswa memperbaiki N+1 di
+  `aplikasi.py` sekaligus memperbarui uji kontrak yang mengunci perilaku
+  lama, lalu mengembalikan keduanya sebelum Latihan 5, karena uji E2E
+  Latihan 5 membutuhkan jalur N+1.
+- `alarm.py` Bab 9 tidak menilai versi yang belum menerima permintaan sama
+  sekali, dan gagal bila belum ada versi yang menerima permintaan.
+  `ci-contoh.yml` hanya menjalankan lapisan unit, karena pengujian integrasi
+  Bab 6 membutuhkan PostgreSQL berisi data Bab 3.
+- Antrean Bab 13 memindahkan pekerjaan yang sudah dicoba lima kali ke
+  *dead letter*, sesuai `BATAS_PERCOBAAN`.
 - Judul slide dibatasi sekitar 37 karakter. Judul yang tepi kanannya lewat
   343 pt menutupi logo Pradita, karena kotak judul berlatar putih digambar di
   atas logo.

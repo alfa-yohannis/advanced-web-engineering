@@ -1,6 +1,6 @@
 # Contoh pipeline CI/CD untuk layanan Bab 9.
 # File ini bahan bacaan, bukan pipeline yang aktif. Untuk mengaktifkannya,
-# salin ke .github/workflows/ di repositori Anda sendiri.
+# salin ke .github/workflows/ pada repositori sendiri.
 #
 # Urutannya sengaja sama dengan urutan gate pada bab sebelumnya: yang paling
 # murah dan paling sering gagal dijalankan lebih dahulu.
@@ -21,11 +21,17 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Pasang dependensi
+        run: python -m pip install ruff pytest hypothesis "psycopg[binary]"
+
       - name: Analisis statis
         run: ruff check sources/chapter09
 
-      - name: Uji unit dan integrasi
-        run: pytest -q sources/chapter06
+      # Pengujian integrasi Bab 6 membutuhkan PostgreSQL berisi data uji
+      # Bab 3, sehingga yang dijalankan di sini hanya lapisan unit.
+      - name: Uji unit
+        working-directory: sources/chapter06
+        run: pytest -q test_harga.py test_properti.py test_double.py
 
       - name: Bangun image
         run: docker build -t awe9-layanan sources/chapter09

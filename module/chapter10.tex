@@ -613,7 +613,9 @@ sebenarnya tersebar di banyak tempat.
 \begin{enumerate}
   \item Tambahkan satu \textit{tenant} ketiga beserta satu penggunanya dan
         satu pesanannya ke
-        \berkas{sources/chapter10/pengguna.json}.
+        \berkas{sources/chapter10/pengguna.json}. Kata sandi pengguna baru
+        disimpan sebagai \textit{salt} dan \textit{hash}, yang dibuat dengan
+        perintah pada Listing \ref{lst:c10-lat4-sandi}.
   \item Tambahkan peran baru, misalnya auditor yang boleh membaca laporan
         tetapi tidak boleh membaca pesanan, ke
         \berkas{sources/chapter10/kebijakan.py}.
@@ -628,6 +630,13 @@ sebenarnya tersebar di banyak tempat.
         perlu diubah bila aturannya berganti dari peran menjadi izin per
         pengguna?
 \end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Membuat \textit{salt} dan \textit{hash} kata sandi pengguna baru, tersedia di \berkas{sources/chapter10/aplikasi.py}}, label={lst:c10-lat4-sandi}]
+python3 -c "import aplikasi; print(aplikasi.buat_catatan_sandi('eko123'))"
+
+# Keluarannya, berbeda tiap kali karena salt-nya acak:
+# {"salt_sandi": "aab7e943...", "hash_sandi": "97301a7f..."}
+\end{lstlisting}
 
 \begin{table}[!htb]
   \centering

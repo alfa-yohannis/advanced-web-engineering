@@ -717,9 +717,11 @@ membandingkan \textit{verdict}-nya pada dua sasaran.
         \ref{tab:c7-lat4-contoh} memperlihatkan contoh yang sudah terisi.
   \item Jalankan pemeriksaan dependensi dan analisis statis, lalu catat
         jumlah temuannya.
-  \item Hapus sementara satu header dari \berkas{sources/chapter07/kebijakan.json},
-        nyalakan ulang aplikasinya, jalankan ulang \textit{gate}-nya, lalu
-        kembalikan seperti semula.
+  \item Hentikan aplikasinya, lalu nyalakan ulang dengan \textit{copy} kebijakan
+        yang kehilangan satu header, sementara \textit{gate}-nya tetap
+        memakai \berkas{sources/chapter07/kebijakan.json} yang asli, seperti
+        pada Listing \ref{lst:c7-lat4-hapus}. Sesudah hasilnya dicatat,
+        nyalakan kembali aplikasinya tanpa argumen.
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa \textit{gate} menilai
         \textit{response} yang dikirim dan bukan membaca kodenya? Kedua,
         mengapa satu syarat justru lolos pada server pembanding? Ketiga,
@@ -744,6 +746,21 @@ ruff check .
 # All checks passed!
 \end{lstlisting}
 
+\begin{lstlisting}[language=bash, caption={Aplikasi yang kehilangan satu header, memakai \berkas{sources/chapter07/aplikasi.py}}, label={lst:c7-lat4-hapus}]
+grep -v '"Referrer-Policy"' kebijakan.json > kebijakan-uji.json
+SECRET_SESI=rahasia-latihan python aplikasi.py kebijakan-uji.json &
+python periksa-keamanan.py
+echo $?
+
+# Keluarannya (dipotong):
+#   / Referrer-Policy                            tidak ada    LANGGAR
+#   /api/cari?judul=Pengantar Referrer-Policy    tidak ada    LANGGAR
+#   /api/profil Referrer-Policy                  tidak ada    LANGGAR
+#
+# Gagal: 3 syarat keamanan belum terpenuhi.
+# 1
+\end{lstlisting}
+
 \begin{table}[!htb]
   \centering
   \caption{Contoh hasil Latihan 4 yang sudah terisi}
@@ -755,6 +772,8 @@ ruff check .
     Aplikasi Bab 7 & 18 & 18 & 0 \\
     \hline
     Server statis bawaan Python & 9 & 1 & 1 \\
+    \hline
+    Aplikasi dengan satu header dihapus & 18 & 15 & 1 \\
     \hline
   \end{tabularx}
 \end{table}

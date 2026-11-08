@@ -6,9 +6,10 @@ consumer: pesan tidak hilang ketika worker-nya mati, pesan yang belum
 di-ack akan dikirim ulang, dan pengiriman ulang itu memakai jeda yang
 berlipat.
 
-Dua catatan ikut disimpan. Daftar pesan memuat pekerjaan yang belum
-selesai, dan buku diproses memuat id pekerjaan yang sudah pernah
-dikerjakan, sehingga consumer dapat menolak duplikat.
+Tiga catatan ikut disimpan. Daftar pesan memuat pekerjaan yang belum
+selesai, buku diproses memuat id pekerjaan yang sudah pernah dikerjakan
+sehingga consumer dapat menolak duplikat, dan dead letter memuat pekerjaan
+yang jatah percobaannya sudah habis.
 
 Modul ini diimpor, bukan dijalankan langsung:
     python3 worker.py
@@ -22,13 +23,15 @@ FILE_ANTREAN = Path(__file__).parent / "antrean.json"
 # Jeda percobaan pertama, lalu dilipatkan dua tiap percobaan berikutnya.
 # Nilainya kecil agar seluruh daur terlihat dalam satu latihan.
 JEDA_DASAR_DETIK = 0.5
+# Pekerjaan yang sudah dicoba sebanyak ini lalu muncul kembali dipindahkan
+# ke dead letter, bukan dicoba terus.
 BATAS_PERCOBAAN = 5
 
 
 def muat():
   """Membaca keadaan antrean, atau keadaan kosong bila filenya belum ada."""
   if not FILE_ANTREAN.exists():
-    return {"pesan": [], "diproses": [], "nomor_terakhir": 0}
+    return {"pesan": [], "diproses": [], "dead_letter": [], "nomor_terakhir": 0}
   return json.loads(FILE_ANTREAN.read_text(encoding="utf-8"))
 
 
@@ -39,7 +42,7 @@ def simpan(keadaan):
 
 def kosongkan():
   """Mengosongkan antrean beserta buku diproses, dipakai sebelum mengukur."""
-  simpan({"pesan": [], "diproses": [], "nomor_terakhir": 0})
+  simpan({"pesan": [], "diproses": [], "dead_letter": [], "nomor_terakhir": 0})
 
 
 def jeda_backoff(percobaan):
@@ -68,6 +71,24 @@ def kirim(jenis, isi):
   return id_pesan
 
 
+def pindahkan_yang_habis(keadaan, sekarang):
+  """Memindahkan pekerjaan yang jatah percobaannya habis ke dead letter.
+
+  Pekerjaan yang sudah dicoba BATAS_PERCOBAAN kali lalu muncul kembali
+  dianggap tidak akan berhasil. Pekerjaan itu dipindahkan, bukan dicoba
+  terus, agar antreannya tidak tersumbat satu pekerjaan saja.
+  """
+  habis = [pesan for pesan in keadaan["pesan"]
+           if pesan["siap_pada"] <= sekarang
+           and pesan["percobaan"] >= BATAS_PERCOBAAN]
+  if not habis:
+    return
+  keadaan["pesan"] = [pesan for pesan in keadaan["pesan"]
+                      if pesan not in habis]
+  keadaan.setdefault("dead_letter", []).extend(habis)
+  simpan(keadaan)
+
+
 def ambil(sekarang):
   """Mengambil satu pekerjaan yang sudah waktunya dikerjakan.
 
@@ -75,9 +96,11 @@ def ambil(sekarang):
   digeser sejauh jeda backoff, sehingga pekerjaan itu kembali muncul bila
   worker-nya mati sebelum memanggil selesai. Di sanalah sifat at-least-once
   berasal: pekerjaan dapat terkirim lebih dari sekali, dan tidak pernah
-  hilang tanpa dikerjakan.
+  hilang tanpa dikerjakan. Pekerjaan yang jatah percobaannya habis
+  dipindahkan lebih dahulu, sehingga tidak diambil lagi.
   """
   keadaan = muat()
+  pindahkan_yang_habis(keadaan, sekarang)
   for pesan in keadaan["pesan"]:
     if pesan["siap_pada"] <= sekarang:
       pesan["percobaan"] += 1

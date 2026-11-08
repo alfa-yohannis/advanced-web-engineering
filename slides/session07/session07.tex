@@ -764,8 +764,8 @@ curl -s --get --data-urlencode 'nama=<b>Mahasiswa</b>' \
           yang lolos, dan status keluarnya.
     \item Jalankan pemeriksaan dependensi dan analisis statis, catat jumlah
           temuannya.
-    \item Hapus sementara satu header dari \texttt{kebijakan.json}, nyalakan
-          ulang aplikasinya, jalankan ulang \textit{gate}-nya, lalu kembalikan.
+    \item Nyalakan ulang aplikasinya dengan \textit{copy} kebijakan tanpa satu
+          header, lalu jalankan ulang \textit{gate}-nya dengan kebijakan asli.
   \end{enumerate}
 \end{frame}
 
@@ -800,6 +800,8 @@ ruff check .
     Aplikasi Bab 7 & 18 & 18 & 0 \\
     \hline
     Server statis bawaan Python & 9 & 1 & 1 \\
+    \hline
+    Aplikasi dengan satu header dihapus & 18 & 15 & 1 \\
     \hline
   \end{tabularx}}
 

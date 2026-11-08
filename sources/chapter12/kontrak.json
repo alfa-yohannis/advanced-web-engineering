@@ -74,8 +74,16 @@
           }
         },
         "responses": {
+          "200": {
+            "description": "Idempotency-Key dan isinya sama dengan permintaan sebelumnya, pesanan yang sama dikembalikan",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Pesanan" }
+              }
+            }
+          },
           "201": {
-            "description": "Pesanan dibuat, atau pesanan sama dikembalikan",
+            "description": "Pesanan dibuat",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/Pesanan" }

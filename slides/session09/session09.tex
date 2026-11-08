@@ -278,12 +278,18 @@
 
 \begin{frame}[fragile]{{\Large Urutan Tahap Pipeline}}
   \vspace{2pt}
-\begin{lstlisting}[language=yaml]
+\begin{lstlisting}[language=yaml, basicstyle=\ttfamily\tiny]
+      - name: Pasang dependensi
+        run: python -m pip install ruff pytest hypothesis "psycopg[binary]"
+
       - name: Analisis statis
         run: ruff check sources/chapter09
 
-      - name: Uji unit dan integrasi
-        run: pytest -q sources/chapter06
+      # Pengujian integrasi Bab 6 membutuhkan PostgreSQL berisi data uji
+      # Bab 3, sehingga yang dijalankan di sini hanya lapisan unit.
+      - name: Uji unit
+        working-directory: sources/chapter06
+        run: pytest -q test_harga.py test_properti.py test_double.py
 
       - name: Bangun image
         run: docker build -t awe9-layanan sources/chapter09
@@ -596,7 +602,7 @@ grep -h "300a032b60413b55e53009cc0660f240" proxy.log hijau.log
 \end{lstlisting}
   \vspace{4pt}
   {\footnotesize Pertanyaan: berapa biaya penerusan proxy dan dari angka mana
-  Anda mengetahuinya, serta apa yang terjadi bila proxy tidak meneruskan
+  biaya itu terbaca, serta apa yang terjadi bila proxy tidak meneruskan
   header \texttt{traceparent}?}
 \end{frame}
 

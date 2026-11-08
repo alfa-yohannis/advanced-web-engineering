@@ -11,13 +11,14 @@ sendiri.
 
 Pemakaian (dari sources/chapter07, setelah docker compose up -d):
     source ../.venv/bin/activate
-    SECRET_SESI=rahasia-latihan python aplikasi.py
+    SECRET_SESI=rahasia-latihan python aplikasi.py [kebijakan.json]
 """
 
 import html
 import json
 import os
 import secrets
+import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -45,13 +46,15 @@ SQL_CARI_BUKU = """
 """
 
 
-def baca_kebijakan():
+def baca_kebijakan(nama_file):
   """Membaca kebijakan keamanan, yaitu satu-satunya tempat syaratnya ditulis.
 
-  Aplikasi dan skrip pemeriksa membaca file yang sama, sehingga keduanya
-  tidak dapat berbeda pendapat tentang apa yang wajib ada.
+  Secara bawaan aplikasi dan skrip pemeriksa membaca file yang sama, sehingga
+  keduanya tidak dapat berbeda pendapat tentang apa yang wajib ada. File lain
+  dipakai bila aplikasi sengaja dibuat menyimpang dari kebijakan, misalnya
+  salinan yang kehilangan satu header, agar gate terbukti menangkapnya.
   """
-  return json.loads(FILE_KEBIJAKAN.read_text(encoding="utf-8"))
+  return json.loads(Path(nama_file).read_text(encoding="utf-8"))
 
 
 def ambil_secret_sesi():
@@ -215,8 +218,12 @@ class ServerToko(ThreadingHTTPServer):
 
 
 def main():
-  """Menyalakan server sampai dihentikan dengan Ctrl+C."""
-  server = ServerToko((HOST, PORT), PenanganToko, baca_kebijakan(),
+  """Menyalakan server sampai dihentikan dengan Ctrl+C.
+
+  Argumen pertama, bila ada, menunjuk file kebijakan pengganti.
+  """
+  nama_file = sys.argv[1] if len(sys.argv) > 1 else FILE_KEBIJAKAN
+  server = ServerToko((HOST, PORT), PenanganToko, baca_kebijakan(nama_file),
                       ambil_secret_sesi())
   print(f"Melayani di http://{HOST}:{PORT}/  (Ctrl+C untuk berhenti)")
   server.serve_forever()

@@ -37,7 +37,20 @@ python3 ukur-gateway.py
 
 curl -s "http://127.0.0.1:8090/v1/buku?per_halaman=2"
 curl -s "http://127.0.0.1:8090/v2/buku?per_halaman=2"
-curl -s http://127.0.0.1:8090/openapi.json | head -5
+```
+
+Kontraknya dikirim sebagai JSON satu baris, sehingga dirapikan lebih dahulu
+sebelum lima baris pertamanya dibaca:
+
+```bash
+curl -s http://127.0.0.1:8090/openapi.json | python3 -m json.tool | head -5
+
+# Keluarannya:
+# {
+#     "openapi": "3.1.0",
+#     "info": {
+#         "title": "Katalog Buku",
+#         "version": "1.0.0",
 ```
 
 Nomor pesanan pada keluaran `uji-kontrak.py` dihitung dari aplikasi yang baru

@@ -1136,11 +1136,13 @@ def jalankan_satu_worker(jalur, jumlah_permintaan, catatan):
 
 \begin{frame}[fragile]{{\Large Membaca Verdict Gate}}
   \vspace{2pt}
-\begin{lstlisting}[language=bash]
+\begin{lstlisting}[language=bash, basicstyle=\ttfamily\tiny]
 source ../.venv/bin/activate
 python gate-budget.py
 
 # Keluarannya:
+# 8 worker, 25 permintaan per worker
+#
 #   Ukuran                                    Budget          Terukur  Verdict
 #   /api/katalog?halaman=1&ukuran=20 p95          60 ms      12.59 ms  lolos
 #   /api/katalog?halaman=1&ukuran=20 ukuran        8 KB       0.29 KB  lolos
@@ -1156,7 +1158,7 @@ python gate-budget.py
 \end{lstlisting}
   \vspace{2pt}
   {\footnotesize Tiap baris satu ukuran: namanya, batas yang disepakati,
-  hasil pengukuran, lalu \textit{verdict}-nya. Enam baris bervonis LEWAT, sehingga
+  hasil pengukuran, lalu \textit{verdict}-nya. Enam baris ber-\textit{verdict} LEWAT, sehingga
   prosesnya berhenti dengan status 1 dan \textit{merge} diblokir.}
 \end{frame}
 

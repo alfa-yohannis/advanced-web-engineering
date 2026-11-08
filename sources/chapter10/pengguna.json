@@ -1,27 +1,31 @@
 {
-  "keterangan": "Daftar pengguna latihan Bab 10. Kata sandi disimpan sebagai hash, bukan teks biasa, dan seluruhnya hanya untuk latihan di komputer sendiri.",
+  "keterangan": "Daftar pengguna latihan Bab 10. Kata sandi disimpan sebagai salt dan hash scrypt, bukan teks biasa. Kata sandi latihannya nama pengguna ditambah 123, misalnya budi123, dan seluruhnya hanya untuk latihan di komputer sendiri.",
   "pengguna": [
     {
       "nama": "ani",
-      "kata_sandi": "ani123",
+      "salt_sandi": "3f33da8984558cd9f4e593d6e90347e5",
+      "hash_sandi": "fd25f396cd21428d6ae86210b9127d36b02ab9f6fee73aca3f32307f0e0bf3b8",
       "peran": "admin",
       "tenant": "kampus-a"
     },
     {
       "nama": "budi",
-      "kata_sandi": "budi123",
+      "salt_sandi": "20415c647a414cb6b4473b0db3779569",
+      "hash_sandi": "777f8873d0060bec2579f9629b509ef3af9044348c1ae8dd29dd0627e0366d10",
       "peran": "staf",
       "tenant": "kampus-a"
     },
     {
       "nama": "cita",
-      "kata_sandi": "cita123",
+      "salt_sandi": "39f4f6dc77560c60a6d39adb8515a63d",
+      "hash_sandi": "3555aa55e5580512987d99fbf6aa08adc85ef9c57ddb2f8caf94be00e646fae0",
       "peran": "pembeli",
       "tenant": "kampus-a"
     },
     {
       "nama": "dedi",
-      "kata_sandi": "dedi123",
+      "salt_sandi": "dba8fe2e2898a6a735dc662e26ed3fa1",
+      "hash_sandi": "436aab87dd5c92ee0e38cac7614f2cfcb3e67ff6f3d4f5df5aaa50fbcb3b2d8f",
       "peran": "staf",
       "tenant": "kampus-b"
     }

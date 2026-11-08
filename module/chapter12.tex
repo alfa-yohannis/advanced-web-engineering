@@ -546,10 +546,13 @@ di komputer sendiri, dan sifatnya mengamati, bukan membebani. Status dan
 klasifikasi perubahan akan sama pada tiap mahasiswa, sedangkan lama
 pengukuran dan nilai \texttt{Retry-After} akan berbeda sedikit.
 
-Penyiapannya dua perintah, seperti pada Listing \ref{lst:c12-siapkan}.
+Penyiapannya mengaktifkan venv bersama di \berkas{sources/.venv}, yang memuat
+\texttt{jsonschema}, lalu menyalakan dua layanan, seperti pada Listing
+\ref{lst:c12-siapkan}.
 
 \begin{lstlisting}[language=bash, caption={Menyalakan aplikasi dan gateway, tersedia di \berkas{sources/chapter12/}}, label={lst:c12-siapkan}]
 cd sources/chapter12
+source ../.venv/bin/activate
 python3 aplikasi.py &
 python3 gateway.py &
 

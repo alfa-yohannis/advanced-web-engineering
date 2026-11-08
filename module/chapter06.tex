@@ -650,8 +650,12 @@ jumlah \textit{query}-nya ikut diukur.
         dengan rumus dua ditambah jumlah item.
   \item Bandingkan isi kedua \textit{response} dengan \texttt{diff}. Catat
         apakah ada bedanya.
-  \item Ulangi untuk satu pesanan lain yang jumlah itemnya berbeda, lalu isi
-        Tabel \ref{tab:c6-lat3-hasil}. Tabel \ref{tab:c6-lat3-contoh}
+  \item Data uji Bab 3 memberi tiap pesanan tepat tiga item, sehingga jumlah
+        item yang berbeda dibuat sendiri. Tambahkan dua item ke pesanan 2,
+        ulangi ketiga langkah di atas untuk pesanan itu, lalu hapus kembali
+        kedua item tambahannya, seperti pada Listing
+        \ref{lst:c6-lat3-tambah}.
+  \item Isi Tabel \ref{tab:c6-lat3-hasil}. Tabel \ref{tab:c6-lat3-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Jawab dua pertanyaan berikut. Pertama, mengapa pengujian yang hanya
         membandingkan isi \textit{response} tidak menangkap cacat ini? Kedua,
@@ -674,6 +678,26 @@ diff sehat.json n1.json && echo "isi response sama persis"
 # isi response sama persis
 \end{lstlisting}
 
+\begin{lstlisting}[language=bash, caption={Menambah dua item ke pesanan 2 lalu mengukurnya, memakai \berkas{sources/chapter06/aplikasi.py}}, label={lst:c6-lat3-tambah}]
+docker compose exec -T db psql -U admin -d toko -c \
+  "INSERT INTO item_pesanan (pesanan_id, buku_id, jumlah, harga_satuan)
+   SELECT 2, id, 1, harga FROM buku WHERE id IN (101, 102)"
+curl -s -D - -o sehat2.json http://127.0.0.1:8020/api/pesanan/2 \
+  | grep -i x-query-count
+curl -s -D - -o n1-2.json http://127.0.0.1:8020/api/pesanan-n1/2 \
+  | grep -i x-query-count
+diff sehat2.json n1-2.json && echo "isi response sama persis"
+docker compose exec -T db psql -U admin -d toko -c \
+  "DELETE FROM item_pesanan WHERE pesanan_id = 2 AND buku_id IN (101, 102)"
+
+# Keluarannya:
+# INSERT 0 2
+# X-Query-Count: 2
+# X-Query-Count: 7
+# isi response sama persis
+# DELETE 2
+\end{lstlisting}
+
 \begin{table}[!htb]
   \centering
   \caption{Contoh hasil Latihan 3 yang sudah terisi}
@@ -683,6 +707,8 @@ diff sehat.json n1.json && echo "isi response sama persis"
     \textbf{Pesanan} & \textbf{Item} & \textbf{Query sehat} & \textbf{Query N+1} & \textbf{Isi response} \\
     \hline
     1 & 3 & 2 & 5 & sama persis \\
+    \hline
+    2, ditambah dua item & 5 & 2 & 7 & sama persis \\
     \hline
   \end{tabularx}
 \end{table}
@@ -697,7 +723,7 @@ diff sehat.json n1.json && echo "isi response sama persis"
     \hline
     1 & \dots & \dots & \dots & \dots \\
     \hline
-    Pesanan pilihan sendiri & \dots & \dots & \dots & \dots \\
+    2, ditambah dua item & \dots & \dots & \dots & \dots \\
     \hline
   \end{tabularx}
 \end{table}
@@ -717,8 +743,16 @@ Latihan ini memasang seluruh pengukuran di atas sebagai satu \textit{gate} yang
   \item Longgarkan batas \textit{query} alamat N+1 menjadi tiga puluh, lalu
         jalankan ulang dan catat status keluarnya.
   \item Kembalikan batasnya menjadi dua, lalu perbaiki cacatnya dengan
-        mengarahkan halaman demo ke alamat yang sehat, dan jalankan ulang
-        sekali lagi.
+        mengarahkan alamat \texttt{/api/pesanan-n1/} ke jalur sehat, yaitu
+        mengganti \texttt{n\_plus\_1=True} menjadi \texttt{n\_plus\_1=False}
+        di \berkas{sources/chapter06/aplikasi.py}. Jalankan ulang
+        \textit{gate}-nya, lalu catat pemeriksaan mana yang kini dilanggar.
+  \item Sesuaikan pengujian di \berkas{sources/chapter06/test\_kontrak.py}
+        yang masih mengharapkan jumlah \textit{query} lama: harapannya diubah
+        menjadi \texttt{QUERY\_JALUR\_SEHAT}, dan baris \texttt{jumlah\_item}
+        yang tidak terpakai lagi dihapus. Jalankan ulang \textit{gate}-nya,
+        catat status keluarnya, lalu kembalikan kedua file itu seperti semula
+        sebelum lanjut ke Latihan 5.
   \item Jawab dua pertanyaan berikut. Pertama, apa bedanya melonggarkan batas
         dengan memperbaiki cacatnya, dilihat dari status keluarnya? Kedua,
         mengapa \textit{Continuous Integration} membaca status keluar dan
@@ -753,8 +787,18 @@ echo $?
     \hline
     Status keluar & 0 & 1 & LANGGAR \\
     \hline
+    \texttt{pytest} integrasi, sesudah alamat diarahkan & 0 & 1 & LANGGAR \\
+    \hline
+    Status keluar sesudah diperbaiki & 0 & 0 & lolos \\
+    \hline
   \end{tabularx}
 \end{table}
+
+Baris keenam pada contoh terisi memperlihatkan akibat yang sering terlupa.
+Begitu alamatnya diarahkan ke jalur sehat, satu pengujian kontrak ikut gagal,
+karena pengujian itu masih mengunci jumlah \textit{query} jalur N+1 yang lama.
+Pengujian semacam itu diperbarui bersama perbaikannya, dan baru sesudahnya
+status keluarnya menjadi 0.
 
 \begin{table}[!htb]
   \centering
@@ -777,6 +821,10 @@ echo $?
     query \texttt{/api/pesanan-n1/1} & \dots & \dots & \dots \\
     \hline
     Status keluar sebelum dan sesudah dilonggarkan & \dots & \dots & \dots \\
+    \hline
+    Pemeriksaan yang dilanggar sesudah alamat diarahkan & \dots & \dots & \dots \\
+    \hline
+    Status keluar sesudah cacatnya diperbaiki & \dots & \dots & \dots \\
     \hline
   \end{tabularx}
 \end{table}
@@ -814,7 +862,7 @@ du -sh test-results
 # 5 passed (2.9s)
 # 15 passed (6.7s)
 # 5 passed (2.8s)
-# 369K	test-results
+# 369K  test-results
 \end{lstlisting}
 
 \begin{table}[!htb]

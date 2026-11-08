@@ -2,7 +2,7 @@
 # Bangun dengan: docker build -t awe9-layanan .
 # Jalankan dengan: docker run --rm -e VERSI=biru -p 8061:8061 awe9-layanan
 #
-# Hanya dua file yang disalin, dan tidak ada dependensi yang dipasang, karena
+# Hanya satu file yang disalin, dan tidak ada dependensi yang dipasang, karena
 # layanannya memang hanya memakai pustaka standar Python.
 
 FROM python:3.12-slim

@@ -23,10 +23,18 @@ LEBAR_NAMA = 34
 
 
 def nilai_satu_versi(tujuan, slo):
-  """Menilai satu versi layanan terhadap seluruh tujuan pada SLO."""
+  """Menilai satu versi layanan terhadap seluruh tujuan pada SLO.
+
+  Versi yang belum menerima satu permintaan pun sedang tidak dirilis,
+  misalnya versi kedua ketika bobotnya nol, sehingga tidak dinilai. Versi
+  yang permintaannya kurang dari jendela minimum tetap dinyatakan melanggar,
+  karena angkanya belum cukup untuk dipercaya.
+  """
   hasil = metrik.baca(tujuan["host"], tujuan["port"])
   permintaan = hasil["permintaan"]
   nama = tujuan["nama"]
+  if permintaan == 0:
+    return []
   if permintaan < slo["jendela_permintaan_minimum"]:
     return [(f"{nama}: jumlah permintaan", slo["jendela_permintaan_minimum"],
              permintaan, False)]
@@ -47,7 +55,7 @@ def cetak_baris(baris):
   """Mencetak satu baris penilaian, lengkap dengan verdict-nya."""
   nama, tujuan, terukur, lolos = baris
   verdict = "lolos" if lolos else "LANGGAR"
-  print(f"  {nama:<{LEBAR_NAMA}} {str(tujuan):>8} {str(terukur):>10} "
+  print(f"  {nama:<{LEBAR_NAMA}} {tujuan!s:>8} {terukur!s:>10} "
         f"  {verdict}")
 
 
@@ -61,6 +69,9 @@ def main():
   daftar_baris = []
   for kunci in ("versi_pertama", "versi_kedua"):
     daftar_baris.extend(nilai_satu_versi(rilis[kunci], slo))
+  if not daftar_baris:
+    print("\nGagal: belum ada versi yang menerima permintaan.")
+    sys.exit(1)
   for baris in daftar_baris:
     cetak_baris(baris)
 

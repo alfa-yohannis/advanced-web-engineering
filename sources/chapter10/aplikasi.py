@@ -13,13 +13,17 @@ Alamat yang dilayani:
     POST /keluar                  mencabut sesi, hanya berlaku pada cara sesi
 
 Seluruh data ada di pengguna.json dan di memori, sehingga latihan tidak
-membutuhkan basis data.
+membutuhkan basis data. Kata sandi di file itu disimpan sebagai salt dan
+hash scrypt, bukan teks biasa.
 
 Pemakaian (dari sources/chapter10):
     python3 aplikasi.py
+Membuat salt dan hash kata sandi untuk pengguna baru di pengguna.json:
+    python3 -c "import aplikasi; print(aplikasi.buat_catatan_sandi('eko123'))"
 """
 
 import hashlib
+import hmac
 import json
 import secrets
 import time
@@ -40,6 +44,16 @@ JENIS_ISI_JSON = "application/json"
 UMUR_ACCESS_DETIK = 5
 UMUR_REFRESH_DETIK = 120
 PANJANG_PENANDA_BYTE = 16
+# Pengaturan scrypt untuk kata sandi. Biayanya sengaja kecil agar latihan
+# tetap cepat, sedangkan sistem sungguhan memakai biaya yang lebih besar.
+BIAYA_SCRYPT = 2 ** 14
+UKURAN_BLOK_SCRYPT = 8
+PARALELISME_SCRYPT = 1
+PANJANG_SALT_BYTE = 16
+PANJANG_HASH_BYTE = 32
+# Salt tetap untuk nama yang tidak terdaftar. Hash-nya tetap dihitung, agar
+# lama response tidak membocorkan nama mana yang terdaftar.
+SALT_NAMA_TAK_TERDAFTAR = bytes(PANJANG_SALT_BYTE)
 
 # Keadaan yang disimpan server. Sesi dan refresh token sama-sama di sini,
 # dan keduanya hilang begitu proses dimatikan.
@@ -52,18 +66,48 @@ def baca_data():
   return json.loads(FILE_PENGGUNA.read_text(encoding="utf-8"))
 
 
+def turunkan_hash_sandi(kata_sandi, salt):
+  """Menurunkan hash satu kata sandi dengan scrypt dan salt miliknya.
+
+  Salt yang berbeda tiap pengguna membuat dua kata sandi yang sama
+  menghasilkan hash yang berbeda. scrypt sengaja lambat dan boros memori,
+  sehingga menebak kata sandi satu per satu menjadi mahal.
+  """
+  return hashlib.scrypt(kata_sandi.encode(), salt=salt, n=BIAYA_SCRYPT,
+                        r=UKURAN_BLOK_SCRYPT, p=PARALELISME_SCRYPT,
+                        dklen=PANJANG_HASH_BYTE)
+
+
+def buat_catatan_sandi(kata_sandi):
+  """Membuat salt baru beserta hash kata sandinya, untuk pengguna baru.
+
+  Hasilnya teks JSON yang siap ditempel ke entri pengguna di pengguna.json.
+  Salt-nya acak, sehingga hasilnya berbeda tiap kali walaupun kata sandinya
+  sama.
+  """
+  salt = secrets.token_bytes(PANJANG_SALT_BYTE)
+  hash_sandi = turunkan_hash_sandi(kata_sandi, salt)
+  return json.dumps({"salt_sandi": salt.hex(), "hash_sandi": hash_sandi.hex()})
+
+
 def cari_pengguna(data, nama, kata_sandi):
   """Mencocokkan nama dan kata sandi, lalu mengembalikan penggunanya.
 
-  Pencocokan memakai compare_digest atas hash keduanya, sehingga lama
-  pembandingan tidak bergantung pada seberapa banyak huruf yang cocok.
+  Hash kata sandi kiriman diturunkan dengan salt milik pengguna itu, lalu
+  dibandingkan dengan hmac.compare_digest, sehingga lama pembandingan tidak
+  bergantung pada seberapa banyak byte yang cocok. Nama yang tidak terdaftar
+  tetap menjalani satu scrypt dengan salt tetap, sehingga lamanya sama dengan
+  kata sandi yang salah dan tidak membocorkan nama mana yang ada.
   """
-  sandi_dikirim = hashlib.sha256(kata_sandi.encode()).digest()
   for pengguna in data["pengguna"]:
-    sandi_asli = hashlib.sha256(pengguna["kata_sandi"].encode()).digest()
-    if pengguna["nama"] == nama and secrets.compare_digest(sandi_dikirim,
-                                                           sandi_asli):
-      return pengguna
+    if pengguna["nama"] == nama:
+      salt = bytes.fromhex(pengguna["salt_sandi"])
+      hash_dikirim = turunkan_hash_sandi(kata_sandi, salt)
+      hash_tersimpan = bytes.fromhex(pengguna["hash_sandi"])
+      if hmac.compare_digest(hash_dikirim, hash_tersimpan):
+        return pengguna
+      return None
+  turunkan_hash_sandi(kata_sandi, SALT_NAMA_TAK_TERDAFTAR)
   return None
 
 

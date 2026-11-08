@@ -11,7 +11,7 @@ termasuk WebSocket-nya.
 | `websocket_sederhana.py` | Jabat tangan dan frame teks WebSocket, dipakai server maupun alat ukur |
 | `websocket.py` | Server WebSocket di port 8101 yang mengikuti aliran SSE aplikasi lalu menyiarkannya |
 | `ukur-transport.py` | Membandingkan *polling*, SSE, dan WebSocket: keterlambatan, byte, dan jumlah permintaan |
-| `antrean.py` | Antrean satu file dengan *visibility timeout*, *backoff* berlipat, dan buku diproses |
+| `antrean.py` | Antrean satu file dengan *visibility timeout*, *backoff* berlipat, buku diproses, dan *dead letter* sesudah lima percobaan |
 | `webhook.py` | Penerima *webhook* di port 8102 yang sengaja menolak dua percobaan pertama satu jenis pekerjaan |
 | `worker.py` | *Worker* idempoten: memeriksa duplikat, mengirim *webhook*, lalu meng-*ack* |
 | `ukur-antrean.py` | Menjalankan satu daur antrean dari ujung ke ujung, lalu mencetak percobaan dan pengirimannya |
@@ -33,7 +33,23 @@ python3 ukur-antrean.py
 curl -s -X POST http://127.0.0.1:8100/kirim \
   -H 'Content-Type: application/json' -d '{"pesan":"uji"}'
 curl -s "http://127.0.0.1:8100/polling?sejak=0"
-curl -sN http://127.0.0.1:8100/sse | head -4
+```
+
+Aliran SSE hanya mengirim peristiwa yang terbit sesudah klien tersambung.
+Perintah berikut menyambung selama dua detik, menerbitkan satu peristiwa di
+tengahnya, lalu selesai sendiri:
+
+```bash
+curl -sN --max-time 2 http://127.0.0.1:8100/sse &
+sleep 0.5
+curl -s -o /dev/null -X POST http://127.0.0.1:8100/kirim \
+  -H 'Content-Type: application/json' -d '{"pesan":"uji-sse"}'
+wait
+
+# Keluarannya, nomor id bergantung pada jumlah peristiwa sebelumnya:
+# id: 32
+# data: {"pesan": "uji-sse"}
+#
 ```
 
 `websocket.py` dinyalakan sesudah `aplikasi.py`, karena ia mengikuti aliran

@@ -38,7 +38,6 @@ BATAS_PUTARAN = 20
 JEDA_PUTARAN_DETIK = 0.25
 LEBAR_ID = 12
 LEBAR_JENIS = 20
-LEBAR_HASIL = 34
 
 
 def kosongkan_webhook():
@@ -111,8 +110,8 @@ def main():
   print()
   ringkasan = antrean.ringkas()
   print(f"  Percobaan worker: {len(catatan)}, "
-        f"pengiriman tiba: {len(ambil_pengiriman())}, "
-        f"pekerjaan tersisa: {ringkasan['tersisa']}, "
+        f"pengiriman tiba: {len(ambil_pengiriman())}")
+  print(f"  Pekerjaan tersisa: {ringkasan['tersisa']}, "
         f"ditandai diproses: {ringkasan['diproses']}")
 
 

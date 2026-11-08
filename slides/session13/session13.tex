@@ -276,6 +276,7 @@ def terbitkan(isi):
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
   keadaan = muat()
+  pindahkan_yang_habis(keadaan, sekarang)
   for pesan in keadaan["pesan"]:
     if pesan["siap_pada"] <= sekarang:
       pesan["percobaan"] += 1
@@ -437,9 +438,9 @@ python3 webhook.py &
 python3 websocket.py &
 
 # Keluarannya:
-# Melayani di http://127.0.0.1:8100/sse dan /polling
-# Webhook di http://127.0.0.1:8102/webhook, dua percobaan pertama ditolak
-# WebSocket di ws://127.0.0.1:8101/
+# Melayani di http://127.0.0.1:8100/sse dan /polling  (Ctrl+C untuk berhenti)
+# Webhook di http://127.0.0.1:8102/webhook  (Ctrl+C untuk berhenti)
+# WebSocket di ws://127.0.0.1:8101/  (Ctrl+C untuk berhenti)
 \end{lstlisting}
   \vspace{2pt}
   {\small \texttt{websocket.py} mengikuti aliran SSE aplikasi, jadi
@@ -479,11 +480,11 @@ python3 ukur-transport.py
 \begin{frame}[fragile]{{\Large Satu Daur Antrean dari Ujung ke Ujung}}
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
-python3 ukur-antrean.py | tail -3
+python3 ukur-antrean.py | tail -2
 
 # Keluarannya:
-#   Percobaan worker: 6, pengiriman tiba: 5, pekerjaan tersisa: 0,
-#   ditandai diproses: 3
+#   Percobaan worker: 6, pengiriman tiba: 5
+#   Pekerjaan tersisa: 0, ditandai diproses: 3
 \end{lstlisting}
   \vspace{4pt}
   {\small Lalu matikan pemeriksaan duplikat di \texttt{worker.py}, jalankan
