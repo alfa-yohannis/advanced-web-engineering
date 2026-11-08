@@ -13,7 +13,7 @@
 #
 # Pemakaian: ./banding-http.sh https://www.pradita.ac.id/ [jumlah_aset] [sendiri|semua]
 
-sumber="${1:?alamat halaman atau berkas daftar aset wajib diisi}"
+sumber="${1:?alamat halaman atau file daftar aset wajib diisi}"
 jumlah="${2:-10}"
 saring="${3:-sendiri}"
 

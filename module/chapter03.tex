@@ -268,7 +268,11 @@ Bagian-bagiannya ditulis dengan urutan tetap \cite{pgdoc-connection-uri}:
 
 \begin{lstlisting}[style=PythonStyle, caption={Satu kebutuhan ditulis dalam tiga tingkat abstraksi, tersedia di \berkas{sources/chapter03/tiga-lapis-akses.py}}, label={lst:tiga-lapis}]
 def lewat_orm(mesin):
-  """Menyusun query dari kelas hasil pemetaan, tanpa menulis SQL sama sekali."""
+  """Menyusun query dari kelas hasil pemetaan, tanpa menulis SQL sama sekali.
+
+  Paling ringkas, tetapi SQL yang benar-benar dikirim tidak terlihat dari
+  kodenya. Itulah yang membuat masalah N+1 mudah lolos.
+  """
   perintah = (
       select(Pesanan.id, Pesanan.total, func.count(ItemPesanan.buku_id))
       .join(ItemPesanan, ItemPesanan.pesanan_id == Pesanan.id)
@@ -282,10 +286,15 @@ def lewat_orm(mesin):
 
 
 def lewat_sql_langsung():
-  """Mengirim SQL apa adanya lewat psycopg."""
+  """Mengirim SQL apa adanya lewat psycopg.
+
+  Paling banyak kodenya, tetapi yang dijalankan basis data persis seperti
+  yang tertulis. Dipakai untuk query laporan dan query yang perlu disetel.
+  """
   with psycopg.connect(DSN) as koneksi:
     baris = koneksi.execute(SQL_LANGSUNG, (ID_PELANGGAN, BATAS)).fetchall()
   return [(b[0], float(b[1]), b[2]) for b in baris]
+
 \end{lstlisting}
 
 Tabel \ref{tab:abstraksi} merangkum \textit{trade-off} ketiganya.
@@ -512,14 +521,22 @@ SQL_TULIS_BILA_VERSI_SAMA = (
 
 
 def atomik(koneksi):
-  """Menyerahkan pembacaan dan pengurangan ke basis data sekaligus."""
+  """Menyerahkan pembacaan dan pengurangan ke basis data sekaligus.
+
+  Tidak ada jeda yang dapat disisipi worker lain, karena tidak ada nilai
+  yang sempat singgah di aplikasi.
+  """
   with koneksi.transaction():
     koneksi.execute(SQL_KURANGI_ATOMIK, (ID_BUKU,))
   return 1
 
 
 def pesimistis(koneksi):
-  """Mengunci baris sampai transaksi selesai, sehingga worker lain menunggu."""
+  """Mengunci baris sampai transaksi selesai, sehingga worker lain menunggu.
+
+  Conflict dicegah sebelum terjadi. Biayanya berupa antrean: worker lain
+  berhenti di baris SELECT sampai kunci dilepas.
+  """
   with koneksi.transaction():
     baris = koneksi.execute(SQL_BACA_STOK_TERKUNCI, (ID_BUKU,)).fetchone()
     stok_terbaca = baris[0]
@@ -528,7 +545,12 @@ def pesimistis(koneksi):
 
 
 def optimistis(koneksi):
-  """Menulis hanya bila versinya belum berubah, lalu mengulang bila kalah."""
+  """Menulis hanya bila versinya belum berubah, lalu mengulang bila kalah.
+
+  Tidak ada yang dikunci, sehingga tidak ada yang menunggu. Biayanya
+  dibayar oleh worker yang kalah dalam race condition, yaitu mengerjakan ulang
+  pembacaan dan penulisannya. Mengembalikan jumlah percobaan yang dipakai.
+  """
   percobaan = 0
   while True:
     percobaan += 1
@@ -942,13 +964,14 @@ yang berlaku per satu \textit{loop} dari tiga \textit{loop}.
 Listing \ref{lst:plan-sebelum} memperlihatkan rencana Q1 sebelum indeks
 dipasang, pada tabel \texttt{pesanan} berisi 200.000 baris.
 
-\begin{lstlisting}[style=SqlStyle, caption={Rencana Q1 sebelum indeks dipasang, dihasilkan oleh \berkas{sources/chapter03/03-query-baseline.sql}}, label={lst:plan-sebelum}]
-Limit  (cost=5179.73..5180.66 rows=8) (actual time=4.994..6.414 rows=10 loops=1)
-  ->  Gather Merge  (actual time=4.993..6.412 rows=10 loops=1)
+\begin{lstlisting}[style=SqlStyle, caption={Rencana Q1 sebelum indeks dipasang, dihasilkan oleh \berkas{sources/chapter03/03-query-baseline.sql} lalu dirapikan}, label={lst:plan-sebelum}]
+Limit  (cost=5179.73..5180.66 rows=8) (actual time=4.994..6.414 rows=10)
+  ->  Gather Merge  (actual time=4.993..6.412 rows=10)
         Workers Launched: 2
         ->  Sort  (actual time=3.568..3.569 rows=3 loops=3)
               Sort Key: dibuat_pada DESC
-              ->  Parallel Seq Scan on pesanan  (actual time=1.175..3.531 rows=3 loops=3)
+              ->  Parallel Seq Scan on pesanan
+                  (actual time=1.175..3.531 rows=3 loops=3)
                     Filter: (pelanggan_id = 12345)
                     Rows Removed by Filter: 66663
 Execution Time: 6.450 ms
@@ -1344,14 +1367,25 @@ indeks sengaja ditulis tanpa \texttt{BEGIN}, karena
 transaksi.
 
 \begin{lstlisting}[style=SqlStyle, caption={Migrasi indeks tanpa menghentikan penulisan, tersedia di \berkas{sources/chapter03/migrasi/003_indeks_pesanan.sql}}, label={lst:migrasi}]
--- Tanpa BEGIN. CREATE INDEX CONCURRENTLY tidak boleh di dalam transaksi.
+-- Migrasi 003: indeks untuk riwayat pesanan per pelanggan.
+--
+-- CREATE INDEX biasa mengunci tabel terhadap seluruh penulisan sampai
+-- indeksnya selesai dibangun. Pada tabel produksi, kunci itu berarti
+-- layanan berhenti menerima pesanan selama pembangunan berlangsung.
+--
+-- CONCURRENTLY membangun indeks tanpa kunci tersebut, dengan tiga syarat:
+--   * tidak boleh berada di dalam blok transaksi, sehingga tanpa BEGIN
+--   * pembangunannya memindai tabel dua kali, jadi lebih lama
+--   * bila gagal, indeksnya tertinggal dalam keadaan INVALID dan harus
+--     dihapus lalu dibuat ulang
+--
+-- Periksa indeks yang gagal dengan:
+--   SELECT indexrelid::regclass FROM pg_index WHERE NOT indisvalid;
+
 SET lock_timeout = '5s';
 
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pesanan_pelanggan_waktu
   ON pesanan (pelanggan_id, dibuat_pada DESC);
-
--- Memeriksa indeks yang tertinggal dalam keadaan tidak sah:
--- SELECT indexrelid::regclass FROM pg_index WHERE NOT indisvalid;
 \end{lstlisting}
 
 Penyetelan \texttt{lock\_timeout} pada baris kedua adalah pengaman yang murah.

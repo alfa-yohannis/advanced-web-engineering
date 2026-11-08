@@ -38,7 +38,7 @@ BATAS_COMPRESS_BYTE = 1024
 UKURAN_POTONGAN_STREAMING = 10
 
 DIREKTORI_STATIS = Path(__file__).parent / "statis"
-BERKAS_VITALS = Path(__file__).parent / "vitals.jsonl"
+FILE_VITALS = Path(__file__).parent / "vitals.jsonl"
 CACHE_CONTROL_API = "no-store"
 
 SQL_KATALOG = """
@@ -125,7 +125,7 @@ def baca_parameter_halaman(query_alamat):
 
 
 def compress_bila_diminta(isi_response, nilai_accept_encoding):
-  """Meng-compress isi response bila klien menerima gzip dan isinya cukup besar.
+  """Meng-compress isi response bila klien menerima gzip dan isinya besar.
 
   Mengembalikan pasangan (isi, nilai Content-Encoding atau None). Response
   kecil dibiarkan apa adanya, karena gzip justru menambah byte dan waktu.
@@ -191,7 +191,7 @@ class PenanganKatalog(BaseHTTPRequestHandler):
       return
     panjang_isi = int(self.headers.get("Content-Length", "0"))
     isi_laporan = self.rfile.read(panjang_isi)
-    with BERKAS_VITALS.open("a", encoding="utf-8") as file:
+    with FILE_VITALS.open("a", encoding="utf-8") as file:
       file.write(isi_laporan.decode("utf-8").strip() + "\n")
     self.kirim_response(204, b"", "text/plain", {})
 

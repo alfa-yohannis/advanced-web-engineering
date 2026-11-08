@@ -49,7 +49,7 @@ FROM (
 ) t
 WHERE t.pesanan_id = p.id;
 
--- Statistik wajib disegarkan. Tanpa ini perencana masih memakai
+-- Statistik wajib di-refresh. Tanpa ini perencana masih memakai
 -- perkiraan lama, dan rencana eksekusinya menyesatkan.
 ANALYZE;
 

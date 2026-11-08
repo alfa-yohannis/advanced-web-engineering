@@ -238,7 +238,7 @@ def ambil(sekarang):
 
   Pekerjaan yang diambil tidak langsung hilang dari antrean. Waktu siapnya
   digeser sejauh jeda backoff, sehingga pekerjaan itu kembali muncul bila
-  worker-nya mati sebelum memanggil selesai. Di sanalah sifat at-least-once
+  worker-nya crash sebelum memanggil selesai. Di sanalah sifat at-least-once
   berasal: pekerjaan dapat terkirim lebih dari sekali, dan tidak pernah
   hilang tanpa dikerjakan. Pekerjaan yang jatah percobaannya habis
   dipindahkan lebih dahulu, sehingga tidak diambil lagi.
@@ -649,7 +649,7 @@ angkanya dapat dihitung sebelum diukur.
 \end{enumerate}
 
 \begin{lstlisting}[language=bash, caption={Menjalankan satu daur antrean, tersedia di \berkas{sources/chapter13/ukur-antrean.py}}, label={lst:c13-lat3-jalan}]
-python3 ukur-antrean.py
+python3 ukur-antrean.py | head -7
 
 # Keluarannya:
 #   Pekerjaan    Jenis                 Ke   Detik  Hasil

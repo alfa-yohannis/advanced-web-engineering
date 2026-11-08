@@ -7,7 +7,7 @@ query per detik, berapa pun jumlah replika yang bertanya.
 
 Yang ditirukan hanya satu sifat yang menentukan hasil penskalaan horizontal,
 yaitu adanya komponen bersama yang tidak ikut bertambah ketika replika
-ditambah. Isi jawabannya tidak penting, dan memang dibuat kecil.
+ditambah. Isi response-nya tidak penting, dan memang dibuat kecil.
 
 Pemakaian (dari sources/chapter14), biasanya dinyalakan ukur-skala.py:
     python3 basis_data_tiruan.py

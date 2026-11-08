@@ -242,7 +242,8 @@ def cari_buku(judul_dicari):
   """
   pola = f"%{judul_dicari}%"
   with psycopg.connect(DSN) as koneksi:
-    baris = koneksi.execute(SQL_CARI_BUKU, (pola, BATAS_HASIL_CARI)).fetchall()
+    baris = koneksi.execute(SQL_CARI_BUKU,
+                            (pola, BATAS_HASIL_CARI)).fetchall()
 \end{lstlisting}
 
 Tabel \ref{tab:parameter} memuat dua pencarian yang dijalankan terhadap
@@ -521,8 +522,10 @@ dibuat, bukan sesuatu yang datang sendiri.
 source ../.venv/bin/activate
 SECRET_SESI=rahasia-latihan python aplikasi.py &
 (cd statis && python -m http.server 8031 &)
-curl -sI http://127.0.0.1:8030/ | grep -iE "^(content-security|x-content|referrer|permissions)"
-curl -sI http://127.0.0.1:8031/index.html | grep -iE "^(content-security|x-content|referrer|permissions)"
+curl -sI http://127.0.0.1:8030/ \
+  | grep -iE "^(content-security|x-content|referrer|permissions)"
+curl -sI http://127.0.0.1:8031/index.html \
+  | grep -iE "^(content-security|x-content|referrer|permissions)"
 
 # Keluarannya:
 # Content-Security-Policy: default-src 'self'
@@ -658,7 +661,8 @@ maupun browser berpindah tugas.
 \end{enumerate}
 
 \begin{lstlisting}[language=bash, caption={Mengirim teks bertanda baca sebagai kata kunci, tersedia di \berkas{sources/chapter07/aplikasi.py}}, label={lst:c7-lat3-jalan}]
-curl -s "http://127.0.0.1:8030/api/cari?judul=Pengantar%20Jilid%207" | head -c 120
+curl -s "http://127.0.0.1:8030/api/cari?judul=Pengantar%20Jilid%207" \
+  | head -c 120
 curl -s --get --data-urlencode "judul=Pengantar'; SELECT 1 --" \
   http://127.0.0.1:8030/api/cari | head -c 120
 curl -s --get --data-urlencode 'nama=<b>Mahasiswa</b>' \

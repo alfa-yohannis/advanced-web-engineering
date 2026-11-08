@@ -655,7 +655,7 @@ def ulangi_pekerjaan(pekerjaan, pool_koneksi, jumlah_ulangan):
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
 def compress_bila_diminta(isi_response, nilai_accept_encoding):
-  """Meng-compress isi response bila klien menerima gzip dan isinya cukup besar.
+  """Meng-compress isi response bila klien menerima gzip dan isinya besar.
 
   Mengembalikan pasangan (isi, nilai Content-Encoding atau None). Response
   kecil dibiarkan apa adanya, karena gzip justru menambah byte dan waktu.
@@ -965,7 +965,8 @@ def jalankan_satu_worker(jalur, jumlah_permintaan, catatan):
   Koneksi dibuka sekali dan dipakai ulang, sehingga yang terukur adalah waktu
   server, bukan waktu membuka koneksi baru.
   """
-  koneksi = HTTPConnection(HOST_BAWAAN, PORT_BAWAAN, timeout=BATAS_WAKTU_DETIK)
+  koneksi = HTTPConnection(HOST_BAWAAN, PORT_BAWAAN,
+                           timeout=BATAS_WAKTU_DETIK)
   header = {"Accept-Encoding": "gzip"}
   for _ in range(jumlah_permintaan):
     waktu_mulai = time.perf_counter()

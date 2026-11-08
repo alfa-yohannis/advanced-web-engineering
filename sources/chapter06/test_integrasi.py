@@ -70,7 +70,7 @@ def test_jalur_n_plus_1_tumbuh_mengikuti_jumlah_item(koneksi, id_pesanan_uji):
   """Jumlah query jalur N+1 bertambah satu untuk tiap item pesanan.
 
   Angka harapannya dihitung dari data, bukan ditulis tetap, sehingga
-  pengujian tetap benar ketika data uji dibangkitkan ulang.
+  pengujian tetap benar ketika data uji di-generate ulang.
   """
   penghitung = basis_data.PenghitungQuery()
   pesanan = basis_data.ambil_pesanan_n_plus_1(koneksi, id_pesanan_uji,

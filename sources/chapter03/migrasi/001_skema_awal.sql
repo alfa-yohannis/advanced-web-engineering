@@ -1,6 +1,6 @@
 -- Migrasi 001: skema awal.
--- Berkas migrasi tidak pernah diubah setelah dijalankan di lingkungan mana
--- pun. Perubahan berikutnya ditulis sebagai berkas baru bernomor lebih besar.
+-- File migrasi tidak pernah diubah setelah dijalankan di lingkungan mana
+-- pun. Perubahan berikutnya ditulis sebagai file baru bernomor lebih besar.
 
 BEGIN;
 

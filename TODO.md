@@ -7,52 +7,48 @@ berikutnya tidak dimulai dari menebak-nebak.
 
 Bab 1 sampai Bab 14 sudah punya naskah, slide, file sumber, dan angka yang
 diukur sungguhan. Seluruh empat belas bab sudah masuk buku, dan bukunya
-terbangun di 277 halaman.
+terbangun di 279 halaman.
 
 Seluruh perintah di README sumber dan di listing latihan Bab 1 sampai Bab 14
 sudah dijalankan pada 7 dan 8 November 2026, dan seluruhnya berjalan.
 Perkecualiannya hanya `sources/chapter02/skrip-beban.js`, karena `k6` belum
 terpasang di komputer pengukuran.
 
-Istilah di naskah, slide, dan README sumber sudah mengikuti daftar istilah di
-`CLAUDE.md`. Seluruh slide memberi baris kosong sesudah tabel dan gambar, dan
+Istilah di naskah, slide, README sumber, dan nama di kode sudah mengikuti
+daftar istilah di `CLAUDE.md`. Seluruh slide memberi baris kosong sesudah tabel dan gambar, dan
 tidak ada lagi judul slide yang menutupi logo.
 
-## Nama di kode yang masih memakai istilah lama
+## Istilah lama yang sengaja dibiarkan
 
-Sekitar 150 nama variabel dan fungsi di `sources/` masih memakai istilah lama,
-terutama `jawaban`, `berkas`, dan `rakit`. Contohnya `kirim_jawaban` dan
-`isi_berkas` di Bab 4, `LAMA_RAKIT_DETIK` di Bab 8, serta `periksa_jawaban`
-dan `rakit_halaman` di Bab 12. Banyak di antaranya dikutip di listing naskah
-dan slide, sehingga penggantiannya harus ikut memperbarui listing itu, dan
-juga keluaran yang dikutip bila nama tersebut tercetak.
+Nama di kode sudah mengikuti daftar istilah sejak 8 November 2026. Yang sengaja
+dibiarkan:
 
-Beberapa kata lama sengaja dibiarkan, karena maknanya berbeda:
+- `const jawaban` di `sources/chapter04/statis/app.3f9a2c.js`, karena *hash*
+  isi file itu menjadi bagian namanya, sedangkan ETag dan ukurannya dikutip
+  naskah. Mengganti namanya berarti mengukur ulang seluruh angka itu.
+- Nama `*_mati` di Bab 11 (`pengukur.py`, `statis/rute.js`,
+  `ukur-tanpa-js.py`), karena di sana artinya JavaScript dimatikan, dan kolom
+  "Skrip mati" yang tercetak dikutip di tabel Bab 11.
+- `jawaban` dalam arti jawaban model LLM di `asisten.py`, `model-tiruan.py`,
+  dan `ukur-llm.py` Bab 14.
+- `berkas` dan `papan` di dalam analogi naskah, dan `jawaban` dalam arti
+  jawaban atas pertanyaan.
 
-- `berkas` dan `papan` di dalam analogi: berkas di loket, papan harga warung,
-  papan pengumuman, papan tulis, dan papan peringkat.
-- `jawaban` dalam arti jawaban atas pertanyaan, termasuk jawaban model LLM di
-  Bab 14.
-- `Skrip mati` di Bab 11, yang berarti JavaScript dimatikan, bukan *down*.
+Bagian topik penelitian di `README.md` belum diseragamkan, dan masih memakai
+`latensi`, `anggaran`, `basi`, `segar`, dan `jawaban`.
 
-Bagian topik penelitian di `README.md` juga belum diseragamkan, dan masih
-memakai `latensi`, `anggaran`, `basi`, `segar`, dan `jawaban`.
+## Listing yang dirapikan
 
-## Listing yang belum sama persis dengan sumber atau keluarannya
+Setiap listing kode sama persis dengan file sumbernya, dan tidak ada baris
+listing yang lebih dari 78 karakter. Satu-satunya keluaran yang dirapikan
+adalah rencana Q1 Bab 3, yaitu `lst:plan-sebelum` dan salinannya di slide
+sesi 3. Baris aslinya selebar 126 karakter, sehingga `loops=1` dibuang dan
+bagian `actual` milik *node* Parallel Seq Scan dipindah ke baris berikutnya.
+Caption dan slidenya menyebut bahwa keluaran itu dirapikan.
 
-Masalah isi yang ditemukan pemeriksaan sumber 8 November 2026 sudah
-dibereskan. Yang tersisa hanya listing yang belum sama persis:
-
-- Bab 12: baris pembuka server di `lst:c12-siapkan` dipendekkan, karena baris
-  aslinya lebih dari 78 karakter. Agar dapat dikutip apa adanya, pesan
-  programnya yang perlu dipendekkan. Slide sesi 12 memendekkan baris
-  *gateway* lebih jauh lagi, dan keluaran `uji-kontrak` di sana tidak memuat
-  ", sama".
-- Bab 13: listing Latihan 3 hanya memuat tabel pertama dari keluaran
-  `ukur-antrean.py`.
-- Beberapa listing kode lama bukan salinan persis file sumbernya, atau
-  panjangnya 79 sampai 80 karakter, misalnya `chapter05.tex` baris 125, 180,
-  409, dan 653.
+Dua baris di slide sesi 3 tampak lebih dari 78 karakter bila markup pewarna
+`(*\textcolor{red}{...}*)` dan spasi yang dibuang `gobble` ikut dihitung. Lebar
+tampilnya 59 dan 76 karakter.
 
 ## Catatan pemeliharaan
 
@@ -65,6 +61,9 @@ dibereskan. Yang tersisa hanya listing yang belum sama persis:
   `docker compose down -v` dari direktori sumber masing-masing bila tidak
   dipakai. Bab 8, Bab 11, dan Bab 14 sengaja tidak memakai container sama
   sekali.
+- Container `awe3-cek-db` di port 5439 beserta volume `ch03-cek_data-awe3cek`
+  dibuat untuk memeriksa Bab 3 tanpa menyentuh `awe-db`. Keduanya dalam
+  keadaan *stop* dan boleh dihapus bila tidak dipakai.
 - Label keluaran `ukur-query.py` Bab 3, `worker.py` Bab 13, dan
   `ukur-offline.py` Bab 14 diganti mengikuti daftar istilah. Kutipan
   keluarannya ditulis ulang dengan angka pengukuran yang sama, seperti pada

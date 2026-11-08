@@ -21,8 +21,8 @@ from pathlib import Path
 
 from beban import hitung_persentil, ukur_beban
 
-BERKAS_ANGGARAN_BAWAAN = Path(__file__).parent / "budget.json"
-BERKAS_VITALS = Path(__file__).parent / "vitals.jsonl"
+FILE_BUDGET_BAWAAN = Path(__file__).parent / "budget.json"
+FILE_VITALS = Path(__file__).parent / "vitals.jsonl"
 # Core Web Vitals dinilai pada persentil 75 dari kunjungan nyata.
 PERSENTIL_VITALS = 75
 # Permintaan warmup sebelum tiap pengukuran, agar cache basis data hangat.
@@ -66,10 +66,10 @@ def baca_laporan_vitals():
   Filenya berformat JSON Lines, satu laporan per baris, sehingga laporan
   baru cukup ditambahkan di akhir tanpa membaca ulang isinya.
   """
-  if not BERKAS_VITALS.exists():
+  if not FILE_VITALS.exists():
     return []
   daftar_laporan = []
-  for baris in BERKAS_VITALS.read_text(encoding="utf-8").splitlines():
+  for baris in FILE_VITALS.read_text(encoding="utf-8").splitlines():
     if baris.strip():
       daftar_laporan.append(json.loads(baris))
   return daftar_laporan
@@ -107,7 +107,7 @@ def cetak_baris(baris):
 
 def main():
   """Mengukur seluruh alamat pada budget, lalu memberi verdict akhirnya."""
-  nama_file = sys.argv[1] if len(sys.argv) > 1 else BERKAS_ANGGARAN_BAWAAN
+  nama_file = sys.argv[1] if len(sys.argv) > 1 else FILE_BUDGET_BAWAAN
   budget = baca_budget(nama_file)
   beban = budget["beban"]
   print(f"{beban['jumlah_worker']} worker, "

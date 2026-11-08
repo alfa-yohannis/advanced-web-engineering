@@ -159,7 +159,7 @@ class PenanganKatalog(BaseHTTPRequestHandler):
 def main():
   """Menyalakan server sampai dihentikan dengan Ctrl+C."""
   server = ThreadingHTTPServer((HOST, PORT), PenanganKatalog)
-  print(f"Melayani di http://{HOST}:{PORT}/penuh dengan {JUMLAH_BUKU} buku"
+  print(f"Melayani {JUMLAH_BUKU} buku di http://{HOST}:{PORT}/penuh"
         "  (Ctrl+C untuk berhenti)")
   server.serve_forever()
 

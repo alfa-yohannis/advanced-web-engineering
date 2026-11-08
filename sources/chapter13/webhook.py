@@ -30,7 +30,7 @@ PERCOBAAN = defaultdict(int)
 
 
 def catat(isi):
-  """Mencatat satu pengiriman, lalu memutuskan status jawabannya.
+  """Mencatat satu pengiriman, lalu memutuskan status response-nya.
 
   Keputusannya hanya bergantung pada jenis pekerjaan dan nomor percobaannya,
   sehingga hasil pengukuran dapat diulang dengan angka yang sama.

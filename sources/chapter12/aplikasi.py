@@ -89,7 +89,7 @@ def bentuk_buku(buku, versi):
 
   Versi 2 mengganti nama field harga dan menambah penerbit. Datanya sama,
   dan hanya bentuk luarnya yang berbeda, sehingga perbedaan versi tidak
-  menuntut dua salinan data.
+  menuntut dua copy data.
   """
   if versi == "v1":
     return dict(buku)
@@ -111,8 +111,8 @@ def ambil_angka(query, nama, bawaan):
   return int(nilai) if nilai.isdigit() else None
 
 
-def rakit_halaman(versi, query):
-  """Merakit satu halaman daftar buku beserta penanda halaman berikutnya."""
+def render_halaman(versi, query):
+  """Me-render satu halaman daftar buku beserta penanda halaman berikutnya."""
   halaman = ambil_angka(query, "halaman", 1)
   per_halaman = ambil_angka(query, "per_halaman", PER_HALAMAN_BAWAAN)
   if not halaman or not per_halaman:
@@ -182,7 +182,7 @@ class PenanganKatalog(BaseHTTPRequestHandler):
       return
     for versi in ("v1", "v2"):
       if alamat.path == f"/{versi}/buku":
-        hasil, salah = rakit_halaman(versi, parse_qs(alamat.query))
+        hasil, salah = render_halaman(versi, parse_qs(alamat.query))
         if salah:
           self.kirim_masalah(422, "parameter-tidak-sesuai", salah)
           return
@@ -255,7 +255,7 @@ class PenanganKatalog(BaseHTTPRequestHandler):
 def main():
   """Menyalakan server sampai dihentikan dengan Ctrl+C."""
   server = ThreadingHTTPServer((HOST, PORT), PenanganKatalog)
-  print(f"Melayani di http://{HOST}:{PORT}/v1/buku dengan {JUMLAH_BUKU} buku"
+  print(f"Melayani {JUMLAH_BUKU} buku di http://{HOST}:{PORT}/v1/buku"
         "  (Ctrl+C untuk berhenti)")
   server.serve_forever()
 

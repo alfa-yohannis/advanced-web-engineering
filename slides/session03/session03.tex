@@ -402,7 +402,6 @@ CREATE TABLE item_pesanan (
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
 def lewat_orm(mesin):
-  """Menyusun query dari kelas hasil pemetaan, tanpa menulis SQL sama sekali."""
   perintah = (
       select(Pesanan.id, Pesanan.total, func.count(ItemPesanan.buku_id))
       .join(ItemPesanan, ItemPesanan.pesanan_id == Pesanan.id)
@@ -447,7 +446,6 @@ def lewat_orm(mesin):
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
 def lewat_query_builder(mesin):
-  """Menyusun SQL dari objek tabel dan kolom, tanpa memetakan tabel ke kelas."""
   pesanan = Pesanan.__table__
   item = ItemPesanan.__table__
   perintah = (
@@ -472,7 +470,6 @@ def lewat_query_builder(mesin):
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
 def lewat_sql_langsung():
-  """Mengirim SQL apa adanya lewat psycopg."""
   with psycopg.connect(DSN) as koneksi:
     baris = koneksi.execute(SQL_LANGSUNG, (ID_PELANGGAN, BATAS)).fetchall()
   return [(b[0], float(b[1]), b[2]) for b in baris]
@@ -746,7 +743,6 @@ SQL_KURANGI_ATOMIK = "UPDATE buku SET stok = stok - 1 WHERE id = %s"
 
 
 def atomik(koneksi):
-  """Menyerahkan pembacaan dan pengurangan ke basis data sekaligus."""
   with koneksi.transaction():
     koneksi.execute(SQL_KURANGI_ATOMIK, (ID_BUKU,))
   return 1
@@ -765,7 +761,6 @@ SQL_BACA_STOK_TERKUNCI = "SELECT stok FROM buku WHERE id = %s FOR UPDATE"
 SQL_TULIS_STOK = "UPDATE buku SET stok = %s WHERE id = %s"
 
 def pesimistis(koneksi):
-  """Mengunci baris sampai transaksi selesai, sehingga worker lain menunggu."""
   with koneksi.transaction():
     baris = koneksi.execute(SQL_BACA_STOK_TERKUNCI, (ID_BUKU,)).fetchone()
     stok_terbaca = baris[0]
@@ -834,7 +829,6 @@ SQL_TULIS_BILA_VERSI_SAMA = (
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
 def optimistis(koneksi):
-  """Menulis hanya bila versinya belum berubah, lalu mengulang bila kalah."""
   percobaan = 0
   while True:
     percobaan += 1
@@ -972,7 +966,6 @@ def optimistis(koneksi):
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
 def ambil_dengan_n_plus_1(koneksi, id_pelanggan, batas):
-  """Mengambil daftar pesanan, lalu itemnya satu query untuk tiap pesanan."""
   with koneksi.cursor() as kursor:
     kursor.execute(SQL_DAFTAR_PESANAN, (id_pelanggan, batas))
     daftar_pesanan = kursor.fetchall()
@@ -1022,7 +1015,6 @@ SQL_ITEM_BANYAK_PESANAN = """
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
 def ambil_dengan_dua_query(koneksi, id_pelanggan, batas):
-  """Mengambil data yang sama dengan jumlah query yang tidak bergantung N."""
   with koneksi.cursor() as kursor:
     kursor.execute(SQL_DAFTAR_PESANAN, (id_pelanggan, batas))
     daftar_pesanan = kursor.fetchall()
@@ -1238,12 +1230,14 @@ WHERE status = 'baru'
 \begin{frame}[fragile]{{\Large Rencana Q1 Sebelum Indeks}}
   \vspace{2pt}
 \begin{lstlisting}[style=SqlStyle, basicstyle=\ttfamily\fontsize{7}{8.5}\selectfont, escapeinside={(*}{*)}]
-Limit  (cost=5179.73..5180.66 rows=8) (actual time=4.994..6.414 rows=10 loops=1)
-  ->  Gather Merge  (actual time=4.993..6.412 rows=10 loops=1)
+-- Keluaran EXPLAIN (ANALYZE), dirapikan
+Limit  (cost=5179.73..5180.66 rows=8) (actual time=4.994..6.414 rows=10)
+  ->  Gather Merge  (actual time=4.993..6.412 rows=10)
         Workers Launched: 2
         ->  (*\textcolor{red}{Sort}*)  (actual time=3.568..3.569 rows=3 loops=3)
               Sort Key: dibuat_pada DESC
-              ->  (*\textcolor{red}{Parallel Seq Scan on pesanan}*)  (actual time=1.175..3.531 rows=3 loops=3)
+              ->  (*\textcolor{red}{Parallel Seq Scan on pesanan}*)
+                  (actual time=1.175..3.531 rows=3 loops=3)
                     Filter: (pelanggan_id = 12345)
                     (*\textcolor{red}{Rows Removed by Filter: 66663}*)
 Execution Time: 6.450 ms
@@ -1655,14 +1649,13 @@ CREATE INDEX IF NOT EXISTS idx_buku_judul_trgm
 \begin{frame}[fragile]{{\Large Migrasi Indeks yang Aman}}
   \vspace{2pt}
 \begin{lstlisting}[style=SqlStyle]
--- Tanpa BEGIN. CREATE INDEX CONCURRENTLY tidak boleh di dalam transaksi.
+-- Periksa indeks yang gagal dengan:
+--   SELECT indexrelid::regclass FROM pg_index WHERE NOT indisvalid;
+
 SET lock_timeout = '5s';
 
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pesanan_pelanggan_waktu
   ON pesanan (pelanggan_id, dibuat_pada DESC);
-
--- Memeriksa indeks yang tertinggal dalam keadaan tidak sah:
--- SELECT indexrelid::regclass FROM pg_index WHERE NOT indisvalid;
 \end{lstlisting}
 
   \vspace{2pt}

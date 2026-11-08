@@ -90,7 +90,7 @@ tidak disebutkan.
           "id_buku": { "type": "integer", "minimum": 1 },
           "jumlah": { "type": "integer", "minimum": 1, "maximum": 10 }
         }
-      }
+      },
 \end{lstlisting}
 
 \section{Validasi di Batas Sistem}
@@ -557,8 +557,9 @@ python3 aplikasi.py &
 python3 gateway.py &
 
 # Keluarannya:
-# Melayani di http://127.0.0.1:8090/v1/buku dengan 48 buku
-# Gateway di http://127.0.0.1:8091/ dengan ember 20 token dan 5 token per detik
+# Melayani 48 buku di http://127.0.0.1:8090/v1/buku  (Ctrl+C untuk berhenti)
+# Gateway di http://127.0.0.1:8091/  (Ctrl+C untuk berhenti)
+# Ember 20 token per klien, diisi 5 token per detik
 \end{lstlisting}
 
 \subsection*{Latihan 1: Meng-generate Tipe dari Kontrak}
@@ -661,7 +662,12 @@ python3 uji-kontrak.py
 # Keluarannya:
 #   Yang diuji                   Status  Hasil
 #   GET /v1/buku                    200  sesuai skema
+#   GET /v1/buku?halaman=2          200  sesuai skema
+#   GET /v1/buku?per_halaman=99     422  sesuai skema
 #   sesuai kontrak                  201  sesuai, diterima
+#   field wajib hilang              422  sesuai, isi tidak sesuai
+#   tipe salah                      422  sesuai, isi tidak sesuai
+#   melebihi batas                  422  sesuai, isi tidak sesuai
 #   field asing                     422  sesuai, isi tidak sesuai
 #   kunci baru                      201  pesanan psn-0002 dibuat
 #   kunci sama, isi sama            200  pesanan psn-0002 dikembalikan, sama
@@ -739,12 +745,16 @@ python3 uji-kompatibilitas.py
 # Keluarannya:
 #   Perubahan kontrak v1 ke v2                     Akibat
 #   Buku.harga wajib dihapus                       merusak klien lama
+#   Buku.harga_rupiah wajib ditambah               merusak klien lama
 #   Buku.penerbit opsional ditambah                aman
+#   Pesanan.status enum menerima dibatalkan        merusak klien lama
 #   PesananBaru.jumlah batas naik ke 20            aman bagi klien lama
 #
-#   Yang diuji pada server             Status  Hasil
-#   klien v1 membaca /v2/buku             200  gagal: 'harga' is a required
-#   klien v2 memesan 15 ke /v1            422  isi tidak sesuai
+#   Yang diuji pada server       Status  Hasil
+#   klien v1 membaca /v1/buku       200  jalan
+#   klien v1 membaca /v2/buku       200  gagal: 'harga' is a required property
+#   klien v2 memesan 15 ke /v2      201  diterima
+#   klien v2 memesan 15 ke /v1      422  isi tidak sesuai
 \end{lstlisting}
 
 \begin{table}[!htb]

@@ -5,7 +5,7 @@ menambah hal opsional, sehingga klien lama tetap jalan. Perubahan yang
 merusak menghapus atau mengganti hal yang wajib, sehingga klien lama berhenti
 bekerja walaupun servernya sehat.
 
-Bagian kedua membuktikannya pada server yang menyala: isi jawaban versi 2
+Bagian kedua membuktikannya pada server yang menyala: isi response versi 2
 divalidasi terhadap skema versi 1, dan isi permintaan yang sah di versi 2
 dikirim ke versi 1.
 
@@ -24,7 +24,7 @@ PORT = 8090
 BATAS_WAKTU_DETIK = 5
 DIREKTORI = Path(__file__).parent
 LEBAR_PERUBAHAN = 46
-LEBAR_NAMA = 34
+LEBAR_NAMA = 28
 
 
 def baca(nama_file):
@@ -99,7 +99,7 @@ def minta(metode, jalur, isi=None, header=None):
 
 
 def klien_lama_baca_versi(versi):
-  """Memvalidasi jawaban satu versi terhadap skema klien versi 1."""
+  """Memvalidasi response satu versi terhadap skema klien versi 1."""
   status, isi = minta("GET", f"/{versi}/buku?per_halaman=2")
   try:
     jsonschema.validate(isi, skema_dari(LAMA, "HalamanBuku"))
@@ -110,13 +110,13 @@ def klien_lama_baca_versi(versi):
 
 
 def klien_baru_kirim_ke(versi, nomor):
-  """Mengirim isi yang sah di versi 2, lalu mencatat status jawabannya."""
+  """Mengirim isi yang sah di versi 2, lalu mencatat status response-nya."""
   isi = {"id_buku": 3, "jumlah": 15}
   kunci = f"uji-kompatibel-{nomor:04d}"
-  status, jawaban = minta("POST", f"/{versi}/pesanan", isi,
+  status, response = minta("POST", f"/{versi}/pesanan", isi,
                           {"Idempotency-Key": kunci})
   keterangan = ("diterima" if status == 201
-                else jawaban.get("title", "ditolak"))
+                else response.get("title", "ditolak"))
   return f"klien v2 memesan 15 ke /{versi}", status, keterangan
 
 

@@ -50,7 +50,7 @@ PEKERJAAN_PER_NAMA = {
 
 
 def ulangi_pekerjaan(pekerjaan, pool_koneksi, jumlah_ulangan):
-  """Menjalankan satu pekerjaan berulang kali, lalu melaporkan ukuran akhirnya.
+  """Menjalankan satu pekerjaan berulang kali, lalu melaporkan ukuran akhir.
 
   Diulang agar waktu tiap fungsi terkumpul cukup banyak untuk dibandingkan,
   bukan tenggelam oleh derajat ketelitian pengukur waktunya.

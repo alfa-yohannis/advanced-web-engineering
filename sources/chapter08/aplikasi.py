@@ -37,7 +37,7 @@ JENIS_ISI_JS = "text/javascript"
 UMUR_ISR_DETIK = 10
 # Rendering sengaja diperlambat sedikit, meniru halaman yang isinya mahal
 # dihitung. Tanpa ini, selisih SSR dan SSG tidak terbaca pengukur waktu.
-LAMA_RAKIT_DETIK = 0.05
+LAMA_RENDER_DETIK = 0.05
 
 
 def render_halaman_katalog():
@@ -46,7 +46,7 @@ def render_halaman_katalog():
   Jeda di dalamnya mewakili pekerjaan nyata sebuah halaman, misalnya
   memanggil basis data dan menyusun ringkasannya.
   """
-  time.sleep(LAMA_RAKIT_DETIK)
+  time.sleep(LAMA_RENDER_DETIK)
   isi = f"    <ul>\n      {katalog.render_baris_html()}\n    </ul>"
   return katalog.render_halaman("Katalog", isi)
 

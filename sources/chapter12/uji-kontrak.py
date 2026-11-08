@@ -1,6 +1,6 @@
-"""Menguji jawaban server dan isi permintaan terhadap kontraknya.
+"""Menguji response server dan isi permintaan terhadap kontraknya.
 
-Tiga hal diuji sekaligus. Pertama, jawaban server divalidasi terhadap skema
+Tiga hal diuji sekaligus. Pertama, response server divalidasi terhadap skema
 di kontrak, sehingga kontrak yang sudah berubah tetapi kodenya belum langsung
 terlihat. Kedua, beberapa isi permintaan dikirim ke server, termasuk yang
 sengaja salah, lalu statusnya dibandingkan dengan yang dijanjikan kontrak.
@@ -56,8 +56,8 @@ def minta(metode, jalur, isi=None, header=None):
   return status, json.loads(mentah) if mentah else {}
 
 
-def periksa_jawaban(nama, jalur, nama_skema):
-  """Memvalidasi satu jawaban server terhadap skema di kontrak."""
+def periksa_response(nama, jalur, nama_skema):
+  """Memvalidasi satu response server terhadap skema di kontrak."""
   status, isi = minta("GET", jalur)
   try:
     jsonschema.validate(isi, skema(nama_skema))
@@ -69,10 +69,10 @@ def periksa_jawaban(nama, jalur, nama_skema):
 def periksa_permintaan(nama, isi, status_dijanjikan, nomor):
   """Mengirim satu isi permintaan, lalu membandingkan statusnya."""
   kunci = f"uji-kontrak-{nomor:04d}"
-  status, jawaban = minta("POST", "/v1/pesanan", isi,
+  status, response = minta("POST", "/v1/pesanan", isi,
                           {"Idempotency-Key": kunci})
   sesuai = "sesuai" if status == status_dijanjikan else "TIDAK sesuai"
-  alasan = jawaban.get("title", jawaban.get("status", ""))
+  alasan = response.get("title", response.get("status", ""))
   return nama, status, f"{sesuai}, {alasan}"
 
 
@@ -89,7 +89,7 @@ def periksa_idempotensi():
                                     {"Idempotency-Key": kunci})
   status_ulang, pesanan_ulang = minta("POST", "/v1/pesanan", isi,
                                       {"Idempotency-Key": kunci})
-  status_beda, jawaban_beda = minta("POST", "/v1/pesanan",
+  status_beda, response_beda = minta("POST", "/v1/pesanan",
                                     {"id_buku": 6, "jumlah": 1},
                                     {"Idempotency-Key": kunci})
   sama = pesanan_awal.get("id") == pesanan_ulang.get("id")
@@ -99,17 +99,17 @@ def periksa_idempotensi():
        f"pesanan {pesanan_ulang.get('id')} dikembalikan, "
        f"{'sama' if sama else 'BERBEDA'}"),
       ("kunci sama, isi beda", status_beda,
-       jawaban_beda.get("title", "diterima")),
+       response_beda.get("title", "diterima")),
   ]
 
 
 def main():
   """Menjalankan ketiga pengujian, lalu mencetak hasilnya sebagai tabel."""
   baris = [
-      periksa_jawaban("GET /v1/buku", "/v1/buku", "HalamanBuku"),
-      periksa_jawaban("GET /v1/buku?halaman=2", "/v1/buku?halaman=2",
+      periksa_response("GET /v1/buku", "/v1/buku", "HalamanBuku"),
+      periksa_response("GET /v1/buku?halaman=2", "/v1/buku?halaman=2",
                       "HalamanBuku"),
-      periksa_jawaban("GET /v1/buku?per_halaman=99",
+      periksa_response("GET /v1/buku?per_halaman=99",
                       "/v1/buku?per_halaman=99", "Kesalahan"),
   ]
   for nomor, (nama, isi, status) in enumerate(ISI_UJI, start=1):

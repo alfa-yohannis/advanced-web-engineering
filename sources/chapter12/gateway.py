@@ -4,7 +4,7 @@ Gateway tidak tahu isi bisnis aplikasinya. Tugasnya tiga: membatasi laju
 permintaan tiap klien, menempelkan penanda permintaan agar dapat dilacak,
 lalu meneruskan sisanya ke aplikasi di belakangnya.
 
-Pembatasannya memakai token bucket: tiap klien punya ember berisi token,
+Rate limiting-nya memakai token bucket: tiap klien punya ember berisi token,
 satu permintaan memakai satu token, dan embernya terisi ulang dengan laju
 tetap. Dengan begitu lonjakan pendek masih dilayani, sedangkan laju rata-rata
 tetap terbatas.
@@ -55,7 +55,7 @@ def ambil_token(nama_klien, sekarang):
 
 
 def teruskan(metode, jalur, header, isi):
-  """Meneruskan satu permintaan ke aplikasi, lalu mengembalikan jawabannya."""
+  """Meneruskan satu permintaan ke aplikasi, lalu mengembalikan response-nya."""
   koneksi = HTTPConnection(HOST_APLIKASI, PORT_APLIKASI,
                            timeout=BATAS_WAKTU_DETIK)
   koneksi.request(metode, jalur, body=isi, headers=header)
@@ -131,9 +131,9 @@ class PenanganGateway(BaseHTTPRequestHandler):
 def main():
   """Menyalakan gateway sampai dihentikan dengan Ctrl+C."""
   server = ThreadingHTTPServer((HOST, PORT), PenanganGateway)
-  print(f"Gateway di http://{HOST}:{PORT}/ dengan ember {KAPASITAS_EMBER} "
-        f"token dan {PENGISIAN_PER_DETIK:.0f} token per detik"
-        "  (Ctrl+C untuk berhenti)")
+  print(f"Gateway di http://{HOST}:{PORT}/  (Ctrl+C untuk berhenti)")
+  print(f"Ember {KAPASITAS_EMBER} token per klien, diisi "
+        f"{PENGISIAN_PER_DETIK:.0f} token per detik")
   server.serve_forever()
 
 

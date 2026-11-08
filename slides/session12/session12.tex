@@ -188,15 +188,15 @@
 \begin{frame}[fragile]{{\Large Dua Baris yang Menentukan Perilakunya}}
   \vspace{2pt}
 \begin{lstlisting}[language=json]
-"PesananBaru": {
-  "type": "object",
-  "required": ["id_buku", "jumlah"],
-  "additionalProperties": false,
-  "properties": {
-    "id_buku": { "type": "integer", "minimum": 1 },
-    "jumlah": { "type": "integer", "minimum": 1, "maximum": 10 }
-  }
-}
+      "PesananBaru": {
+        "type": "object",
+        "required": ["id_buku", "jumlah"],
+        "additionalProperties": false,
+        "properties": {
+          "id_buku": { "type": "integer", "minimum": 1 },
+          "jumlah": { "type": "integer", "minimum": 1, "maximum": 10 }
+        }
+      },
 \end{lstlisting}
   \vspace{2pt}
   {\small \texttt{required} menyebut field yang wajib ada, dan
@@ -551,8 +551,9 @@ python3 aplikasi.py &
 python3 gateway.py &
 
 # Keluarannya:
-# Melayani di http://127.0.0.1:8090/v1/buku dengan 48 buku
-# Gateway di http://127.0.0.1:8091/ dengan ember 20 token
+# Melayani 48 buku di http://127.0.0.1:8090/v1/buku  (Ctrl+C untuk berhenti)
+# Gateway di http://127.0.0.1:8091/  (Ctrl+C untuk berhenti)
+# Ember 20 token per klien, diisi 5 token per detik
 \end{lstlisting}
   \vspace{4pt}
   {\small Latihan membutuhkan Python 3 beserta \texttt{jsonschema}, dan
@@ -595,12 +596,12 @@ python3 buat_tipe.py kontrak-v2.json tipe-katalog-v2.ts
 \begin{lstlisting}[language=bash]
 python3 uji-kontrak.py
 
-# Keluarannya:
+# Keluarannya (dipotong):
 #   Yang diuji                   Status  Hasil
 #   sesuai kontrak                  201  sesuai, diterima
 #   field asing                     422  sesuai, isi tidak sesuai
 #   kunci baru                      201  pesanan psn-0002 dibuat
-#   kunci sama, isi sama            200  pesanan psn-0002 dikembalikan
+#   kunci sama, isi sama            200  pesanan psn-0002 dikembalikan, sama
 #   kunci sama, isi beda            409  kunci idempotensi dipakai ulang
 \end{lstlisting}
   \vspace{2pt}
@@ -620,14 +621,14 @@ python3 uji-kontrak.py
 \begin{lstlisting}[language=bash]
 python3 uji-kompatibilitas.py
 
-# Keluarannya:
+# Keluarannya (dipotong):
 #   Perubahan kontrak v1 ke v2                     Akibat
 #   Buku.harga wajib dihapus                       merusak klien lama
 #   Buku.penerbit opsional ditambah                aman
 #   PesananBaru.jumlah batas naik ke 20            aman bagi klien lama
-#
-#   klien v1 membaca /v2/buku             200  gagal: 'harga' is required
-#   klien v2 memesan 15 ke /v1            422  isi tidak sesuai
+#   Yang diuji pada server       Status  Hasil
+#   klien v1 membaca /v2/buku       200  gagal: 'harga' is a required property
+#   klien v2 memesan 15 ke /v1      422  isi tidak sesuai
 \end{lstlisting}
   \vspace{2pt}
   {\small Lalu ganti nama satu field wajib di kontrak v2, dan catat berapa

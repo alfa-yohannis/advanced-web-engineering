@@ -161,7 +161,8 @@
 \begin{frame}[fragile]{{\Large Sesi Dicabut Seketika}}
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
-curl -s -X POST "http://127.0.0.1:8070/masuk?cara=sesi&nama=budi&sandi=budi123" -D -
+curl -s -X POST -D - \
+  "http://127.0.0.1:8070/masuk?cara=sesi&nama=budi&sandi=budi123"
 curl -s -H "Cookie: sesi=..." http://127.0.0.1:8070/api/pesanan
 curl -s -X POST -H "Cookie: sesi=..." http://127.0.0.1:8070/keluar
 curl -s -H "Cookie: sesi=..." http://127.0.0.1:8070/api/pesanan
@@ -436,8 +437,10 @@ KUNCI_TOKEN=kunci-latihan python3 aplikasi.py &
   dekode bagian tengah token dengan \texttt{base64}.}
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
-curl -s -D - -X POST "http://127.0.0.1:8070/masuk?cara=sesi&nama=budi&sandi=budi123"
-curl -s -X POST "http://127.0.0.1:8070/masuk?cara=token&nama=budi&sandi=budi123"
+curl -s -D - -X POST \
+  "http://127.0.0.1:8070/masuk?cara=sesi&nama=budi&sandi=budi123"
+curl -s -X POST \
+  "http://127.0.0.1:8070/masuk?cara=token&nama=budi&sandi=budi123"
 
 # Keluarannya:
 # Set-Cookie: sesi=4b2f8d7e...; HttpOnly; SameSite=Lax; Path=/

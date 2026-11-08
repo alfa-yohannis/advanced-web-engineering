@@ -5,7 +5,7 @@ Satu kali EXPLAIN ANALYZE tidak cukup dijadikan angka laporan. Jalankan
 pertama menanggung pengisian cache, sedangkan jalankan berikutnya lebih
 cepat. Karena itu yang dilaporkan adalah p50 dan p95, bukan satu angka.
 
-Query dibaca dari berkas, satu query per berkas.
+Query dibaca dari file, satu query per file.
 
 Pemakaian:
     source ../.venv/bin/activate
@@ -44,17 +44,17 @@ def ambil_rencana(koneksi, sql):
     return kursor.fetchone()[0][0]
 
 
-def simpul_pemindaian(simpul, ditemukan=None):
-  """Menelusuri rencana untuk mengumpulkan seluruh simpul pemindaiannya.
+def node_pemindaian(node, ditemukan=None):
+  """Menelusuri rencana untuk mengumpulkan seluruh node pemindaiannya.
 
-  Simpul inilah yang menunjukkan apakah indeks benar-benar dipakai.
+  Node inilah yang menunjukkan apakah indeks benar-benar dipakai.
   """
   ditemukan = ditemukan if ditemukan is not None else []
-  if "Scan" in simpul["Node Type"]:
-    sasaran = simpul.get("Relation Name") or simpul.get("Index Name", "")
-    ditemukan.append(f"{simpul['Node Type']} {sasaran}".strip())
-  for anak in simpul.get("Plans", []):
-    simpul_pemindaian(anak, ditemukan)
+  if "Scan" in node["Node Type"]:
+    sasaran = node.get("Relation Name") or node.get("Index Name", "")
+    ditemukan.append(f"{node['Node Type']} {sasaran}".strip())
+  for anak in node.get("Plans", []):
+    node_pemindaian(anak, ditemukan)
   return ditemukan
 
 
@@ -62,9 +62,9 @@ def main():
   """Mengukur satu file query, lalu mencetak sebaran waktunya."""
   if len(sys.argv) < 2:
     sys.exit("Pemakaian: python ukur-query.py <file.sql> [ulangan]")
-  berkas = Path(sys.argv[1])
+  file_query = Path(sys.argv[1])
   ulangan = int(sys.argv[2]) if len(sys.argv) > 2 else 20
-  sql = berkas.read_text(encoding="utf-8").strip().rstrip(";")
+  sql = file_query.read_text(encoding="utf-8").strip().rstrip(";")
 
   daftar_waktu = []
   with psycopg.connect(DSN) as koneksi:
@@ -74,11 +74,11 @@ def main():
       rencana = ambil_rencana(koneksi, sql)
       daftar_waktu.append(rencana["Execution Time"])
 
-  print(f"File         : {berkas}")
+  print(f"File         : {file_query}")
   print(f"Ulangan      : {ulangan}, jalankan pertama dibuang")
   print(f"p50          : {persentil(daftar_waktu, 50):8.3f} ms")
   print(f"p95          : {persentil(daftar_waktu, 95):8.3f} ms")
-  print("Pemindaian   : " + ", ".join(simpul_pemindaian(rencana["Plan"])))
+  print("Pemindaian   : " + ", ".join(node_pemindaian(rencana["Plan"])))
 
 
 if __name__ == "__main__":

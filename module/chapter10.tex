@@ -50,7 +50,8 @@ sama seperti Bab 7. Pencabutannya terbukti seketika, seperti pada Listing
 \ref{lst:sesi10}.
 
 \begin{lstlisting}[language=bash, caption={Sesi dicabut seketika saat keluar, tersedia di \berkas{sources/chapter10/aplikasi.py}}, label={lst:sesi10}]
-curl -s -X POST "http://127.0.0.1:8070/masuk?cara=sesi&nama=budi&sandi=budi123" -D -
+curl -s -X POST -D - \
+  "http://127.0.0.1:8070/masuk?cara=sesi&nama=budi&sandi=budi123"
 curl -s -H "Cookie: sesi=..." http://127.0.0.1:8070/api/pesanan
 curl -s -X POST -H "Cookie: sesi=..." http://127.0.0.1:8070/keluar
 curl -s -H "Cookie: sesi=..." http://127.0.0.1:8070/api/pesanan
@@ -423,8 +424,10 @@ bahwa isi token terbaca siapa pun yang memegangnya.
 \end{enumerate}
 
 \begin{lstlisting}[language=bash, caption={Membandingkan sesi dan token, tersedia di \berkas{sources/chapter10/aplikasi.py}}, label={lst:c10-lat1-jalan}]
-curl -s -D - -X POST "http://127.0.0.1:8070/masuk?cara=sesi&nama=budi&sandi=budi123"
-curl -s -X POST "http://127.0.0.1:8070/masuk?cara=token&nama=budi&sandi=budi123"
+curl -s -D - -X POST \
+  "http://127.0.0.1:8070/masuk?cara=sesi&nama=budi&sandi=budi123"
+curl -s -X POST \
+  "http://127.0.0.1:8070/masuk?cara=token&nama=budi&sandi=budi123"
 
 # Keluarannya:
 # Set-Cookie: sesi=4b2f8d7e...; HttpOnly; SameSite=Lax; Path=/

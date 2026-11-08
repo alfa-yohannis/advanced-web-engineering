@@ -54,7 +54,7 @@ class ServerOngkir(ThreadingHTTPServer):
   def handle_error(self, request, client_address):
     """Mengabaikan koneksi yang ditutup klien di tengah jalan.
 
-    Klien yang memakai batas waktu menutup koneksinya sebelum jawaban
+    Klien yang memakai batas waktu menutup koneksinya sebelum response
     dikirim. Error tulis yang muncul sesudahnya bukan kesalahan layanan.
     """
     if not isinstance(sys.exc_info()[1], ConnectionError):
@@ -65,7 +65,7 @@ class PenanganOngkir(BaseHTTPRequestHandler):
   """Menjawab /ongkir, kadang cepat, kadang sengaja lambat."""
 
   def do_GET(self):
-    """Menahan jawaban sesuai hasil undian, lalu mengirim biaya kirim."""
+    """Menahan response sesuai hasil undian, lalu mengirim biaya kirim."""
     bagian_alamat = urlsplit(self.path)
     if bagian_alamat.path != "/ongkir":
       self.send_error(404)
@@ -76,12 +76,12 @@ class PenanganOngkir(BaseHTTPRequestHandler):
       time.sleep(JEDA_LAMBAT_DETIK)
     else:
       time.sleep(JEDA_NORMAL_DETIK)
-    isi_jawaban = json.dumps({"ongkir": ONGKIR_RUPIAH}).encode()
+    isi_response = json.dumps({"ongkir": ONGKIR_RUPIAH}).encode()
     self.send_response(200)
     self.send_header("Content-Type", "application/json")
-    self.send_header("Content-Length", str(len(isi_jawaban)))
+    self.send_header("Content-Length", str(len(isi_response)))
     self.end_headers()
-    self.wfile.write(isi_jawaban)
+    self.wfile.write(isi_response)
 
   def log_message(self, format_pesan, *argumen):
     """Mematikan catatan per permintaan agar terminal tetap terbaca."""

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Meringkas berkas HAR hasil ekspor panel Network.
+"""Meringkas file HAR hasil ekspor panel Network.
 
 HAR (HTTP Archive) adalah format rekaman aktivitas jaringan browser dalam
 bentuk JSON. Isinya seluruh permintaan beserta waktu, header, ukuran, protokol,
 dan penanda koneksinya. Rekaman ini ikut memuat header, sehingga cookie dan
 token autentikasi dapat ikut tersimpan. Jangan dibagikan sembarangan.
 
-Berkas HAR diperoleh dari DevTools, panel Network, klik kanan pada daftar
+File HAR diperoleh dari DevTools, panel Network, klik kanan pada daftar
 permintaan, lalu pilih "Save all as HAR with content".
 
 Skrip ini menghitung sendiri jumlah permintaan, jumlah koneksi, protokol, dan
@@ -14,7 +14,7 @@ waktu, sehingga tidak perlu dihitung satu per satu dari layar.
 
 Argumen kedua boleh berupa dua hal:
   * potongan nama host, misalnya www.pradita.ac.id
-  * nama berkas berisi daftar alamat aset, satu per baris, misalnya aset.txt
+  * nama file berisi daftar alamat aset, satu per baris, misalnya aset.txt
 
 Bentuk kedua dipakai bila hasilnya hendak dibandingkan dengan pengukuran
 curl, agar kumpulan aset yang dihitung benar-benar sama.
@@ -38,10 +38,10 @@ def main():
   if len(sys.argv) < 2:
     sys.exit("Pemakaian: ./ringkas-har.py rekaman.har [saringan_host]")
 
-  berkas = sys.argv[1]
+  file_har = sys.argv[1]
   saringan = sys.argv[2] if len(sys.argv) > 2 else ""
 
-  with open(berkas, encoding="utf-8") as f:
+  with open(file_har, encoding="utf-8") as f:
     entri = json.load(f)["log"]["entries"]
 
   if saringan and os.path.isfile(saringan):

@@ -351,21 +351,23 @@ tetapi tidak terpakai justru memboroskan sumber daya. Listing
 \ref{lst:preconnect} menunjukkan penulisannya.
 
 \begin{lstlisting}[language=html, caption={Membuka koneksi ke domain pihak ketiga lebih awal, tersedia di \berkas{sources/chapter02/preconnect.html}}, label={lst:preconnect}]
-<!-- Koneksi lengkap: DNS, TCP, dan TLS -->
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Koneksi lengkap: DNS, TCP, dan TLS.
+         Dipakai bila aset pasti diminta. -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-<!-- Hanya pencarian DNS, dipakai bila aset belum tentu diminta -->
-<link rel="dns-prefetch" href="https://cdn.contoh.ac.id">
+    <!-- Hanya pencarian DNS. Dipakai bila aset belum tentu diminta. -->
+    <link rel="dns-prefetch" href="https://cdn.contoh.ac.id" />
 \end{lstlisting}
 
 Listing \ref{lst:curl} memperlihatkan biaya tiap tahap secara langsung.
 
 \begin{lstlisting}[language=bash, caption={Mengukur waktu tiap tahap koneksi, format keluarannya di \berkas{sources/chapter02/format-curl.txt}}, label={lst:curl}]
-# Format keluaran disimpan di berkas agar perintahnya pendek dan mudah disalin.
+# Format keluaran disimpan di file agar perintahnya pendek dan mudah disalin.
 curl -o /dev/null -s -w @format-curl.txt https://www.pradita.ac.id/
 
 # Keluarannya:
-# dns:0.009726s tcp:0.033991s tls:0.084639s ttfb:0.338771s total:0.342899s versi:HTTP/2
+# dns:0.009726s tcp:0.033991s tls:0.084639s ttfb:0.338771s total:0.342899s
+# versi:HTTP/2
 \end{lstlisting}
 
 Isi \texttt{format-curl.txt} beserta skrip pembungkusnya tersedia pada
@@ -694,11 +696,12 @@ thread} sedang sibuk.
 
 \begin{lstlisting}[language=TypeScript, caption={Urutan eksekusi tugas dan \textit{microtask}, tersedia di \berkas{sources/chapter02/urutan-event-loop.js}}, label={lst:urutan}]
 console.log("1: kode sinkron");
-setTimeout(() => console.log("4: tugas berikutnya"), 0);
+setTimeout(() => console.log("4: macrotask berikutnya"), 0);
 Promise.resolve().then(() => console.log("3: microtask"));
 console.log("2: kode sinkron");
+
 // Keluaran berurutan: 1, 2, 3, 4.
-// Baris 3 tetap lebih dulu daripada baris 4, walaupun tundaan setTimeout 0 ms.
+// Baris 3 tetap lebih dulu daripada baris 4, walau tundaan setTimeout 0 ms.
 \end{lstlisting}
 
 \begin{figure}[ht]
@@ -735,7 +738,7 @@ antarmuka yang terasa berat. Listing \ref{lst:longtask} memberi satu
 contohnya.
 
 \begin{lstlisting}[language=TypeScript, caption={Tugas berat yang menahan seluruh antarmuka, tersedia di \berkas{sources/chapter02/tugas-berat.ts}}, label={lst:longtask}]
-function hitungTotal(pesanan: Pesanan[]): number {
+export function hitungTotal(pesanan: Pesanan[]): number {
   let total = 0;
   // Perulangan panjang ini menahan main thread sampai selesai.
   for (const item of pesanan) {
@@ -809,14 +812,17 @@ Dua hal menghambat rangkaian ini:
 \end{enumerate}
 
 \begin{lstlisting}[language=html, caption={Script yang menahan \textit{parsing} dan perbaikannya, tersedia di \berkas{sources/chapter02/defer-async.html}}, label={lst:defer}]
-<!-- Menahan parsing HTML sampai analytics.js selesai dijalankan -->
-<script src="/js/analytics.js"></script>
+    <!-- Menahan parsing HTML sampai file selesai diunduh dan dijalankan. -->
+    <script src="/js/analytics.js"></script>
 
-<!-- Diunduh paralel dengan parsing HTML, dijalankan setelah parsing selesai -->
-<script src="/js/analytics.js" defer></script>
+    <!-- Diunduh paralel dengan parsing, dijalankan setelah parsing selesai,
+         dan urutannya mengikuti urutan penulisan. -->
+    <script src="/js/aplikasi.js" defer></script>
 
-<!-- Diunduh paralel juga, tetapi langsung dijalankan begitu unduhan selesai -->
-<script src="/js/iklan.js" async></script>
+    <!-- Diunduh paralel juga, tetapi langsung dijalankan begitu unduhan
+         selesai, sehingga urutannya tidak dapat diandalkan. -->
+    <script src="/js/iklan.js" async></script>
+  </head>
 \end{lstlisting}
 
 Kata paralel di sini berarti pengunduhan berjalan bersamaan dengan
@@ -1171,9 +1177,13 @@ bukan oleh kecepatan program di server.
 url="${1:?alamat wajib diisi}"
 ulangan="${2:-5}"
 
-printf "%-10s %-10s %-10s %-14s %-10s\n" "DNS" "TCP" "TLS" "TungguServer" "Total"
+format="%{time_namelookup} %{time_connect} %{time_appconnect}"
+format+=" %{time_starttransfer} %{time_total}\n"
+
+printf "%-10s %-10s %-10s %-14s %-10s\n" \
+  "DNS" "TCP" "TLS" "TungguServer" "Total"
 for ((i = 1; i <= ulangan; i++)); do
-  curl -o /dev/null -s -w "%{time_namelookup} %{time_connect} %{time_appconnect} %{time_starttransfer} %{time_total}\n" --max-time 30 "$url" |
+  curl -o /dev/null -s -w "$format" --max-time 30 "$url" |
     awk '{
       printf "%-10.0f %-10.0f %-10.0f %-14.0f %-10.0f\n",
         $1*1000, ($2-$1)*1000, ($3-$2)*1000, ($4-$3)*1000, $5*1000

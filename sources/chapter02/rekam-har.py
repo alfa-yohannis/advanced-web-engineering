@@ -2,7 +2,7 @@
 """Merekam aktivitas jaringan sebuah halaman tanpa membuka DevTools.
 
 Skrip ini menjalankan Chrome tanpa antarmuka, mengendalikannya lewat Chrome
-DevTools Protocol (CDP), lalu menulis hasilnya sebagai berkas HAR. Berkas
+DevTools Protocol (CDP), lalu menulis hasilnya sebagai file HAR. File
 tersebut dapat langsung diringkas dengan ringkas-har.py, sehingga seluruh
 rangkaian pengukuran berjalan tanpa langkah manual.
 
@@ -49,7 +49,7 @@ def alamat_debug():
   sys.exit("Chrome tidak menjawab pada porta debug.")
 
 
-async def rekam(url, berkas):
+async def rekam(url, file_har):
   ws_url = alamat_debug()
   permintaan, respons, selesai = {}, {}, {}
   pesan_ke = 0
@@ -118,18 +118,18 @@ async def rekam(url, berkas):
         },
     })
 
-  with open(berkas, "w", encoding="utf-8") as f:
+  with open(file_har, "w", encoding="utf-8") as f:
     json.dump({"log": {"version": "1.2", "entries": entri}}, f, indent=1)
 
-  print(f"Tersimpan {len(entri)} permintaan ke {berkas}")
+  print(f"Tersimpan {len(entri)} permintaan ke {file_har}")
 
 
 def main():
   if len(sys.argv) < 2:
-    sys.exit("Pemakaian: ./rekam-har.py <alamat> [berkas.har]")
+    sys.exit("Pemakaian: ./rekam-har.py <alamat> [file.har]")
 
   url = sys.argv[1]
-  berkas = sys.argv[2] if len(sys.argv) > 2 else "rekaman.har"
+  file_har = sys.argv[2] if len(sys.argv) > 2 else "rekaman.har"
 
   profil = tempfile.mkdtemp(prefix="chrome-rekam-")
   chrome = subprocess.Popen(
@@ -139,7 +139,7 @@ def main():
       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
   )
   try:
-    asyncio.run(rekam(url, berkas))
+    asyncio.run(rekam(url, file_har))
   finally:
     chrome.terminate()
     chrome.wait(timeout=10)

@@ -1,4 +1,4 @@
-"""Membandingkan pemanggilan di dalam proses dengan pemanggilan lewat jaringan.
+"""Membandingkan panggilan di dalam proses dengan request lewat jaringan.
 
 Pekerjaannya sama persis, yaitu hitung_harga dari layanan.py. Yang berbeda
 hanya jalannya. Pada modular monolith, modul pesanan memanggil modul harga

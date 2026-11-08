@@ -93,7 +93,7 @@ def periksa_versi(perintah, minimum):
 def periksa_docker():
   """Memeriksa klien Docker sekaligus daemon-nya.
 
-  Klien yang terpasang belum berarti Docker dapat dipakai. Daemon yang mati
+  Klien yang terpasang belum berarti Docker dapat dipakai. Daemon yang down
   atau pengguna yang belum masuk grup docker baru ketahuan ketika server
   ditanya, sehingga keduanya diperiksa di sini.
   """

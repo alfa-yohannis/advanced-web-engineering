@@ -1,7 +1,7 @@
 """Mengendalikan Chrome tanpa jendela lewat Chrome DevTools Protocol di pipa.
 
 Chrome yang dinyalakan dengan --remote-debugging-pipe membaca perintah dari
-file descriptor 3 dan menulis jawaban ke file descriptor 4. Tiap pesan berupa
+file descriptor 3 dan menulis response ke file descriptor 4. Tiap pesan berupa
 satu JSON yang diakhiri byte nol. Dengan cara ini alat ukur dapat menunggu
 sampai keadaan tertentu benar-benar tercapai, misalnya service worker siap,
 tanpa WebSocket dan tanpa pustaka tambahan. Protokol yang sama dipakai
@@ -22,7 +22,7 @@ NAMA_CHROME = ["google-chrome", "google-chrome-stable", "chromium",
                "chromium-browser"]
 # Nomor file descriptor yang dipakai Chrome untuk --remote-debugging-pipe.
 FD_PERINTAH_CHROME = 3
-FD_JAWABAN_CHROME = 4
+FD_RESPONSE_CHROME = 4
 PEMISAH_PESAN = b"\0"
 UKURAN_BACA_BYTE = 65536
 BATAS_TUNGGU_DETIK = 15
@@ -39,17 +39,17 @@ def cari_chrome():
                    "atau Chromium lebih dahulu.")
 
 
-def pasang_pipa_di_anak(ujung_perintah, ujung_jawaban):
+def pasang_pipa_di_anak(ujung_perintah, ujung_response):
   """Memindahkan kedua ujung pipa ke fd 3 dan 4 di proses anak.
 
   Fungsi ini berjalan di proses anak, sesudah fork dan sebelum Chrome
   dijalankan. Urutannya disengaja: fd 3 dipasang lebih dahulu, karena ujung
-  jawaban selalu bernomor lebih besar dari 4 dan tidak akan tertimpa.
+  response selalu bernomor lebih besar dari 4 dan tidak akan tertimpa.
   """
   os.dup2(ujung_perintah, FD_PERINTAH_CHROME)
-  os.dup2(ujung_jawaban, FD_JAWABAN_CHROME)
+  os.dup2(ujung_response, FD_RESPONSE_CHROME)
   os.set_inheritable(FD_PERINTAH_CHROME, True)
-  os.set_inheritable(FD_JAWABAN_CHROME, True)
+  os.set_inheritable(FD_RESPONSE_CHROME, True)
 
 
 class ChromeLewatPipa:
@@ -69,7 +69,7 @@ class ChromeLewatPipa:
         "--remote-debugging-pipe", "about:blank",
     ]
     self.proses = subprocess.Popen(
-        perintah, pass_fds=(FD_PERINTAH_CHROME, FD_JAWABAN_CHROME),
+        perintah, pass_fds=(FD_PERINTAH_CHROME, FD_RESPONSE_CHROME),
         preexec_fn=functools.partial(pasang_pipa_di_anak, baca_chrome,
                                      tulis_chrome),
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -95,10 +95,10 @@ class ChromeLewatPipa:
     return json.loads(pesan)
 
   def kirim(self, metode, parameter=None, sesi=None):
-    """Mengirim satu perintah, lalu menunggu jawaban dengan nomor yang sama.
+    """Mengirim satu perintah, lalu menunggu response dengan nomor yang sama.
 
     Pesan lain yang datang lebih dahulu, misalnya pemberitahuan peristiwa,
-    dilewati, karena alat ukur ini hanya membaca jawaban perintahnya sendiri.
+    dilewati, karena alat ukur ini hanya membaca response perintahnya sendiri.
     """
     self.nomor_pesan += 1
     pesan = {"id": self.nomor_pesan, "method": metode,
@@ -108,12 +108,12 @@ class ChromeLewatPipa:
     self.tulis.write(json.dumps(pesan).encode() + PEMISAH_PESAN)
     self.tulis.flush()
     while True:
-      jawaban = self.baca_pesan()
-      if jawaban.get("id") != self.nomor_pesan:
+      response = self.baca_pesan()
+      if response.get("id") != self.nomor_pesan:
         continue
-      if "error" in jawaban:
-        raise RuntimeError(f"{metode}: {jawaban['error']['message']}")
-      return jawaban.get("result", {})
+      if "error" in response:
+        raise RuntimeError(f"{metode}: {response['error']['message']}")
+      return response.get("result", {})
 
   def buka(self, alamat):
     """Membuka satu alamat di tab, lalu mengembalikan teks error-nya bila ada.

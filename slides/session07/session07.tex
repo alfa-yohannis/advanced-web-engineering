@@ -353,7 +353,8 @@ def cari_buku(judul_dicari):
   """
   pola = f"%{judul_dicari}%"
   with psycopg.connect(DSN) as koneksi:
-    baris = koneksi.execute(SQL_CARI_BUKU, (pola, BATAS_HASIL_CARI)).fetchall()
+    baris = koneksi.execute(SQL_CARI_BUKU,
+                            (pola, BATAS_HASIL_CARI)).fetchall()
 \end{lstlisting}
 \end{frame}
 
@@ -700,7 +701,8 @@ curl -sI -H "Origin: https://situs-lain.example" \
 \begin{frame}[fragile]{{\Large Langkah Kerja dan Perintahnya}}
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
-curl -s "http://127.0.0.1:8030/api/cari?judul=Pengantar%20Jilid%207" | head -c 80
+curl -s "http://127.0.0.1:8030/api/cari?judul=Pengantar%20Jilid%207" \
+  | head -c 80
 curl -s --get --data-urlencode "judul=Pengantar'; SELECT 1 --" \
   http://127.0.0.1:8030/api/cari | head -c 80
 curl -s --get --data-urlencode 'nama=<b>Mahasiswa</b>' \

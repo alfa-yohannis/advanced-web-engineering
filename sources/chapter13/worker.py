@@ -5,7 +5,7 @@ diproses lebih dahulu. Pemeriksaan itu diperlukan karena antreannya bersifat
 at-least-once, sehingga satu pesan dapat tiba dua kali, misalnya ketika
 worker crash sesudah mengirim tetapi sebelum meng-ack.
 
-Satu jenis pekerjaan, yaitu crash-setelah-kirim, memang menirukan kematian
+Satu jenis pekerjaan, yaitu crash-setelah-kirim, memang menirukan crash
 itu: webhooknya dikirim, pesannya ditandai diproses, lalu worker berhenti
 tanpa meng-ack. Pengiriman kedua dipakai untuk membuktikan duplikatnya
 tertahan.

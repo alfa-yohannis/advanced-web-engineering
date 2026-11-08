@@ -44,7 +44,7 @@ def id_pesanan_uji(koneksi):
   """Mencari satu pesanan yang punya minimal dua item.
 
   Idnya dicari dari data, bukan ditulis tetap di kode, sehingga pengujian
-  tetap jalan walaupun data uji dibangkitkan ulang dengan id yang berbeda.
+  tetap jalan walaupun data uji di-generate ulang dengan id yang berbeda.
   """
   penghitung = basis_data.PenghitungQuery()
   baris = basis_data.jalankan_query(koneksi, SQL_PESANAN_BERITEM, (),

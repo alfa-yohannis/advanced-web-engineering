@@ -1,4 +1,4 @@
-"""Membuktikan halaman tetap tampil ketika server mati, berkat service worker.
+"""Membuktikan halaman tetap tampil ketika server down, berkat service worker.
 
 Empat kunjungan dibuat dengan Chrome tanpa jendela, masing-masing sebagai
 proses Chrome baru, seperti browser yang ditutup lalu dibuka lagi. Dua yang
@@ -14,7 +14,7 @@ sehingga alat ukur menunggu sampai service worker benar-benar siap, bukan
 menebak lamanya.
 
 Skrip ini menyalakan dan mematikan sendiri aplikasinya, karena yang diukur
-justru keadaan ketika servernya mati. Seluruhnya di 127.0.0.1, dan sifatnya
+justru keadaan ketika servernya down. Seluruhnya di 127.0.0.1, dan sifatnya
 mengamati, bukan membebani.
 
 Pemakaian (dari sources/chapter14):
@@ -56,10 +56,10 @@ def kunjungi(direktori_profil):
   """
   chrome = chrome_pipa.ChromeLewatPipa(direktori_profil)
   try:
-    galat = chrome.buka(ALAMAT)
-    if galat:
+    error = chrome.buka(ALAMAT)
+    if error:
       return {"buku": 0, "sumber": "gagal", "serviceWorker": "-",
-              "tampilMs": 0, "galat": galat}
+              "tampilMs": 0, "error": error}
     chrome.tunggu(UNGKAPAN_SUMBER_TERCATAT)
     chrome.tunggu(UNGKAPAN_SERVICE_WORKER_SIAP)
     return chrome.nilai(UNGKAPAN_RINGKASAN)
@@ -84,8 +84,8 @@ def cetak_baris(nama, server_hidup, hasil, permintaan):
         f"{hasil['sumber']:<{LEBAR_SUMBER}} "
         f"{hasil['serviceWorker']:<{LEBAR_KEADAAN}} {tampil:>9} "
         f"{permintaan:>9}")
-  if hasil.get("galat"):
-    print(f"  {'':<{LEBAR_KUNJUNGAN}} Chrome: {hasil['galat']}")
+  if hasil.get("error"):
+    print(f"  {'':<{LEBAR_KUNJUNGAN}} Chrome: {hasil['error']}")
 
 
 def main():

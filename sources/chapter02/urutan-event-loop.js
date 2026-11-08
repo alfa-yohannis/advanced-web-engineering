@@ -8,4 +8,4 @@ Promise.resolve().then(() => console.log("3: microtask"));
 console.log("2: kode sinkron");
 
 // Keluaran berurutan: 1, 2, 3, 4.
-// Baris 3 tetap lebih dulu daripada baris 4, walaupun tundaan setTimeout 0 ms.
+// Baris 3 tetap lebih dulu daripada baris 4, walau tundaan setTimeout 0 ms.

@@ -24,7 +24,7 @@ BERAT_GRAM = 1200
 class StubBiayaKirim:
   """Selalu menjawab satu tarif yang sama, apa pun yang ditanyakan.
 
-  Dipakai untuk menguji jalur berhasil tanpa peduli isi jawabannya.
+  Dipakai untuk menguji jalur berhasil tanpa peduli isi response-nya.
   """
 
   def minta_biaya(self, kode_pos, berat_gram):

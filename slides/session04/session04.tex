@@ -282,11 +282,11 @@
     }
     if self.headers.get("If-None-Match") == self.server.etag_halaman:
       # 304 tidak membawa isi. Browser memakai copy yang sudah dimilikinya.
-      self.kirim_jawaban(304, b"", "text/html", header_tambahan,
+      self.kirim_response(304, b"", "text/html", header_tambahan,
                          sertakan_isi=False)
       return
     jenis_isi = "text/html; charset=utf-8"
-    self.kirim_jawaban(200, self.server.isi_halaman, jenis_isi,
+    self.kirim_response(200, self.server.isi_halaman, jenis_isi,
                        header_tambahan, sertakan_isi)
 \end{lstlisting}
 
@@ -931,11 +931,11 @@ async function tekanSuka(
   const sesudah = keadaanSesudahKlik(sebelum);
   gambarUlang(sesudah); // Pengguna melihat hasilnya sebelum server menjawab.
   try {
-    const jawaban = await fetch(`${ALAMAT_SUKA}/${idBuku}`, {
+    const response = await fetch(`${ALAMAT_SUKA}/${idBuku}`, {
       method: sesudah.sudahSuka ? "PUT" : "DELETE",
     });
-    if (!jawaban.ok) {
-      throw new Error(`server menolak dengan status ${jawaban.status}`);
+    if (!response.ok) {
+      throw new Error(`server menolak dengan status ${response.status}`);
     }
 \end{lstlisting}
 \end{frame}

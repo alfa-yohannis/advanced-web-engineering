@@ -10,7 +10,7 @@ hal yang berbeda. Untuk tiap layanan dihitung empat hal:
     biaya        biaya bulanan dari jumlah replika dan node basis data
 
 Setiap komponen hanya boleh dipakai sampai utilisasi_maksimum dari
-kapasitasnya. Sisanya adalah ruang untuk lonjakan dan untuk node yang mati,
+kapasitasnya. Sisanya adalah ruang untuk lonjakan dan untuk node yang down,
 sehingga rencana tidak bergantung pada keadaan yang serba lancar.
 
 Seluruh angka masukan ada di rencana.json. Kapasitas diambil dari pengukuran

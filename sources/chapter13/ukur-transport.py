@@ -110,9 +110,9 @@ def langganan_websocket(keadaan):
       f"Sec-WebSocket-Key: {kunci}\r\nSec-WebSocket-Version: 13\r\n\r\n"
   )
   sambungan.sendall(permintaan.encode())
-  jawaban = b""
-  while b"\r\n\r\n" not in jawaban:
-    jawaban += sambungan.recv(1024)
+  response = b""
+  while b"\r\n\r\n" not in response:
+    response += sambungan.recv(1024)
   keadaan["permintaan"] += 1
   while not keadaan["berhenti"].is_set():
     teks, byte_terpakai = websocket_sederhana.baca_frame(sambungan)

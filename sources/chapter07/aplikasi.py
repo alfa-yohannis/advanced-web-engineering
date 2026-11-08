@@ -52,7 +52,7 @@ def baca_kebijakan(nama_file):
   Secara bawaan aplikasi dan skrip pemeriksa membaca file yang sama, sehingga
   keduanya tidak dapat berbeda pendapat tentang apa yang wajib ada. File lain
   dipakai bila aplikasi sengaja dibuat menyimpang dari kebijakan, misalnya
-  salinan yang kehilangan satu header, agar gate terbukti menangkapnya.
+  copy yang kehilangan satu header, agar gate terbukti menangkapnya.
   """
   return json.loads(Path(nama_file).read_text(encoding="utf-8"))
 
@@ -77,7 +77,8 @@ def cari_buku(judul_dicari):
   """
   pola = f"%{judul_dicari}%"
   with psycopg.connect(DSN) as koneksi:
-    baris = koneksi.execute(SQL_CARI_BUKU, (pola, BATAS_HASIL_CARI)).fetchall()
+    baris = koneksi.execute(SQL_CARI_BUKU,
+                            (pola, BATAS_HASIL_CARI)).fetchall()
   return [{"id": id_buku, "judul": judul, "harga": int(harga)}
           for id_buku, judul, harga in baris]
 

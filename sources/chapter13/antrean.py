@@ -2,7 +2,7 @@
 
 Antreannya satu file JSON, dan itu memang bukan antrean untuk produksi.
 Yang ditirukan di sini hanya sifat-sifat yang menentukan cara menulis
-consumer: pesan tidak hilang ketika worker-nya mati, pesan yang belum
+consumer: pesan tidak hilang ketika worker-nya crash, pesan yang belum
 di-ack akan dikirim ulang, dan pengiriman ulang itu memakai jeda yang
 berlipat.
 
@@ -94,7 +94,7 @@ def ambil(sekarang):
 
   Pekerjaan yang diambil tidak langsung hilang dari antrean. Waktu siapnya
   digeser sejauh jeda backoff, sehingga pekerjaan itu kembali muncul bila
-  worker-nya mati sebelum memanggil selesai. Di sanalah sifat at-least-once
+  worker-nya crash sebelum memanggil selesai. Di sanalah sifat at-least-once
   berasal: pekerjaan dapat terkirim lebih dari sekali, dan tidak pernah
   hilang tanpa dikerjakan. Pekerjaan yang jatah percobaannya habis
   dipindahkan lebih dahulu, sehingga tidak diambil lagi.

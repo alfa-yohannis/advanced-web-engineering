@@ -27,7 +27,7 @@ def test_total_tidak_pernah_negatif(jumlah_unit, harga_satuan):
 
 @given(jumlah_unit=UNIT, harga_satuan=HARGA_SATUAN)
 def test_diskon_tidak_melebihi_subtotal(jumlah_unit, harga_satuan):
-  """Potongan selalu lebih kecil daripada belanjanya, sehingga tidak gratis."""
+  """Potongan selalu lebih kecil daripada belanja, sehingga tidak gratis."""
   subtotal = harga.hitung_subtotal(jumlah_unit, harga_satuan)
   assert 0 <= harga.hitung_diskon(jumlah_unit, subtotal) <= subtotal
 

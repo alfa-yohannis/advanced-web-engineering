@@ -46,14 +46,14 @@ def jabat_tangan(sambungan):
       kunci = baris.split(":", 1)[1].strip()
   if not kunci:
     return False
-  jawaban = (
+  response = (
       "HTTP/1.1 101 Switching Protocols\r\n"
       "Upgrade: websocket\r\n"
       "Connection: Upgrade\r\n"
       f"Sec-WebSocket-Accept: "
-      f"{websocket_sederhana.jawaban_jabat_tangan(kunci)}\r\n\r\n"
+      f"{websocket_sederhana.response_jabat_tangan(kunci)}\r\n\r\n"
   )
-  sambungan.sendall(jawaban.encode())
+  sambungan.sendall(response.encode())
   return True
 
 

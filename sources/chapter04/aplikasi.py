@@ -8,7 +8,7 @@ Empat alamat disediakan, masing-masing dengan kebijakan cache berbeda:
   /api/terlaris-cache  query yang sama, lewat cache-aside di Redis
 
 Header X-Cache pada alamat terakhir berisi HIT atau MISS, sehingga asal
-jawabannya dapat diamati lewat curl maupun panel Network.
+response-nya dapat diamati lewat curl maupun panel Network.
 
 Pemakaian (dari sources/chapter04, setelah docker compose up -d):
     source ../.venv/bin/activate
@@ -43,7 +43,7 @@ BATAS_WAKTU_REDIS_DETIK = 0.05
 JUMLAH_RETRY_REDIS = 0
 
 DIREKTORI_STATIS = Path(__file__).parent / "statis"
-NAMA_BERKAS_ASET = "app.3f9a2c.js"
+NAMA_FILE_ASET = "app.3f9a2c.js"
 
 CACHE_CONTROL_HALAMAN = "no-cache"
 CACHE_CONTROL_ASET = "public, max-age=31536000, immutable"
@@ -62,13 +62,13 @@ SQL_TERLARIS = """
 """
 
 
-def hitung_etag(isi_berkas):
-  """Menurunkan ETag dari isi berkas.
+def hitung_etag(isi_file):
+  """Menurunkan ETag dari isi file.
 
   Isi yang sama selalu menghasilkan ETag yang sama, sehingga browser dapat
   bertanya "masih sama?" tanpa mengunduh ulang isinya.
   """
-  return '"' + hashlib.sha256(isi_berkas).hexdigest()[:16] + '"'
+  return '"' + hashlib.sha256(isi_file).hexdigest()[:16] + '"'
 
 
 def jalankan_query_terlaris(pool_koneksi):
@@ -116,24 +116,24 @@ def ambil_terlaris_lewat_cache(pool_koneksi, cache):
 
 
 class ServerToko(ThreadingHTTPServer):
-  """Server HTTP yang membawa connection pool, klien Redis, dan berkas statis.
+  """Server HTTP yang membawa connection pool, klien Redis, dan file statis.
 
   Semuanya disimpan sebagai atribut server, sehingga penangan permintaan
   memakainya lewat self.server tanpa variabel global.
   """
 
   def __init__(self, alamat, kelas_penangan, pool_koneksi, cache):
-    """Membaca berkas statis sekali di awal, lalu menghitung ETag halamannya.
+    """Membaca file statis sekali di awal, lalu menghitung ETag halamannya.
 
     Membaca sekali lebih murah daripada membaca ulang tiap permintaan. ETag
-    yang dihitung dari isi berkas otomatis berganti bila berkasnya diubah
+    yang dihitung dari isi file otomatis berganti bila file-nya diubah
     lalu server dinyalakan ulang.
     """
     super().__init__(alamat, kelas_penangan)
     self.pool_koneksi = pool_koneksi
     self.cache = cache
     self.isi_halaman = (DIREKTORI_STATIS / "index.html").read_bytes()
-    self.isi_aset = (DIREKTORI_STATIS / NAMA_BERKAS_ASET).read_bytes()
+    self.isi_aset = (DIREKTORI_STATIS / NAMA_FILE_ASET).read_bytes()
     self.etag_halaman = hitung_etag(self.isi_halaman)
 
 
@@ -149,28 +149,28 @@ class PenanganToko(BaseHTTPRequestHandler):
     self.layani_permintaan(sertakan_isi=False)
 
   def layani_permintaan(self, sertakan_isi):
-    """Memilih jawaban berdasarkan jalur alamat."""
+    """Memilih response berdasarkan jalur alamat."""
     server = self.server
     if self.path == "/":
       self.layani_halaman(sertakan_isi)
-    elif self.path == "/aset/" + NAMA_BERKAS_ASET:
+    elif self.path == "/aset/" + NAMA_FILE_ASET:
       header_tambahan = {"Cache-Control": CACHE_CONTROL_ASET}
-      self.kirim_jawaban(200, server.isi_aset, "text/javascript",
+      self.kirim_response(200, server.isi_aset, "text/javascript",
                          header_tambahan, sertakan_isi)
     elif self.path == "/api/terlaris":
       isi_json = json.dumps(jalankan_query_terlaris(server.pool_koneksi)).encode()
       header_tambahan = {"Cache-Control": CACHE_CONTROL_API}
-      self.kirim_jawaban(200, isi_json, "application/json",
+      self.kirim_response(200, isi_json, "application/json",
                          header_tambahan, sertakan_isi)
     elif self.path == "/api/terlaris-cache":
-      isi_json, asal_jawaban = ambil_terlaris_lewat_cache(
+      isi_json, asal_response = ambil_terlaris_lewat_cache(
           server.pool_koneksi, server.cache
       )
-      header_tambahan = {"Cache-Control": CACHE_CONTROL_API, "X-Cache": asal_jawaban}
-      self.kirim_jawaban(200, isi_json, "application/json",
+      header_tambahan = {"Cache-Control": CACHE_CONTROL_API, "X-Cache": asal_response}
+      self.kirim_response(200, isi_json, "application/json",
                          header_tambahan, sertakan_isi)
     else:
-      self.kirim_jawaban(404, b"tidak ditemukan\n", "text/plain", {}, sertakan_isi)
+      self.kirim_response(404, b"tidak ditemukan\n", "text/plain", {}, sertakan_isi)
 
   def layani_halaman(self, sertakan_isi):
     """Menjawab 304 bila ETag kiriman browser masih sama, 200 bila tidak."""
@@ -180,25 +180,25 @@ class PenanganToko(BaseHTTPRequestHandler):
     }
     if self.headers.get("If-None-Match") == self.server.etag_halaman:
       # 304 tidak membawa isi. Browser memakai copy yang sudah dimilikinya.
-      self.kirim_jawaban(304, b"", "text/html", header_tambahan,
+      self.kirim_response(304, b"", "text/html", header_tambahan,
                          sertakan_isi=False)
       return
     jenis_isi = "text/html; charset=utf-8"
-    self.kirim_jawaban(200, self.server.isi_halaman, jenis_isi,
+    self.kirim_response(200, self.server.isi_halaman, jenis_isi,
                        header_tambahan, sertakan_isi)
 
-  def kirim_jawaban(self, status, isi_jawaban, jenis_isi, header_tambahan,
+  def kirim_response(self, status, isi_response, jenis_isi, header_tambahan,
                     sertakan_isi):
-    """Menulis baris status, header, lalu isi jawaban bila diminta."""
+    """Menulis baris status, header, lalu isi response bila diminta."""
     self.send_response(status)
     self.send_header("Content-Type", jenis_isi)
     if status != 304:
-      self.send_header("Content-Length", str(len(isi_jawaban)))
+      self.send_header("Content-Length", str(len(isi_response)))
     for nama_header, nilai_header in header_tambahan.items():
       self.send_header(nama_header, nilai_header)
     self.end_headers()
     if sertakan_isi:
-      self.wfile.write(isi_jawaban)
+      self.wfile.write(isi_response)
 
   def log_message(self, format_pesan, *argumen):
     """Mematikan catatan per permintaan agar keluaran pengukuran tetap bersih."""

@@ -15,7 +15,7 @@ until docker compose exec -T db psql "$DSN" -c "SELECT 1" > /dev/null 2>&1; do
   sleep 1
 done
 
-for berkas in 01-skema.sql 02-data-uji.sql 04-indeks.sql; do
-  echo "=== $berkas"
-  docker compose exec -T db psql -q "$DSN" < "$DIREKTORI_BAB3/$berkas"
+for file_sql in 01-skema.sql 02-data-uji.sql 04-indeks.sql; do
+  echo "=== $file_sql"
+  docker compose exec -T db psql -q "$DSN" < "$DIREKTORI_BAB3/$file_sql"
 done

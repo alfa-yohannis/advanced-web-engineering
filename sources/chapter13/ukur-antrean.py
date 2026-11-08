@@ -2,7 +2,7 @@
 
 Tiga pekerjaan dimasukkan ke antrean. Yang pertama berjalan lancar, yang
 kedua ditolak webhook dua kali sehingga harus dicoba ulang dengan jeda
-berlipat, dan yang ketiga menirukan worker yang mati sesudah mengirim
+berlipat, dan yang ketiga menirukan worker yang crash sesudah mengirim
 sehingga pekerjaannya terkirim dua kali.
 
 Dua tabel dicetak. Tabel pertama memuat tiap percobaan yang dilakukan worker,

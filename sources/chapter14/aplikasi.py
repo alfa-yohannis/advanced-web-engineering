@@ -10,7 +10,7 @@ Alamat yang dilayani:
 Seluruh file statis dikirim dengan Cache-Control: no-cache, dan data katalog
 dengan no-store. Akibatnya HTTP cache browser tidak pernah menyimpan apa pun
 yang dapat dipakai tanpa server, sehingga halaman yang tetap tampil ketika
-server mati pasti dilayani service worker, bukan HTTP cache.
+server down pasti dilayani service worker, bukan HTTP cache.
 
 Pemakaian (dari sources/chapter14):
     python3 aplikasi.py

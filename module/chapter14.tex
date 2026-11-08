@@ -858,7 +858,7 @@ def tangani(peristiwa):
   """Menghitung ongkos kirim satu paket. Bentuknya seperti handler serverless.
 
   Handler hanya menerima peristiwa dan mengembalikan hasil. Ia tidak
-  menyimpan apa pun di antara dua pemanggilan, karena pemanggilan berikutnya
+  menyimpan apa pun di antara dua request, karena request berikutnya
   belum tentu sampai ke proses yang sama.
   """
   kilogram = math.ceil(peristiwa["berat_gram"] / GRAM_PER_KILOGRAM)

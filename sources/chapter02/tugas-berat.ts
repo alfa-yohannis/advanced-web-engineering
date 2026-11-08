@@ -13,8 +13,9 @@ function hitungPajakBerlapis(item: Pesanan): number {
 
 export function hitungTotal(pesanan: Pesanan[]): number {
   let total = 0;
+  // Perulangan panjang ini menahan main thread sampai selesai.
   for (const item of pesanan) {
-    total += hitungPajakBerlapis(item);
+    total += hitungPajakBerlapis(item); // proses berat per item
   }
   return total;
 }

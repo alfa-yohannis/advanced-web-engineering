@@ -31,7 +31,7 @@ class KlienBiayaKirim:
     """Menyimpan alamat layanan, tanpa membuka koneksi lebih dahulu.
 
     Koneksi dibuka saat dipakai, sehingga membuat klien tidak pernah gagal
-    hanya karena layanannya sedang mati.
+    hanya karena layanannya sedang down.
     """
     self.host = host
     self.port = port

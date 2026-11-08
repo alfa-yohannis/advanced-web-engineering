@@ -2,9 +2,9 @@
 
 Fungsinya dijalankan dengan dua cara, seperti pada layanan serverless
 sungguhan. Pada cold start, satu proses baru dinyalakan untuk satu
-pemanggilan: interpreter dimulai, modul dimuat, fungsinya dipanggil sekali,
+request: interpreter dimulai, modul dimuat, fungsinya dipanggil sekali,
 lalu prosesnya selesai. Pada keadaan warm, proses yang sama dipakai ulang,
-sehingga tiap pemanggilan hanya membayar fungsinya sendiri.
+sehingga tiap request hanya membayar fungsinya sendiri.
 
 Environment MUAT_DEPENDENSI=1 membuat fungsi ini memuat sejumlah modul
 pustaka standar saat dinyalakan, menirukan fungsi yang membawa dependensi.
@@ -37,7 +37,7 @@ def muat_dependensi():
   """Memuat seluruh dependensi bila diminta, seperti fungsi yang besar.
 
   Pemuatan ini terjadi sekali per proses. Pada cold start biayanya dibayar
-  tiap pemanggilan, sedangkan pada keadaan warm dibayar sekali saja.
+  tiap request, sedangkan pada keadaan warm dibayar sekali saja.
   """
   if os.environ.get("MUAT_DEPENDENSI") == "1":
     for nama_modul in DAFTAR_DEPENDENSI:
@@ -48,7 +48,7 @@ def tangani(peristiwa):
   """Menghitung ongkos kirim satu paket. Bentuknya seperti handler serverless.
 
   Handler hanya menerima peristiwa dan mengembalikan hasil. Ia tidak
-  menyimpan apa pun di antara dua pemanggilan, karena pemanggilan berikutnya
+  menyimpan apa pun di antara dua request, karena request berikutnya
   belum tentu sampai ke proses yang sama.
   """
   kilogram = math.ceil(peristiwa["berat_gram"] / GRAM_PER_KILOGRAM)

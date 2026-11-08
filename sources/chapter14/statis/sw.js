@@ -1,6 +1,6 @@
 // Service worker katalog Bab 14. Kerangka halaman disimpan ke cache saat
 // pemasangan, lalu dilayani dari cache lebih dahulu. Data katalog diambil dari
-// jaringan lebih dahulu, dan salinan terakhirnya dipakai ketika jaringan gagal.
+// jaringan lebih dahulu, dan copy terakhirnya dipakai ketika jaringan gagal.
 
 /** Nama cache. Versinya dinaikkan setiap kerangka berubah. */
 const NAMA_CACHE = "katalog-v1";
@@ -46,7 +46,7 @@ async function cacheLebihDahulu(permintaan) {
 /**
  * Menyalin response dari cache, ditambah header penanda sumbernya.
  * @param {Response} respon Response yang diambil dari cache.
- * @returns {Promise<Response>} Salinan dengan header X-Sumber: cache.
+ * @returns {Promise<Response>} Copy dengan header X-Sumber: cache.
  */
 async function tandaiDariCache(respon) {
   const header = new Headers(respon.headers);
@@ -55,9 +55,9 @@ async function tandaiDariCache(respon) {
 }
 
 /**
- * Mengambil data dari jaringan lebih dahulu, salinan terakhir bila gagal.
+ * Mengambil data dari jaringan lebih dahulu, copy terakhir bila gagal.
  *
- * Setiap response yang berhasil disimpan, sehingga salinan di cache selalu
+ * Setiap response yang berhasil disimpan, sehingga copy di cache selalu
  * yang terakhir dilihat pengguna, bukan yang tersimpan saat pemasangan.
  * @param {Request} permintaan Permintaan data katalog dari halaman.
  * @returns {Promise<Response>} Response dari jaringan atau dari cache.

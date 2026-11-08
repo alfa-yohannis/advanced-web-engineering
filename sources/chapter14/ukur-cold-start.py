@@ -1,8 +1,8 @@
 """Mengukur biaya cold start sebuah fungsi serverless dibanding keadaan warm.
 
 Tiga cara memanggil fungsi.py yang sama dibandingkan. Warm memakai satu proses
-yang terus hidup, sehingga tiap pemanggilan hanya membayar fungsinya. Cold
-start menyalakan satu proses baru untuk tiap pemanggilan. Cold start dengan
+yang terus hidup, sehingga tiap request hanya membayar fungsinya. Cold
+start menyalakan satu proses baru untuk tiap request. Cold start dengan
 dependensi melakukan hal yang sama, ditambah memuat sejumlah modul saat
 proses dinyalakan.
 
@@ -25,9 +25,9 @@ import pengukur
 
 FILE_FUNGSI = str(Path(__file__).parent / "fungsi.py")
 PERISTIWA = {"berat_gram": 1200, "kota": "Bandung"}
-JUMLAH_PEMANGGILAN_COLD = 30
-JUMLAH_PEMANGGILAN_WARM = 300
-# Pemanggilan pertama tidak dihitung, agar file yang belum ada di cache
+JUMLAH_REQUEST_COLD = 30
+JUMLAH_REQUEST_WARM = 300
+# Request pertama tidak dihitung, agar file yang belum ada di cache
 # sistem operasi tidak ikut menjadi angka.
 JUMLAH_WARMUP = 3
 LEBAR_CARA = 30
@@ -46,12 +46,12 @@ def panggil_cold(dengan_dependensi):
 def ukur_cold(dengan_dependensi):
   """Mengukur sejumlah cold start berturut-turut."""
   lama_ms = [panggil_cold(dengan_dependensi)
-             for _ in range(JUMLAH_WARMUP + JUMLAH_PEMANGGILAN_COLD)]
+             for _ in range(JUMLAH_WARMUP + JUMLAH_REQUEST_COLD)]
   return lama_ms[JUMLAH_WARMUP:]
 
 
 def ukur_warm():
-  """Mengukur pemanggilan berulang pada satu proses yang terus hidup.
+  """Mengukur request berulang pada satu proses yang terus hidup.
 
   Proses dinyalakan sekali di luar pengukuran. Yang diukur hanya perjalanan
   satu peristiwa masuk lewat stdin dan hasilnya keluar lewat stdout.
@@ -61,7 +61,7 @@ def ukur_warm():
                             text=True)
   baris_peristiwa = json.dumps(PERISTIWA) + "\n"
   lama_ms = []
-  for urutan in range(JUMLAH_WARMUP + JUMLAH_PEMANGGILAN_WARM):
+  for urutan in range(JUMLAH_WARMUP + JUMLAH_REQUEST_WARM):
     mulai = time.perf_counter()
     proses.stdin.write(baris_peristiwa)
     proses.stdin.flush()

@@ -56,7 +56,7 @@ SQL_TERLARIS = """
 """
 
 
-class PenghitungKueri:
+class PenghitungQuery:
   """Menghitung query yang sampai ke basis data, aman dipakai banyak utas.
 
   Tanpa gembok, dua utas yang menambah bersamaan dapat kehilangan satu
@@ -175,14 +175,14 @@ def siapkan_keadaan_kedaluwarsa(cara, pool_koneksi, cache):
   """
   cache.delete(KUNCI_TERLARIS, KUNCI_GEMBOK)
   if cara is stale_while_revalidate:
-    isi_lama = jalankan_query_terlaris(pool_koneksi, PenghitungKueri())
+    isi_lama = jalankan_query_terlaris(pool_koneksi, PenghitungQuery())
     nilai_stale = json.dumps({"isi": isi_lama, "fresh_sampai": time.time() - 1})
     cache.set(KUNCI_TERLARIS, nilai_stale, ex=TTL_KERAS_DETIK)
 
 
 def kirim_satu_permintaan(cara, pool_koneksi, cache, penghitung_query,
                           aba_aba_mulai, daftar_lama_ms):
-  """Satu klien: menunggu aba-aba bersama, lalu mencatat lama jawabannya."""
+  """Satu klien: menunggu aba-aba bersama, lalu mencatat lama response-nya."""
   aba_aba_mulai.wait()
   waktu_mulai = time.perf_counter()
   cara(pool_koneksi, cache, penghitung_query)
@@ -199,7 +199,7 @@ def tunggu_utas_refresh():
 def jalankan_satu_cara(cara, jumlah_permintaan, pool_koneksi, cache):
   """Melepas seluruh permintaan serentak, lalu mencetak satu baris hasil."""
   siapkan_keadaan_kedaluwarsa(cara, pool_koneksi, cache)
-  penghitung_query = PenghitungKueri()
+  penghitung_query = PenghitungQuery()
   # Barrier menahan semua utas sampai lengkap, lalu melepasnya bersamaan.
   aba_aba_mulai = threading.Barrier(jumlah_permintaan)
   daftar_lama_ms = []
@@ -233,9 +233,9 @@ def main():
       DSN, min_size=UKURAN_POOL, max_size=UKURAN_POOL, open=True
   )
   cache = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
-  # Pemanasan: satu query di awal agar halaman data sudah ada di memori
+  # Warmup: satu query di awal agar halaman data sudah ada di memori
   # PostgreSQL, sehingga cara pertama tidak menanggung pembacaan disk.
-  jalankan_query_terlaris(pool_koneksi, PenghitungKueri())
+  jalankan_query_terlaris(pool_koneksi, PenghitungQuery())
 
   print(f"{jumlah_permintaan} permintaan serentak tepat setelah kunci kedaluwarsa\n")
   print(

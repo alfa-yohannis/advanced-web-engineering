@@ -4,7 +4,7 @@ Pemeriksaannya bersifat mengamati: skrip ini hanya mengambil response biasa
 dari aplikasi sendiri, lalu membaca header, cookie, dan perilaku CORS-nya.
 Tidak ada permintaan yang dibuat untuk membebani atau menembus apa pun.
 
-Gerbang ini keluar dengan status 1 bila ada satu saja syarat yang belum
+Gate ini keluar dengan status 1 bila ada satu saja syarat yang belum
 terpenuhi, sehingga dapat dipasang di Continuous Integration untuk memblokir
 merge.
 

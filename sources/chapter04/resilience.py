@@ -122,15 +122,15 @@ class CircuitBreaker:
 
 
 def panggil_layanan_sekali(alamat, batas_waktu_detik, catatan_hasil):
-  """Satu panggilan ke layanan. Mengembalikan True bila jawabannya diterima.
+  """Satu panggilan ke layanan. Mengembalikan True bila response-nya diterima.
 
   batas_waktu_detik None berarti menunggu tanpa batas, yaitu perilaku bawaan
   banyak pustaka HTTP bila batas waktunya lupa diatur.
   """
   catatan_hasil.catat_panggilan()
   try:
-    with urllib.request.urlopen(alamat, timeout=batas_waktu_detik) as jawaban:
-      jawaban.read()
+    with urllib.request.urlopen(alamat, timeout=batas_waktu_detik) as response:
+      response.read()
     return True
   except (urllib.error.URLError, TimeoutError, ConnectionError):
     return False
@@ -148,7 +148,7 @@ def hitung_jeda_sebelum_retry(percobaan_ke, pengacak):
 
 
 def tanpa_batas_waktu(alamat, catatan_hasil, breaker, pengacak):
-  """Menunggu jawaban selama apa pun."""
+  """Menunggu response selama apa pun."""
   return panggil_layanan_sekali(alamat, None, catatan_hasil)
 
 

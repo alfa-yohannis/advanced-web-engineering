@@ -2,11 +2,11 @@
 """Mengukur waktu sampai byte pertama satu alamat, lalu melaporkan sebarannya.
 
 Yang diukur sama dengan kolom TungguServer pada ukur-koneksi.sh di Bab 2,
-yaitu sejak permintaan terkirim sampai baris status jawaban diterima. Tiap
+yaitu sejak permintaan terkirim sampai baris status response diterima. Tiap
 permintaan membuka koneksi baru, persis seperti curl.
 
-Bila jawaban membawa header X-Cache, jumlah HIT dan MISS ikut dilaporkan,
-sehingga angka waktu dapat dikaitkan dengan asal jawabannya.
+Bila response membawa header X-Cache, jumlah HIT dan MISS ikut dilaporkan,
+sehingga angka waktu dapat dikaitkan dengan asal response-nya.
 
 Peringatan: jalankan hanya terhadap sistem sendiri. Skrip ini mengirim
 permintaan berurutan tanpa jeda.
@@ -51,11 +51,11 @@ def ukur_satu_permintaan(host, port, jalur):
   koneksi.connect()
   waktu_mulai = time.perf_counter()
   koneksi.request("GET", jalur)
-  jawaban = koneksi.getresponse()
+  response = koneksi.getresponse()
   lama_ms = (time.perf_counter() - waktu_mulai) * 1000
-  jawaban.read()
+  response.read()
   koneksi.close()
-  return lama_ms, jawaban.getheader("X-Cache", "-")
+  return lama_ms, response.getheader("X-Cache", "-")
 
 
 def main():
@@ -69,11 +69,11 @@ def main():
   daftar_lama_ms = []
   jumlah_per_asal = collections.Counter()
   for _ in range(jumlah_ulangan):
-    lama_ms, asal_jawaban = ukur_satu_permintaan(
+    lama_ms, asal_response = ukur_satu_permintaan(
         bagian_alamat.hostname, bagian_alamat.port, bagian_alamat.path
     )
     daftar_lama_ms.append(lama_ms)
-    jumlah_per_asal[asal_jawaban] += 1
+    jumlah_per_asal[asal_response] += 1
 
   print(f"Alamat       : {alamat}")
   print(f"Ulangan      : {jumlah_ulangan}")

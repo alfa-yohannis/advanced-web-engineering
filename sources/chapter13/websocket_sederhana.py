@@ -16,7 +16,7 @@ import hashlib
 import os
 import struct
 
-# Nilai tetap dari RFC 6455, dipakai menghitung jawaban jabat tangan.
+# Nilai tetap dari RFC 6455, dipakai menghitung response jabat tangan.
 KUNCI_AJAIB = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 OPCODE_TEKS = 0x1
 OPCODE_TUTUP = 0x8
@@ -29,7 +29,7 @@ BATAS_PANJANG_SEDANG = 65535
 PANJANG_MASK = 4
 
 
-def jawaban_jabat_tangan(kunci_klien):
+def response_jabat_tangan(kunci_klien):
   """Menghitung nilai Sec-WebSocket-Accept dari kunci yang dikirim klien.
 
   Nilainya bukan rahasia dan bukan tanda tangan keamanan. Gunanya memastikan

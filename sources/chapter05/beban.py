@@ -50,7 +50,8 @@ def jalankan_satu_worker(jalur, jumlah_permintaan, catatan):
   Koneksi dibuka sekali dan dipakai ulang, sehingga yang terukur adalah waktu
   server, bukan waktu membuka koneksi baru.
   """
-  koneksi = HTTPConnection(HOST_BAWAAN, PORT_BAWAAN, timeout=BATAS_WAKTU_DETIK)
+  koneksi = HTTPConnection(HOST_BAWAAN, PORT_BAWAAN,
+                           timeout=BATAS_WAKTU_DETIK)
   header = {"Accept-Encoding": "gzip"}
   for _ in range(jumlah_permintaan):
     waktu_mulai = time.perf_counter()

@@ -63,7 +63,7 @@ def baca_kesukaan(nomor_pengguna):
   """Menanyakan kategori kesukaan satu pengguna ke basis data tiruan.
 
   Bila sambungannya sudah ditutup pihak lain, sambungan dibuka ulang satu kali.
-  Kegagalan kedua dibiarkan naik, karena itu tanda basis datanya memang mati.
+  Kegagalan kedua dibiarkan naik, karena itu tanda basis datanya memang down.
   """
   jalur = f"/kesukaan/{nomor_pengguna}"
   try:

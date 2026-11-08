@@ -28,7 +28,7 @@ from psycopg_pool import ConnectionPool
 DSN = "postgresql://admin:admin123@localhost:5433/toko"
 
 # Query sengaja sesepele mungkin agar yang terukur adalah biaya koneksinya.
-KUERI = "SELECT 1"
+QUERY_UJI = "SELECT 1"
 
 UKURAN_POOL = 10
 WORKER_BERLEBIH = 40
@@ -38,21 +38,21 @@ def koneksi_baru(ulangan):
   """Membuka dan menutup satu koneksi untuk tiap query."""
   for _ in range(ulangan):
     with psycopg.connect(DSN) as koneksi:
-      koneksi.execute(KUERI).fetchone()
+      koneksi.execute(QUERY_UJI).fetchone()
 
 
 def satu_koneksi(ulangan):
   """Memakai satu koneksi untuk seluruh query milik satu worker."""
   with psycopg.connect(DSN) as koneksi:
     for _ in range(ulangan):
-      koneksi.execute(KUERI).fetchone()
+      koneksi.execute(QUERY_UJI).fetchone()
 
 
 def pakai_pool(pool, ulangan):
   """Meminjam koneksi dari pool, memakainya, lalu mengembalikannya."""
   for _ in range(ulangan):
     with pool.connection() as koneksi:
-      koneksi.execute(KUERI).fetchone()
+      koneksi.execute(QUERY_UJI).fetchone()
 
 
 def jalankan_aman(cara, ulangan, daftar_error):

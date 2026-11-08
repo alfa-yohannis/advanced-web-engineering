@@ -34,7 +34,7 @@ function keadaanSesudahKlik(sebelum: KeadaanSuka): KeadaanSuka {
  * Layar langsung diperbarui, sehingga pengguna tidak menunggu satu RTT pun.
  * Bila server menolak atau jaringan putus, keadaan sebelum klik dipasang
  * kembali. PUT dan DELETE dipilih karena keduanya idempoten, sehingga aman
- * diulang bila jawabannya hilang di jalan.
+ * diulang bila response-nya hilang di jalan.
  */
 async function tekanSuka(
   idBuku: number,
@@ -44,11 +44,11 @@ async function tekanSuka(
   const sesudah = keadaanSesudahKlik(sebelum);
   gambarUlang(sesudah); // Pengguna melihat hasilnya sebelum server menjawab.
   try {
-    const jawaban = await fetch(`${ALAMAT_SUKA}/${idBuku}`, {
+    const response = await fetch(`${ALAMAT_SUKA}/${idBuku}`, {
       method: sesudah.sudahSuka ? "PUT" : "DELETE",
     });
-    if (!jawaban.ok) {
-      throw new Error(`server menolak dengan status ${jawaban.status}`);
+    if (!response.ok) {
+      throw new Error(`server menolak dengan status ${response.status}`);
     }
   } catch {
     // Dikembalikan ke keadaan sebelum klik. Tombolnya tampak "memantul".
