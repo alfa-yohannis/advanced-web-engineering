@@ -1,4 +1,8 @@
-\chapter{Overview Mata Kuliah dan Alur Rekayasa}
+\ifajar
+  \chapter{Overview Mata Kuliah dan Alur Rekayasa}
+\else
+  \chapter{Cakupan Bidang dan Alur Rekayasanya}
+\fi
 \label{ch:overview}
 
 \ifajar
@@ -24,11 +28,19 @@ seberapa tahan ketika sebagian sistemnya gagal, seberapa aman, dan bagaimana
 membuktikan semuanya. Jawabannya selalu berupa angka yang diukur sendiri,
 bukan kesan.
 
+\ifajar
 Bab ini adalah orientasi. Isinya peta keempat belas pertemuan, perkakas yang
 dipakai beserta alasannya, dan alur kerja rekayasa yang berlaku sepanjang
 semester. Bab ini juga menyiapkan tiga hal yang dipakai bab-bab berikutnya:
 lingkungan kerja yang sudah diperiksa, alur Git dengan cabang berumur pendek,
 dan kerangka Application Programming Interface (API) kecil yang dijaga CI.
+\else
+Bab ini menyiapkan tiga hal yang dipakai bab-bab berikutnya: perkakas beserta
+alasan pemilihannya, alur kerja rekayasa dengan cabang Git berumur pendek, dan
+kerangka Application Programming Interface (API) kecil yang dijaga
+\textit{Continuous Integration} (CI). Ketiganya yang membuat tiap angka di
+bab berikutnya dapat diukur ulang.
+\fi
 
 Referensi utamanya adalah Winters dkk.\ untuk alur rekayasa pada tim yang
 besar \cite{winters2020swe}, Chacon dan Straub untuk Git
@@ -37,7 +49,7 @@ Fowler untuk pola \textit{repository} \cite{fowler2002poeaa}.
 
 \section{Cakupan dan Posisi Mata Kuliah}
 
-Kata "lanjut" pada mata kuliah ini tidak berarti fitur yang lebih rumit. Yang
+Kata "lanjut" di sini tidak berarti fitur yang lebih rumit. Yang
 berubah adalah pertanyaannya. Fitur yang sama, misalnya katalog toko buku,
 dinilai dari sifat yang tidak terlihat di layar: cepatnya ketika diakses
 ratusan orang, perilakunya ketika basis datanya lambat, ketahanannya terhadap
@@ -53,7 +65,7 @@ Tabel \ref{tab:posisi01} merangkum pergeseran itu.
 
 \begin{table}[!htb]
   \centering
-  \caption{Pertanyaan pemrograman web pengantar lawan mata kuliah ini}
+  \caption{Pertanyaan pemrograman web pengantar lawan rekayasa web lanjut}
   \label{tab:posisi01}
   \begin{tabularx}{\textwidth}{lXX}
     \hline
@@ -94,6 +106,8 @@ Dua contoh dari bab-bab berikutnya memperlihatkan jenis jawaban yang dicari:
 Karena itu tiap bab ditutup dengan Latihan yang menghasilkan angka. Angka
 tiap mahasiswa akan berbeda, sedangkan yang dinilai adalah pola
 perbandingannya dan penjelasan atas kejanggalannya.
+
+\ifajar
 
 \section{Peta Empat Belas Pertemuan}
 
@@ -167,6 +181,8 @@ menimbulkan efek samping, lalu satu komponen yang ditambahkan untuk menekan
 efek samping itu. Rincian tiap topik ada di \texttt{README.md} akar
 repositori.
 
+\fi
+
 \section{Tech Stack dan Alasan Pemilihannya}
 
 Perkakas dipilih dengan satu prinsip: yang terukur harus mekanismenya, bukan
@@ -201,8 +217,8 @@ terlihat langsung di kode. Tabel \ref{tab:stack01} memuat perkakas lainnya.
   \end{tabularx}
 \end{table}
 
-Perkakas sebanyak itu harus diperiksa sebelum praktikum pertama, bukan ketika
-praktikum Bab 5 sudah berjalan setengah. Pemeriksaan singkat seperti itu
+Perkakas sebanyak itu harus diperiksa sebelum pengukuran pertama, bukan
+ketika pengukuran Bab 5 sudah berjalan setengah. Pemeriksaan singkat seperti itu
 disebut \textit{smoke test}: belum menguji apa pun secara mendalam, hanya
 memastikan tidak ada yang langsung berasap begitu dinyalakan.
 
@@ -281,7 +297,7 @@ dahulu, bukan diakali di tengah jalan.
 \section{Alur Kerja Rekayasa: Monorepo, Branching, dan Code Review}
 
 Monorepo berarti seluruh bagian sistem disimpan dalam satu repositori Git.
-Repositori mata kuliah ini sendiri berbentuk begitu, seperti pada Gambar
+Repositori yang menyertai buku ini berbentuk begitu, seperti pada Gambar
 \ref{fig:monorepo01}: naskah, slide, dan kode tiap bab tinggal bersama,
 sehingga satu perubahan pada kode dan pada naskah yang mengutipnya masuk
 dalam satu commit. Winters dkk.\ mencatat manfaat yang sama pada skala jauh
@@ -306,7 +322,7 @@ dapat dilakukan sekaligus \cite{winters2020swe}.
     }
     \node[font=\tiny, gray] at (5.6,-0.65) {kode tiap bab, satu CI};
   \end{tikzpicture}
-  \caption{Repositori mata kuliah ini sebagai satu monorepo}
+  \caption{Repositori yang menyertai buku ini sebagai satu monorepo}
   \label{fig:monorepo01}
 \end{figure}
 
@@ -392,7 +408,7 @@ semester.
 
 \begin{table}[!htb]
   \centering
-  \caption{Aturan \textit{code review} sepanjang semester}
+  \caption{Aturan \textit{code review} yang dipakai}
   \label{tab:review01}
   \begin{tabularx}{\textwidth}{XX}
     \hline
@@ -651,11 +667,18 @@ lamanya pun perlu diukur.
 
 \section{Ringkasan}
 
+\ifajar
 Mata kuliah ini menilai aplikasi web dari sifat yang tidak terlihat di layar:
 cepatnya, ketahanannya, keamanannya, dan kemudahannya diubah. Jawabannya
 selalu angka yang diukur sendiri, misalnya 199,8 lawan 1,8 milidetik untuk
 peristiwa yang sama pada Bab 13. Keempat belas pertemuannya dibagi menjadi
 empat bagian, dan urutannya disusun untuk menopang enam topik penelitian.
+\else
+Buku ini menilai aplikasi web dari sifat yang tidak terlihat di layar:
+cepatnya, ketahanannya, keamanannya, dan kemudahannya diubah. Jawabannya
+selalu angka yang diukur sendiri, misalnya 199,8 lawan 1,8 milidetik untuk
+peristiwa yang sama pada Bab 13.
+\fi
 
 Lingkungan kerja diperiksa sebelum praktikum pertama dengan satu
 \textit{smoke test}. Pada laptop penulisan modul ini, seluruh perkakas lolos,

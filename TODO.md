@@ -111,9 +111,12 @@ adalah edisi referensi.
    "catatan sendiri" di edisi referensi. Edisi referensi kini 275 halaman
    tanpa satu pun lembar isian, edisi ajar tetap 283 halaman dengan 57 lembar
    isian dan 14 Tujuan Pembelajaran.
-2. Bab 1 masih bergaya pengantar mata kuliah, termasuk peta pertemuan. Di
-   edisi referensi, bab itu perlu dibingkai ulang sebagai pengantar bidang
-   ilmu, atau dipindahkan ke edisi ajar saja.
+2. ~~Bab 1 bergaya pengantar mata kuliah.~~ Sudah dikerjakan. Di edisi
+   referensi judulnya menjadi "Cakupan Bidang dan Alur Rekayasanya", seksi
+   Peta Empat Belas Pertemuan beserta tabel topik penelitiannya tidak
+   dicetak, dan paragraf orientasi serta ringkasannya diganti bentuk yang
+   tidak menyebut pertemuan. Kata khas kelas seperti praktikum dan mata
+   kuliah ini diganti kata yang berlaku di kedua edisi.
 3. Kata "latihan", "pertemuan", dan "mahasiswa" di badan bab perlu disapu
    untuk edisi referensi.
 4. Indeks belum ada isinya. `makeidx` sudah dipasang; perlu satu sapuan

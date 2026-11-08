@@ -465,3 +465,6 @@ sources/chapter08/statis/katalog-isr.html
 
 # Antrean percobaan Bab 13, dibuat ulang oleh skripnya
 sources/chapter13/antrean.json
+
+## Klon tiga sistem RAG untuk Bab 15, diukur tetapi bukan bagian buku ini
+sources/chapter15/rag/
