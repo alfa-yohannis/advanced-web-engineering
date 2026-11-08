@@ -181,6 +181,58 @@
   \Huge{\textbf{Container dan\\Twelve-Factor App}}
 \end{frame}
 
+\begin{frame}{{\Large Image dan Container Itu Apa}}
+  \vspace{10pt}
+  \begin{itemize}
+    \item \textbf{\textit{Image}}: satu paket berisi aplikasi beserta
+          seluruh yang dibutuhkannya, dibangun sekali dan tidak berubah
+          sesudahnya.
+    \item \textbf{\textit{Container}}: satu proses yang berjalan dari
+          \textit{image} itu, dengan sistem file dan jaringannya sendiri.
+          Satu \textit{image} dapat menjalankan banyak \textit{container}.
+    \item \textbf{\textit{Layer}}: \textit{image} tersusun berlapis, dan
+          lapisan yang tidak berubah dipakai ulang pada \textit{build}
+          berikutnya. Lapisan paling bawah disebut \textit{base image},
+          misalnya \texttt{python:3.12-slim}.
+  \end{itemize}
+  \vspace{8pt}
+  {\small Ketiga istilah itu yang menjelaskan angka pada slide sesudahnya.}
+\end{frame}
+
+\begin{frame}{{\Large Twelve-Factor App Itu Apa}}
+  \vspace{8pt}
+  {\small Daftar dua belas kebiasaan menulis aplikasi yang dijalankan di
+  lingkungan yang berganti-ganti. Disebut dua belas karena memang ada dua
+  belas butir:}
+  \vspace{4pt}
+  \begin{columns}[t]
+    \column{0.5\textwidth}
+    {\scriptsize
+    \begin{enumerate}
+      \item Satu \textit{codebase}, banyak \textit{deploy}
+      \item Dependensi dinyatakan tegas
+      \item Konfigurasi dari \textit{environment}
+      \item Layanan pendukung sebagai sumber daya
+      \item \textit{Build}, \textit{release}, \textit{run} dipisah
+      \item Proses tanpa ingatan tetap
+    \end{enumerate}}
+
+    \column{0.5\textwidth}
+    {\scriptsize
+    \begin{enumerate}
+      \setcounter{enumi}{6}
+      \item \textit{Port binding}
+      \item Skala lewat jumlah proses
+      \item Mulai cepat, berhenti rapi
+      \item Lingkungan uji mirip produksi
+      \item \textit{Log} sebagai aliran peristiwa
+      \item Tugas administratif sekali jalan
+    \end{enumerate}}
+  \end{columns}
+  \vspace{4pt}
+  {\small Slide berikutnya mengambil lima yang paling terasa pada demo ini.}
+\end{frame}
+
 \begin{frame}{{\Large Lima Aturan yang Paling Terasa}}
   \vspace{6pt}
   \centering
@@ -265,8 +317,10 @@
   \end{tabularx}}
 
   \vspace{8pt}
-  {\small Baris tengah yang membuat rilis pada pertemuan ini mungkin: proxy
-  membaca bobotnya pada tiap permintaan.}
+  {\small \textit{Secret} adalah nilai yang bila bocor langsung berakibat,
+  sehingga tidak pernah masuk git dan tidak ikut tercetak di \textit{log}.
+  Baris tengah yang membuat rilis pada pertemuan ini mungkin: proxy membaca
+  bobotnya pada tiap permintaan.}
 \end{frame}
 
 \section{CI/CD dan Infrastructure as Code}
@@ -274,6 +328,24 @@
 \begin{frame}{\hfill}
   \centering
   \Huge{\textbf{CI/CD dan\\Infrastructure as Code}}
+\end{frame}
+
+\begin{frame}{{\Large CI, CD, dan IaC Itu Apa}}
+  \vspace{10pt}
+  \begin{itemize}
+    \item \textbf{Continuous Integration}: tiap perubahan digabung ke batang
+          utama lalu diuji otomatis, sehingga kesalahan ketemu dalam menit,
+          bukan menunggu akhir sprint.
+    \item \textbf{Continuous Delivery}: artefak yang lolos seluruh tahap
+          siap dirilis kapan saja, dan rilisnya satu perintah, bukan satu
+          malam kerja.
+    \item \textbf{Infrastructure as Code}: infrastrukturnya ditulis sebagai
+          file yang di-\textit{commit}, bukan diklik di konsol. Di demo ini
+          bentuknya \texttt{docker-compose.yml}.
+  \end{itemize}
+  \vspace{8pt}
+  {\small \textit{Pipeline} adalah urutan tahap yang dijalankan otomatis
+  pada tiap perubahan.}
 \end{frame}
 
 \begin{frame}[fragile]{{\Large Urutan Tahap Pipeline}}
@@ -307,6 +379,22 @@
 \begin{frame}{\hfill}
   \centering
   \Huge{\textbf{Reverse Proxy,\\Cloud, dan Edge}}
+\end{frame}
+
+\begin{frame}{{\Large Reverse Proxy Itu Apa}}
+  \vspace{10pt}
+  \begin{itemize}
+    \item Satu pintu di depan beberapa layanan. Klien hanya tahu alamat
+          proxy-nya, dan proxy yang memutuskan layanan mana yang menjawab.
+    \item Bedanya dengan \textit{proxy} biasa: \textit{proxy} biasa
+          mewakili klien ketika menghubungi server, sedangkan \textit{reverse
+          proxy} mewakili server ketika menerima klien.
+    \item Karena semua permintaan lewat satu tempat, pembagian lalu lintas,
+          pencatatan, dan pembatasan laju cukup ditulis sekali.
+  \end{itemize}
+  \vspace{8pt}
+  {\small Di produk nyata: Nginx, Caddy, atau HAProxy. Di \textit{cloud}
+  perannya dipegang \textit{load balancer} penyedia.}
 \end{frame}
 
 \begin{frame}{{\Large Satu Tempat untuk Semua Keputusan}}
@@ -343,6 +431,23 @@
   \Huge{\textbf{Blue-Green, Canary,\\dan Rollback}}
 \end{frame}
 
+\begin{frame}{{\Large Ketiga Pola Rilis Itu Apa}}
+  \vspace{10pt}
+  \begin{itemize}
+    \item \textbf{\textit{Blue-green}}: dua lingkungan yang setara, satu
+          melayani dan satu menunggu. Rilis berarti memindahkan seluruh lalu
+          lintas sekaligus ke yang menunggu.
+    \item \textbf{\textit{Canary}}: versi baru menerima sebagian kecil lalu
+          lintas lebih dahulu, misalnya 10 persen, lalu dinaikkan hanya bila
+          angkanya sehat.
+    \item \textbf{\textit{Rollback}}: lalu lintas dikembalikan ke versi
+          lama, tanpa membangun ulang apa pun.
+  \end{itemize}
+  \vspace{8pt}
+  {\small Pada demo ini ketiganya satu angka di \texttt{rilis.json}, dan
+  proxy membacanya pada tiap permintaan.}
+\end{frame}
+
 \begin{frame}[fragile]{{\Large Seluruh Mekanismenya, Empat Baris}}
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
@@ -377,8 +482,24 @@ def pilih_tujuan(rilis, nomor_permintaan):
 
   \vspace{8pt}
   {\small Versi hijau sengaja dibuat cacat: empat kali lebih lama, dan satu
-  dari dua puluh lima permintaannya dijawab 500. Pada \textit{canary} cacat
-  itu hanya mengenai 50 dari 500 permintaan.}
+  dari dua puluh lima permintaannya dijawab 500. Arti tiap kolomnya ada di
+  slide berikutnya.}
+\end{frame}
+
+\begin{frame}{{\Large Arti Tiap Kolomnya}}
+  \vspace{10pt}
+  \begin{itemize}
+    \item \textbf{Minta}: jumlah permintaan yang dikirim alat ukur pada
+          tahap itu.
+    \item \textbf{Biru} dan \textbf{Hijau}: berapa dari permintaan itu yang
+          benar-benar dilayani tiap versi, menurut metrik kedua layanan.
+    \item \textbf{Gagal}: permintaan yang dijawab berstatus 500.
+  \end{itemize}
+  \vspace{8pt}
+  {\small Angka gagalnya dapat dihitung sebelum diukur. Cacatnya satu dari
+  dua puluh lima, jadi 50 permintaan hijau menghasilkan 2 kegagalan, dan 100
+  permintaan hijau menghasilkan 4. Pada \textit{canary}, cacat itu hanya
+  mengenai 50 dari 500 permintaan.}
 \end{frame}
 
 \section{Log, Metrik, dan Trace}
@@ -426,6 +547,38 @@ def pilih_tujuan(rilis, nomor_permintaan):
   \vspace{8pt}
   {\small Perbedaan kedua versi terbaca dari metrik, tanpa perlu membaca
   kodenya.}
+\end{frame}
+
+\begin{frame}{{\Large Rata dan p95 Itu Apa}}
+  \vspace{10pt}
+  \begin{itemize}
+    \item \textbf{Rata}: jumlah waktu dibagi jumlah permintaan. Satu
+          permintaan yang sangat lambat mudah tersembunyi di sana.
+    \item \textbf{p95}: 95 dari 100 permintaan lebih cepat daripada angka
+          itu. Yang terbaca adalah pengalaman terburuk yang masih lazim,
+          bukan yang terburuk sekali.
+    \item Keduanya dilaporkan bersama, karena rata menyembunyikan ekor dan
+          p95 tidak menunjukkan keadaan umumnya.
+  \end{itemize}
+  \vspace{8pt}
+  {\small Angka 10 dan 25 jatuh tepat di batas ember histogram, karena
+  persentilnya dihitung dari ember, bukan dari tiap nilai.}
+\end{frame}
+
+\begin{frame}{{\Large Trace, Trace Id, dan traceparent}}
+  \vspace{10pt}
+  \begin{itemize}
+    \item \textbf{\textit{Trace}}: satu permintaan diikuti sepanjang
+          jalannya, melintasi setiap layanan yang menyentuhnya.
+    \item \textbf{\textit{Trace id}}: satu penanda yang sama dicatat
+          seluruh layanan itu, sehingga barisnya dapat dikumpulkan kembali.
+    \item \textbf{\texttt{traceparent}}: header standar World Wide Web
+          Consortium (W3C) tempat penanda itu dititipkan ketika permintaan
+          diteruskan.
+  \end{itemize}
+  \vspace{8pt}
+  {\small Tanpa penanda itu, \textit{log} dua layanan hanya dua tumpukan
+  baris yang tidak dapat disambungkan.}
 \end{frame}
 
 \begin{frame}[fragile]{{\Large Menelusuri Satu Permintaan}}

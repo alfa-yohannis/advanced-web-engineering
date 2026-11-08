@@ -40,9 +40,25 @@ menjadi satu artefak yang dapat dijalankan di mana saja. Yang membuatnya
 berguna bukan pengemasannya saja, melainkan janji bahwa artefak yang diuji
 dan artefak yang dijalankan di produksi benar-benar sama.
 
+Tiga istilah dipakai berdampingan dan mudah tertukar. Pembagiannya begini.
+\textit{Image} adalah paketnya, dibangun sekali lalu tidak berubah lagi.
+\textit{Container} adalah satu proses yang berjalan dari \textit{image} itu,
+dengan sistem file dan jaringannya sendiri, dan satu \textit{image} dapat
+menjalankan banyak \textit{container}. \textit{Layer} adalah lapisan
+penyusun \textit{image}: lapisan yang tidak berubah dipakai ulang pada
+\textit{build} berikutnya, dan lapisan paling bawah disebut \textit{base
+image}, misalnya \texttt{python:3.12-slim}.
+
 \textit{Twelve-factor app} \cite{twelve-factor} adalah daftar aturan yang
-membuat janji itu dapat ditepati. Tabel \ref{tab:12factor} memuat lima aturan
-yang paling terasa pada demo bab ini.
+membuat janji itu dapat ditepati. Namanya menyebut angka karena isinya memang
+dua belas butir: satu \textit{codebase} untuk banyak \textit{deploy},
+dependensi yang dinyatakan tegas, konfigurasi dari \textit{environment},
+layanan pendukung sebagai sumber daya yang dilekatkan, \textit{build}
+dipisah dari \textit{release} dan \textit{run}, proses tanpa ingatan tetap,
+\textit{port binding}, skala lewat jumlah proses, mulai cepat dan berhenti
+rapi, lingkungan uji yang mirip produksi, \textit{log} sebagai aliran
+peristiwa, dan tugas administratif yang dijalankan sekali jalan. Tabel
+\ref{tab:12factor} memuat lima aturan yang paling terasa pada demo bab ini.
 
 \begin{table}[!htb]
   \centering
@@ -310,6 +326,18 @@ tahap \textit{canary}.
     \hline
   \end{tabularx}
 \end{table}
+
+Dua kolom terakhir tabel itu dibaca berpasangan. Kolom \textbf{Rata ms}
+adalah jumlah waktu dibagi jumlah permintaan, dan satu permintaan yang sangat
+lambat mudah tersembunyi di sana. Kolom \textbf{p95 ms} menyebut angka yang
+dilewati 95 dari 100 permintaan, sehingga yang terbaca adalah pengalaman
+terburuk yang masih lazim. Keduanya dilaporkan bersama karena rata
+menyembunyikan ekor sebarannya, sedangkan p95 tidak menunjukkan keadaan
+umumnya.
+
+Angka 10 dan 25 pada kolom p95 kelihatan terlalu bulat, dan memang begitu
+asalnya. Persentilnya dihitung dari ember histogram, bukan dari tiap nilai,
+sehingga hasilnya selalu jatuh pada salah satu batas ember.
 
 Pertanyaan berikutnya, bagaimana satu permintaan ditelusuri ketika melewati
 dua proses. Jawabannya \textit{trace id}, yaitu penanda yang dibuat sekali di
