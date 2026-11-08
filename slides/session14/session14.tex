@@ -134,7 +134,7 @@
   \end{itemize}
   \vspace{10pt}
   {\small Bab ini menjawab dengan pengukuran: replika ditambah sampai satu
-  komponen bersama penuh, pemanggilan fungsi diadu dengan pemanggilan
+  komponen bersama penuh, panggilan fungsi diadu dengan panggilan
   jaringan, dua cara membagi data dibandingkan, lalu seluruhnya disusun menjadi
   satu rencana kapasitas.}
 \end{frame}
@@ -146,7 +146,7 @@
   \Huge{\textbf{Penskalaan Vertikal\\dan Horizontal}}
 \end{frame}
 
-\begin{frame}{{\Large Replika Tanpa State di Depan Satu Basis Data}}
+\begin{frame}{{\Large Replika Tanpa State, Satu Basis Data}}
   \vspace{6pt}
   \centering
   \begin{tikzpicture}[
@@ -561,7 +561,7 @@ def baca_kesukaan(nomor_pengguna):
 
   \vspace{4pt}
   {\small Analoginya petugas loket yang menyimpan \textit{copy} daftar buku di
-  laci: ketika sistem pusat mati, daftar terakhir tetap dapat ditunjukkan,
+  laci: ketika sistem pusat \textit{down}, daftar terakhir tetap dapat ditunjukkan,
   lengkap dengan tanggalnya.}
 \end{frame}
 
@@ -597,9 +597,9 @@ async function jaringanLebihDahulu(permintaan) {
     \hline
     2, profil sama & hidup & 8 & jaringan & 62 & 2 \\
     \hline
-    3, profil sama & mati & 8 & \textit{cache} & 31 & 0 \\
+    3, profil sama & \textit{down} & 8 & \textit{cache} & 31 & 0 \\
     \hline
-    4, profil baru & mati & 0 & gagal & - & 0 \\
+    4, profil baru & \textit{down} & 0 & gagal & - & 0 \\
     \hline
   \end{tabularx}}
 
@@ -833,8 +833,8 @@ python3 rencana-kapasitas.py | tail -1
 \begin{lstlisting}[language=bash]
 python3 ukur-offline.py | tail -3
 # Keluarannya:
-#   3, profil sama  mati      8  cache     mengendalikan        31         0
-#   4, profil baru  mati      0  gagal     -                     -         0
+#   3, profil sama  down      8  cache     mengendalikan        31         0
+#   4, profil baru  down      0  gagal     -                     -         0
 #                   Chrome: net::ERR_CONNECTION_REFUSED
 
 python3 ukur-cold-start.py | tail -2
@@ -865,7 +865,7 @@ python3 ukur-cold-start.py | tail -2
     \item Rencana 100 kali lipat: 28 replika, 15 \textit{node}, lima
           \textit{shard} untuk pesanan. \textit{Cache} katalog menghemat 18
           \textit{node}.
-    \item Server mati: delapan buku tetap tampil dalam 31 ms. \textit{Cold
+    \item Server \textit{down}: delapan buku tetap tampil dalam 31 ms. \textit{Cold
           start} 19,069 ms. Token pertama 601,7 ms, selesai tetap 3.003,4 ms.
     \item Tiap teknik penskalaan memindahkan \textit{bottleneck}, tidak
           menghapusnya.

@@ -1,6 +1,6 @@
 # Sumber Bab 4: Caching, Consistency, dan Resilience
 
-| Berkas | Kegunaan |
+| File | Kegunaan |
 | --- | --- |
 | `docker-compose.yml` | PostgreSQL 16 di port 5434 dan Redis 7 di port 6380, Redis dibatasi 64 MB |
 | `siapkan-data.sh` | Mengisi basis data dengan skema, data uji, dan indeks milik Bab 3 |
@@ -11,7 +11,7 @@
 | `stampede.py` | Memperagakan cache stampede dan dua cara meredamnya |
 | `invalidasi.py` | Mengukur lama data *stale* pada empat cara memperbarui cache |
 | `optimistic-update.ts` | Tombol suka yang diperbarui secara optimistis di browser |
-| `layanan-lambat.py` | Layanan biaya kirim tiruan yang sebagian jawabannya ditahan 2 detik |
+| `layanan-lambat.py` | Layanan biaya kirim tiruan yang sebagian *response*-nya ditahan 2 detik |
 | `resilience.py` | Membandingkan tanpa batas waktu, batas waktu, *retry*, dan *circuit breaker* |
 | `redis-macet.py` | Mengukur lama satu GET ke Redis yang macet, dengan dan tanpa *retry* bawaan redis-py |
 
@@ -27,7 +27,7 @@ docker compose up -d
 ```
 
 Pengisian data memakan sekitar lima belas detik. Skrip `siapkan-data.sh`
-membaca berkas SQL milik `sources/chapter03`, sehingga direktori tersebut harus
+membaca file SQL milik `sources/chapter03`, sehingga direktori tersebut harus
 ada di sebelah direktori bab ini.
 
 ## Menyiapkan venv
@@ -58,7 +58,7 @@ python redis-macet.py
 docker compose unpause cache
 ```
 
-Pemeriksaan tipe berkas TypeScript:
+Pemeriksaan tipe file TypeScript:
 
 ```bash
 npx -p typescript tsc --noEmit --strict --lib es2022,dom optimistic-update.ts

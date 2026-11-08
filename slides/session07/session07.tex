@@ -186,7 +186,7 @@
   sisinya.}
 \end{frame}
 
-\begin{frame}{{\Large Tiga Kewajiban yang Keluar dari Gambar Itu}}
+\begin{frame}{{\Large Tiga Kewajiban dari Gambar Itu}}
   \vspace{14pt}
   \begin{enumerate}
     \item Teks dari browser tidak pernah disambung langsung ke dalam perintah
@@ -207,7 +207,7 @@
   \Huge{\textbf{Header Keamanan}}
 \end{frame}
 
-\begin{frame}{{\Large Server Bawaan lawan Aplikasi yang Dikeraskan}}
+\begin{frame}{{\Large Server Bawaan lawan yang Dikeraskan}}
   \vspace{6pt}
   \centering
   {\footnotesize
@@ -516,7 +516,7 @@ python periksa-keamanan.py
 \end{lstlisting}
 \end{frame}
 
-\begin{frame}{{\Large Gate yang Selalu Lolos Tidak Membuktikan Apa Pun}}
+\begin{frame}{{\Large Gate yang Selalu Lolos Tak Berarti}}
   \vspace{6pt}
   \centering
   {\footnotesize
@@ -760,12 +760,12 @@ curl -s --get --data-urlencode 'nama=<b>Mahasiswa</b>' \
   \begin{enumerate}
     \item Baca \texttt{kebijakan.json}, tulis dugaan berapa syarat yang akan
           terpenuhi aplikasi dan berapa pada server pembanding.
-    \item Jalankan gerbangnya terhadap keduanya, catat jumlah syarat, jumlah
+    \item Jalankan \textit{gate}-nya terhadap keduanya, catat jumlah syarat, jumlah
           yang lolos, dan status keluarnya.
     \item Jalankan pemeriksaan dependensi dan analisis statis, catat jumlah
           temuannya.
     \item Hapus sementara satu header dari \texttt{kebijakan.json}, nyalakan
-          ulang aplikasinya, jalankan ulang gerbangnya, lalu kembalikan.
+          ulang aplikasinya, jalankan ulang \textit{gate}-nya, lalu kembalikan.
   \end{enumerate}
 \end{frame}
 
@@ -819,7 +819,7 @@ ruff check .
   \end{tabularx}}
 
   \vspace{4pt}
-  {\footnotesize Pertanyaan: mengapa gerbang menilai \textit{response} dan
+  {\footnotesize Pertanyaan: mengapa \textit{gate} menilai \textit{response} dan
   bukan kodenya, mengapa satu syarat justru lolos pada pembanding, dan
   mengapa hasil pemeriksaan dependensi punya umur simpan?}
 \end{frame}
@@ -853,7 +853,7 @@ docker compose down -v
           kebijakan.
     \item Teks pengguna tetap data: kata kunci bertanda kutip dijawab 200
           dengan nol baris, dan markup tampil sebagai huruf.
-    \item Gerbang menilai 18 syarat dan keluar dengan status 0, sedangkan
+    \item \textit{Gate} menilai 18 syarat dan keluar dengan status 0, sedangkan
           server tanpa penyetelan meloloskan 1 dari 9 dan keluar status 1.
   \end{itemize}
 \end{frame}

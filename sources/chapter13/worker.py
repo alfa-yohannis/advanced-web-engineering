@@ -3,7 +3,7 @@
 Worker ini idempoten: sebelum mengerjakan satu pesan, ia memeriksa buku
 diproses lebih dahulu. Pemeriksaan itu diperlukan karena antreannya bersifat
 at-least-once, sehingga satu pesan dapat tiba dua kali, misalnya ketika
-worker mati sesudah mengirim tetapi sebelum meng-ack.
+worker crash sesudah mengirim tetapi sebelum meng-ack.
 
 Satu jenis pekerjaan, yaitu crash-setelah-kirim, memang menirukan kematian
 itu: webhooknya dikirim, pesannya ditandai diproses, lalu worker berhenti
@@ -55,10 +55,10 @@ def kerjakan(pesan, tirukan_crash):
     return "duplikat ditahan"
   status = kirim_webhook(pesan)
   if status != 200:
-    return f"gagal, webhook {status}, dicoba lagi nanti"
+    return f"gagal, webhook {status}"
   antrean.tandai_diproses(pesan["id"])
   if pesan["jenis"] == JENIS_CRASH and tirukan_crash:
-    return "terkirim, worker mati sebelum ack"
+    return "terkirim, crash sebelum ack"
   antrean.selesai(pesan["id"])
   return "terkirim dan di-ack"
 

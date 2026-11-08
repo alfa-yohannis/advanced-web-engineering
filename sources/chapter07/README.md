@@ -39,8 +39,8 @@ ruff check .
 Pembandingnya, yaitu server statis bawaan Python tanpa penyetelan apa pun:
 
 ```bash
-cd statis && python -m http.server 8031 &
-cd .. && python periksa-keamanan.py kebijakan-pembanding.json
+(cd statis && python -m http.server 8031 &)
+python periksa-keamanan.py kebijakan-pembanding.json
 ```
 
 ## Catatan etika

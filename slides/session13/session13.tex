@@ -108,7 +108,7 @@
     \item Pengguna ingin melihat perubahan segera, tanpa menekan
           \textit{refresh}. Ini menuntut jalan dari server ke klien, padahal
           HyperText Transfer Protocol (HTTP) dirancang untuk arah sebaliknya.
-    \item Pekerjaan yang lama tidak boleh menahan jawaban. Ini menuntut
+    \item Pekerjaan yang lama tidak boleh menahan \textit{response}. Ini menuntut
           pekerjaan hidup lebih lama daripada permintaan yang memulainya.
   \end{itemize}
   \vspace{10pt}
@@ -143,10 +143,11 @@
     \draw[panah] (server.east |- sse) -- node[font=\tiny, above] {dorong} (sse.west);
     \draw[panah] (server.east |- ws) -- node[font=\tiny, above] {dorong} (ws.west);
     \draw[panah] (ws.west) ++(0,-0.3) -- ++(-2.1,0);
-    \node[font=\tiny, gray, anchor=west] at (6.0,1.4) {jawaban sering kosong};
+    \node[font=\tiny, gray, anchor=west] at (6.0,1.4) {\textit{response} sering kosong};
     \node[font=\tiny, gray, anchor=west] at (6.0,0) {satu arah};
     \node[font=\tiny, gray, anchor=west] at (6.0,-2.0) {dua arah};
   \end{tikzpicture}
+
   \vspace{2pt}
   {\small Analoginya menunggu nilai ujian: menengok papan tiap lima menit,
   menunggu di depan papan, atau berdiri di depan petugas.}
@@ -167,6 +168,7 @@
     WebSocket & 1,9 & 2,1 & 490 & 1 \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Keterlambatan \textit{polling} ditentukan jedanya, bukan kecepatan
   servernya. Satu sambungan mengganti sebelas permintaan, dan sebelas
@@ -196,7 +198,7 @@
   berikutnya tidak pernah tiba.}
 \end{frame}
 
-\begin{frame}{{\Large Yang Menentukan Pilihan Tidak Ada di Tabel}}
+\begin{frame}{{\Large Penentu Pilihan Tidak Ada di Tabel}}
   \vspace{12pt}
   \begin{itemize}
     \item SSE berjalan satu arah, berbentuk teks, dan menyambung ulang
@@ -243,7 +245,7 @@ def terbitkan(isi):
   \Huge{\textbf{Antrean, Worker, dan Webhook}}
 \end{frame}
 
-\begin{frame}{{\Large Titipan Masuk Antrean, Worker Mengerjakannya}}
+\begin{frame}{{\Large Masuk Antrean, Dikerjakan Worker}}
   \vspace{4pt}
   \centering
   \begin{tikzpicture}[
@@ -264,12 +266,13 @@ def terbitkan(isi):
     \draw[panah] (worker.east) -- ++(0.3,0) |- (gagal.west);
     \draw[panah] (gagal.south) -- ++(0,-0.45) -| node[font=\tiny, below, pos=0.25] {dicoba lagi dengan jeda berlipat} (antrean.south);
   \end{tikzpicture}
+
   \vspace{2pt}
   {\small Analoginya loket surat: mahasiswa menerima tanda terima lalu
   pulang, dan petugas di belakang mengerjakan berkasnya menurut urutan.}
 \end{frame}
 
-\begin{frame}[fragile]{{\Large Pekerjaan yang Diambil Tidak Langsung Hilang}}
+\begin{frame}[fragile]{{\Large Diambil Tidak Berarti Dihapus}}
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
   keadaan = muat()
@@ -283,7 +286,7 @@ def terbitkan(isi):
 \end{lstlisting}
   \vspace{2pt}
   {\small Pergeseran waktu siap itu disebut \textit{visibility timeout}.
-  Akibatnya dua: pekerjaan tidak hilang ketika \textit{worker}-nya mati, dan
+  Akibatnya dua: pekerjaan tidak hilang ketika \textit{worker}-nya \textit{crash}, dan
   pekerjaan dapat dikerjakan dua kali.}
 \end{frame}
 
@@ -306,7 +309,7 @@ def terbitkan(isi):
     \hline
     \texttt{kerja-0002} & 1 & gagal, \textit{webhook} 500 & 0,01 \\
     \hline
-    \texttt{kerja-0003} & 1 & terkirim, mati sebelum \textit{ack} & 0,01 \\
+    \texttt{kerja-0003} & 1 & terkirim, \textit{crash} sebelum \textit{ack} & 0,01 \\
     \hline
     \texttt{kerja-0002} & 2 & gagal, \textit{webhook} 500 & 0,51 \\
     \hline
@@ -315,12 +318,13 @@ def terbitkan(isi):
     \texttt{kerja-0002} & 3 & terkirim dan di-\textit{ack} & 1,52 \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Jeda dasarnya 0,5 detik: percobaan kedua 0,5 detik sesudah yang
   pertama, dan yang ketiga 1,0 detik sesudah yang kedua.}
 \end{frame}
 
-\begin{frame}[fragile]{{\Large Satu Baris yang Menahan Banjir Percobaan}}
+\begin{frame}[fragile]{{\Large Satu Baris Penahan Banjir Percobaan}}
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
 def jeda_backoff(percobaan):
@@ -357,11 +361,12 @@ def jeda_backoff(percobaan):
     \hline
     \texttt{kerja-0002}, ditolak dua kali & 3 & 3 & satu kali, pada percobaan ketiga \\
     \hline
-    \texttt{kerja-0003}, \textit{worker} mati & 2 & 1 & satu kali \\
+    \texttt{kerja-0003}, \textit{worker} \textit{crash} & 2 & 1 & satu kali \\
     \hline
     \textbf{Jumlah} & \textbf{6} & \textbf{5} & \textbf{3 pekerjaan tuntas} \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Baris ketiga memuat hasil yang dicari: dikirim dua kali oleh
   \textit{worker}, tiba sekali di \textit{webhook}, karena pengiriman kedua
@@ -376,7 +381,7 @@ def jeda_backoff(percobaan):
     return "duplikat ditahan"
   status = kirim_webhook(pesan)
   if status != 200:
-    return f"gagal, webhook {status}, dicoba lagi nanti"
+    return f"gagal, webhook {status}"
   antrean.tandai_diproses(pesan["id"])
 \end{lstlisting}
   \vspace{2pt}
@@ -392,7 +397,7 @@ def jeda_backoff(percobaan):
   \Huge{\textbf{Scheduled Job dan\\Eventual Consistency}}
 \end{frame}
 
-\begin{frame}{{\Large Kedua Sisi Akan Sama, Tetapi Tidak Sekarang}}
+\begin{frame}{{\Large Akan Sama, Tetapi Tidak Sekarang}}
   \vspace{6pt}
   \centering
   {\footnotesize
@@ -409,6 +414,7 @@ def jeda_backoff(percobaan):
     1,52 & tiga tuntas & ketiganya sudah diterima \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Dua akibat praktisnya: tampilan tidak boleh berjanji lebih
   daripada yang sudah terjadi, dan jarak waktunya harus dipantau, karena

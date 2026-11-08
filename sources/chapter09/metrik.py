@@ -1,4 +1,4 @@
-"""Pembaca metrik format Prometheus, dipakai papan.py dan alarm.py.
+"""Pembaca metrik format Prometheus, dipakai dashboard.py dan alarm.py.
 
 Pembacaannya sengaja sederhana: baris teks dipilah menurut nama metriknya,
 tanpa pustaka tambahan. Yang ingin ditunjukkan bab ini adalah bentuk

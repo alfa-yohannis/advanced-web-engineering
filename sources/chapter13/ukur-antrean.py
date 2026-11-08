@@ -32,7 +32,9 @@ PEKERJAAN = [
     ("gagal-dua-kali", {"tujuan": "mitra"}),
     ("crash-setelah-kirim", {"tujuan": "gudang"}),
 ]
-BATAS_PUTARAN = 12
+# Dua puluh putaran memberi sekitar lima detik, cukup untuk percobaan ketiga
+# ketika JEDA_DASAR_DETIK di antrean.py dinaikkan menjadi 1,0 pada latihan.
+BATAS_PUTARAN = 20
 JEDA_PUTARAN_DETIK = 0.25
 LEBAR_ID = 12
 LEBAR_JENIS = 20

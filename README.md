@@ -10,9 +10,9 @@ Urutan pertemuan disusun untuk menopang pengerjaan empat topik penelitian terata
 | 2 | Browser, HTTP & Network Internals | Memprofil aplikasi yang sengaja dibuat lambat, lalu menetapkan *baseline* performa | T1, T5 |
 | 3 | Data Engineering for Web Applications | Merancang skema, migrasi, dan batas transaksi; mengoptimalkan *query* terpilih | **T1, T6** |
 | 4 | Caching, Consistency & Resilience | Menerapkan *caching* dan *resilience*, lalu membandingkannya dengan *baseline* Pertemuan 2 | **T1** |
-| 5 | Performance Engineering | Memenuhi anggaran latensi dan Core Web Vitals. Praktikum gagal bila anggaran terlampaui | **T1**, T5 |
+| 5 | Performance Engineering | Memenuhi *budget* *latency* dan Core Web Vitals. Praktikum gagal bila *budget* terlampaui | **T1**, T5 |
 | 6 | Testing, Reliability & Code Quality | Membangun *pipeline* pengujian otomatis dan CI yang memblokir *merge* cacat | **T6** |
-| 7 | Web Application Security | Menyerang *branch* yang sengaja dibuat rentan, mendokumentasikan eksploitasi, lalu menambalnya | **T2** |
+| 7 | Web Application Security | Mengaudit header, cookie, daftar origin, dan penanganan masukan pada aplikasi sendiri, lalu menegakkannya sebagai *gate* keamanan yang memblokir *merge* | **T2** |
 | 8 | Modern Web Architecture | Membandingkan tiga arsitektur untuk satu kebutuhan, lalu menulis keputusannya | **T5** |
 | 9 | Cloud Deployment, DevOps & Observability | Men-*deploy*, menginstrumentasi, membuat *dashboard*, dan satu *alert* bermakna | **T6** |
 | 10 | Identity, Authentication & Authorization | Menambahkan *authentication*, *authorization*, dan isolasi *tenant* | **T2** |
@@ -41,7 +41,7 @@ Orientasi, tanpa materi teknis mendalam. Pembahasan mencakup arti "advanced" pad
 
 **Topik.** Arsitektur browser. DNS (*Domain Name System*), TCP (*Transmission Control Protocol*), dan TLS (*Transport Layer Security*). Perbandingan HTTP (*HyperText Transfer Protocol*) 1.1, HTTP/2, dan HTTP/3. Siklus hidup *request*. *Event loop*. *Rendering pipeline* dan *critical rendering path*. Core Web Vitals. Penguasaan *browser DevTools*.
 
-**Praktikum.** Memprofil aplikasi yang sengaja dibuat lambat. Hasilnya adalah *baseline* performa berupa **angka**, yaitu Core Web Vitals dan latensi server pada persentil 50 dan 95. Angka tersebut diuji ulang pada Pertemuan 4 dan 5.
+**Praktikum.** Memprofil aplikasi yang sengaja dibuat lambat. Hasilnya adalah *baseline* performa berupa **angka**, yaitu Core Web Vitals dan *latency* server pada persentil 50 dan 95. Angka tersebut diuji ulang pada Pertemuan 4 dan 5.
 
 ### Bagian II. Data, Caching, dan Performa (3 sampai 5)
 
@@ -59,9 +59,9 @@ Orientasi, tanpa materi teknis mendalam. Pembahasan mencakup arti "advanced" pad
 
 #### Pertemuan 05 · Performance Engineering
 
-**Topik.** Anggaran performa. Metodologi *profiling*. Analisis *bundle*. *Tree shaking*. *Code splitting*. *Lazy loading*. Optimasi gambar dan huruf. *Streaming* SSR. *Tuning* basis data dan *query*. *Load testing*. Identifikasi *bottleneck* skalabilitas.
+**Topik.** *Budget* performa. Metodologi *profiling*. Analisis *bundle*. *Tree shaking*. *Code splitting*. *Lazy loading*. Optimasi gambar dan huruf. *Streaming* SSR. *Tuning* basis data dan *query*. *Load testing*. Identifikasi *bottleneck* skalabilitas.
 
-**Praktikum.** Memenuhi anggaran latensi dan Core Web Vitals yang sudah ditetapkan secara eksplisit. **Praktikum dinyatakan gagal bila anggaran tidak terpenuhi.** Perbaikan tanpa bukti pengukuran tidak dihitung.
+**Praktikum.** Memenuhi *budget* *latency* dan Core Web Vitals yang sudah ditetapkan secara eksplisit. **Praktikum dinyatakan gagal bila *budget* tidak terpenuhi.** Perbaikan tanpa bukti pengukuran tidak dihitung.
 
 > Sampai titik ini seluruh perkakas untuk **Topik 1** sudah lengkap. Skema dan *query* dari Pertemuan 03. Mekanisme *caching* dari Pertemuan 04. *Load generator* dan cara membaca hasilnya dari Pertemuan 05.
 
@@ -79,7 +79,7 @@ Tiga jalur penelitian dijalankan bergantian. Tujuannya agar tim yang mengerjakan
 
 **Topik.** *Threat modelling*. OWASP (*Open Worldwide Application Security Project*) Top 10. XSS (*Cross-Site Scripting*). CSRF (*Cross-Site Request Forgery*). Injeksi SQL dan perintah sistem. SSRF (*Server-Side Request Forgery*). CORS (*Cross-Origin Resource Sharing*). CSP (*Content Security Policy*). Cookie yang aman. Manajemen *secret*. Serangan lewat dependensi. Keamanan rantai pasok perangkat lunak.
 
-**Praktikum.** Menyerang *branch* yang sengaja dibuat rentan. Eksploitasi yang berhasil didokumentasikan, lalu seluruh temuan ditambal pada *branch* utama.
+**Praktikum.** Mengaudit pertahanan aplikasi sendiri dari *response* yang benar-benar dikirimnya: header keamanan, atribut cookie, daftar origin, serta teks pengguna yang tetap diperlakukan sebagai data oleh basis data dan browser. Hasilnya dibandingkan dengan server tanpa penyetelan. Seluruh syarat itu, ditambah jumlah kerentanan dependensi, lalu ditegakkan sebagai *gate* keamanan yang memblokir *merge*. Seluruh pemeriksaan bersifat mengamati dan hanya diarahkan ke aplikasi di komputer sendiri.
 
 #### Pertemuan 08 · Modern Web Architecture, *jalur T5*
 
@@ -127,7 +127,7 @@ Tiga jalur penelitian dijalankan bergantian. Tujuannya agar tim yang mengerjakan
 
 #### Pertemuan 14 · Scaling, Distributed Web Systems & Emerging Web
 
-**Topik.** Penskalaan vertikal dan horizontal. Perpindahan dari *modular monolith* menuju *microservices*. Penentuan batas layanan. *Trade-off* sistem terdistribusi. Sistem *multi-region*. *Edge computing*. Bagian akhir membahas arah teknologi yang sedang tumbuh: PWA (*Progressive Web App*) dan *offline-first*, WebAssembly (Wasm), *serverless*, serta aplikasi web terintegrasi LLM (*Large Language Model*) beserta pertimbangan latensi, biaya, privasi, dan keamanan.
+**Topik.** Penskalaan vertikal dan horizontal. Perpindahan dari *modular monolith* menuju *microservices*. Penentuan batas layanan. *Trade-off* sistem terdistribusi. Sistem *multi-region*. *Edge computing*. Bagian akhir membahas arah teknologi yang sedang tumbuh: PWA (*Progressive Web App*) dan *offline-first*, WebAssembly (Wasm), *serverless*, serta aplikasi web terintegrasi LLM (*Large Language Model*) beserta pertimbangan *latency*, biaya, privasi, dan keamanan.
 
 **Praktikum.** Latihan evolusi arsitektur. Rencana penskalaan aplikasi disusun untuk beban 100 kali lipat, mencakup batas layanan, replikasi, partisi, dan biaya. Ditambah eksperimen kecil pada satu teknologi *emerging*, misalnya mode *offline* PWA, satu fungsi *serverless* di *edge*, atau satu fitur berbantuan LLM.
 

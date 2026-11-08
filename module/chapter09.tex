@@ -18,7 +18,7 @@
 
 Delapan bab sebelumnya membangun dan memperbaiki aplikasi di komputer
 sendiri. Bab ini menanyakan apa yang berubah ketika aplikasi itu dijalankan
-di tempat lain, dilayani untuk orang lain, dan diperbarui tanpa boleh mati.
+di tempat lain, dilayani untuk orang lain, dan diperbarui tanpa boleh \textit{down}.
 
 Tiga pertanyaan praktis muncul di sana. Bagaimana satu artefak yang sama
 dijalankan di lingkungan yang berbeda tanpa diubah isinya. Bagaimana versi
@@ -135,9 +135,9 @@ memindahkan lalu lintas, tanpa satu proses pun dimatikan.
 
 \section{CI/CD dan Infrastructure as Code}
 
-\textit{Continuous Integration} sudah dipakai sejak Bab 5 sebagai gerbang
+\textit{Continuous Integration} sudah dipakai sejak Bab 5 sebagai \textit{gate}
 yang menolak perubahan cacat. \textit{Continuous Delivery} melanjutkannya:
-perubahan yang lolos gerbang dikemas dan disiapkan untuk dirilis, tanpa
+perubahan yang lolos \textit{gate} dikemas dan disiapkan untuk dirilis, tanpa
 langkah manual yang diingat-ingat.
 
 Urutan tahapnya mengikuti aturan yang sama dengan Bab 6, yaitu yang paling
@@ -285,15 +285,15 @@ jumlah permintaannya, yang disimpan hanya hitungan per ember. Harganya,
 persentil yang dihitung darinya selalu jatuh pada salah satu batas ember,
 bukan pada angka persis.
 
-Papan operasional pada bab ini membaca \texttt{/metrics} kedua versi, lalu
-menampilkannya berdampingan. Tabel \ref{tab:papan} memuat keluarannya sesudah
+\textit{Dashboard} operasional pada bab ini membaca \texttt{/metrics} kedua versi, lalu
+menampilkannya berdampingan. Tabel \ref{tab:dashboard} memuat keluarannya sesudah
 tahap \textit{canary}.
 
 \begin{table}[!htb]
   \centering
-  \caption{Papan operasional sesudah 500 permintaan \textit{canary}, hasil
+  \caption{\textit{Dashboard} operasional sesudah 500 permintaan \textit{canary}, hasil
            pengukuran nyata}
-  \label{tab:papan}
+  \label{tab:dashboard}
   \begin{tabularx}{\textwidth}{Xrrrrr}
     \hline
     \textbf{Versi} & \textbf{Minta} & \textbf{Gagal} & \textbf{\% gagal} & \textbf{Rata ms} & \textbf{p95 ms} \\
@@ -359,7 +359,7 @@ Tabel \ref{tab:slo} memuat penilaian alarm pada bab ini sesudah tahap
   \end{tabularx}
 \end{table}
 
-Alarm itu keluar dengan status 1, sama seperti gerbang pada Bab 5 sampai Bab
+Alarm itu keluar dengan status 1, sama seperti \textit{gate} pada Bab 5 sampai Bab
 7, sehingga dapat dipasang di penjadwal maupun di \textit{pipeline} sesudah
 rilis. Yang menarik justru baris p95 versi hijau: angkanya 25 milidetik, dua
 setengah kali lipat versi biru, tetapi masih di bawah batas 50 milidetik.
@@ -490,7 +490,7 @@ python3 ukur-rilis.py 200
   \end{tabularx}
 \end{table}
 
-\subsection*{Latihan 2: Membaca Papan Operasional}
+\subsection*{Latihan 2: Membaca Dashboard Operasional}
 
 Latihan ini membuktikan bahwa perbedaan dua versi terbaca dari metrik, tanpa
 perlu membaca kodenya.
@@ -498,19 +498,19 @@ perlu membaca kodenya.
 \begin{enumerate}
   \item Lihat teks metrik mentah salah satu versi, lalu kenali ketiga jenis
         metriknya, seperti pada Listing \ref{lst:c9-lat2-jalan}.
-  \item Jalankan papan operasionalnya, lalu catat angka kedua versi ke Tabel
+  \item Jalankan \textit{dashboard} operasionalnya, lalu catat angka kedua versi ke Tabel
         \ref{tab:c9-lat2-hasil}. Tabel \ref{tab:c9-lat2-contoh}
         memperlihatkan contoh yang sudah terisi.
-  \item Kirim 200 permintaan lagi, lalu jalankan papannya sekali lagi dan
+  \item Kirim 200 permintaan lagi, lalu jalankan \textit{dashboard}-nya sekali lagi dan
         perhatikan angka mana yang bertambah dan angka mana yang tetap.
-  \item Jawab dua pertanyaan berikut. Pertama, mengapa p95 pada papan selalu
+  \item Jawab dua pertanyaan berikut. Pertama, mengapa p95 pada \textit{dashboard} selalu
         jatuh pada angka yang sama, misalnya 10 atau 25? Kedua, apa yang
         hilang bila sebaran waktu disimpan sebagai rata-rata saja?
 \end{enumerate}
 
-\begin{lstlisting}[language=bash, caption={Membaca metrik mentah lalu papannya, tersedia di \berkas{sources/chapter09/papan.py}}, label={lst:c9-lat2-jalan}]
+\begin{lstlisting}[language=bash, caption={Membaca metrik mentah lalu \textit{dashboard}-nya, tersedia di \berkas{sources/chapter09/dashboard.py}}, label={lst:c9-lat2-jalan}]
 curl -s http://127.0.0.1:8061/metrics | head -8
-python3 papan.py
+python3 dashboard.py
 
 # Keluarannya:
 #   Versi                       Minta   Gagal  % gagal   Rata ms   p95 ms

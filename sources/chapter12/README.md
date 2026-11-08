@@ -17,7 +17,7 @@ kedua kontrak. Aplikasinya memakai Python pustaka standar ditambah
 | `pakai-tipe-salah.ts` | Sengaja salah: memakai field versi 1 pada tipe versi 2 |
 | `aplikasi.py` | API di port 8090: dua versi, *pagination*, *filtering*, idempotensi, validasi di batas |
 | `gateway.py` | *Gateway* di port 8091: *rate limiting* token bucket, lalu meneruskan |
-| `uji-kontrak.py` | Memvalidasi jawaban server, isi permintaan, dan janji idempotensinya |
+| `uji-kontrak.py` | Memvalidasi *response* server, isi permintaan, dan janji idempotensinya |
 | `uji-kompatibilitas.py` | Memisahkan perubahan kontrak yang aman dari yang merusak, lalu mengujinya pada server |
 | `ukur-gateway.py` | Mengukur lonjakan permintaan, penolakan 429, dan pengisian ulang embernya |
 
@@ -25,6 +25,7 @@ kedua kontrak. Aplikasinya memakai Python pustaka standar ditambah
 
 ```bash
 cd sources/chapter12
+source ../.venv/bin/activate
 python3 aplikasi.py &
 python3 gateway.py &
 

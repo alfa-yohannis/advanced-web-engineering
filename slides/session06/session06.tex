@@ -258,7 +258,7 @@
   pengganti untuk adegan yang tidak perlu dikerjakan pemeran aslinya.}
 \end{frame}
 
-\begin{frame}[fragile]{{\Large Mock Membuktikan Panggilan yang Tidak Terjadi}}
+\begin{frame}[fragile]{{\Large Mock Memastikan Tidak Ada Panggilan}}
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
 def test_mock_membuktikan_layanan_tidak_dipanggil():
@@ -785,7 +785,7 @@ diff sehat.json n1.json && echo "isi response sama persis"
   \begin{enumerate}
     \item Baca \texttt{mutu.json}, lalu tulis dugaan pemeriksaan mana yang
           akan dilanggar dan mengapa.
-    \item Jalankan gerbangnya, catat \textit{verdict} tiap baris beserta
+    \item Jalankan \textit{gate}-nya, catat \textit{verdict} tiap baris beserta
           status keluarnya.
     \item Longgarkan batas \textit{query} alamat N+1 menjadi tiga puluh, lalu
           jalankan ulang dan catat status keluarnya.
@@ -941,7 +941,7 @@ du -sh test-results
           test menjaga isinya.
     \item \textit{Coverage} 100 persen pada dua suite yang berbeda, tetapi
           hanya satu yang menangkap mutasi \texttt{>=} menjadi \texttt{>}.
-    \item Gerbang mutu menilai waktu, \textit{coverage}, temuan
+    \item \textit{Gate} mutu menilai waktu, \textit{coverage}, temuan
           \texttt{ruff}, dan jumlah \textit{query}, lalu keluar dengan status
           1 begitu satu batas dilanggar.
   \end{itemize}

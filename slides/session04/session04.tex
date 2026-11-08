@@ -113,7 +113,7 @@
   \vspace{12pt}
   \begin{itemize}
     \item Menjelaskan cara browser, Content Delivery Network (CDN), dan
-          \textit{cache} aplikasi memutuskan apakah sebuah jawaban boleh
+          \textit{cache} aplikasi memutuskan apakah sebuah \textit{response} boleh
           dipakai ulang, berdasarkan header \texttt{Cache-Control},
           \texttt{ETag}, dan masa berlakunya.
     \item Mengukur untung rugi pola \textit{cache-aside}, termasuk data \textit{stale}
@@ -129,9 +129,9 @@
   \begin{itemize}
     \item \textit{Query} buku terlaris 30 hari pada Bab 3 tetap memakan puluhan
           milidetik walaupun indeksnya sudah dipasang.
-    \item Jawabannya sama untuk semua pengunjung, dan hanya berubah sedikit
+    \item Hasilnya sama untuk semua pengunjung, dan hanya berubah sedikit
           dari menit ke menit.
-    \item \textit{Caching} menyimpan jawaban yang sudah jadi, lalu memakainya
+    \item \textit{Caching} menyimpan hasil yang sudah jadi, lalu memakainya
           lagi. \textit{Tradeoff}-nya: \textit{copy} dapat \textit{stale}, dan tempat
           penyimpanannya dapat \textit{slow} atau \textit{down}.
   \end{itemize}
@@ -159,8 +159,8 @@
           berubah, atau \texttt{200} dengan isi baru bila sudah berubah.
   \end{itemize}
   \vspace{6pt}
-  {\footnotesize \texttt{ETag} adalah tanda versi isi jawaban, dibuat server
-  dari isi berkasnya. Begitu isinya berubah, nilainya ikut berubah.
+  {\footnotesize \texttt{ETag} adalah tanda versi isi \textit{response}, dibuat server
+  dari isi file-nya. Begitu isinya berubah, nilainya ikut berubah.
 
   \vspace{4pt}
   Analoginya fotokopi jadwal ujian bertuliskan ``berlaku sampai Jumat'' dan
@@ -211,13 +211,13 @@
     \hline
     \textbf{Perintah} & \textbf{Artinya} \\
     \hline
-    \texttt{max-age=N} & \textit{Copy} tetap \textit{fresh} selama N detik sejak jawaban dibuat. Selama itu server tidak ditanya. \\
+    \texttt{max-age=N} & \textit{Copy} tetap \textit{fresh} selama N detik sejak \textit{response} dibuat. Selama itu server tidak ditanya. \\
     \hline
     \texttt{s-maxage=N} & Sama dengan \texttt{max-age}, tetapi khusus untuk \textit{cache} bersama seperti CDN. Browser mengabaikannya. \\
     \hline
     \texttt{no-cache} & \textit{Copy} boleh disimpan, tetapi setiap pemakaian wajib ditanyakan ulang ke server. \\
     \hline
-    \texttt{no-store} & Jawaban tidak boleh disimpan sama sekali, di mana pun. \\
+    \texttt{no-store} & \textit{Response} tidak boleh disimpan sama sekali, di mana pun. \\
     \hline
     \texttt{private} & Hanya browser pengguna itu yang boleh menyimpan. CDN dan \textit{proxy} tidak boleh. \\
     \hline
@@ -246,9 +246,9 @@
 \begin{frame}{{\Large no-cache dan no-store Sering Tertukar}}
   \vspace{10pt}
   \begin{itemize}
-    \item \texttt{no-cache} membolehkan jawaban disimpan, tetapi setiap
+    \item \texttt{no-cache} membolehkan \textit{response} disimpan, tetapi setiap
           pemakaiannya harus ditanyakan ulang ke server.
-    \item \texttt{no-store} melarang jawaban disimpan sama sekali.
+    \item \texttt{no-store} melarang \textit{response} disimpan sama sekali.
     \item Halaman yang diberi \texttt{no-cache} tetap tersimpan di browser.
           Untuk halaman yang tidak boleh tertinggal di komputer pengguna,
           misalnya halaman rekening, dipakai \texttt{no-store}.
@@ -267,7 +267,7 @@
           byte. Permintaan bersyarat menerima status 304 dengan 0 byte.
   \end{enumerate}
   \vspace{8pt}
-  {\footnotesize Jawaban 304 menghemat isi, tetapi browser tetap menunggu satu
+  {\footnotesize \textit{Response} 304 menghemat isi, tetapi browser tetap menunggu satu
   \textit{round-trip time} (RTT) untuk mendapatkannya.}
 \end{frame}
 
@@ -320,9 +320,9 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
     \item Aset \texttt{stylenew.css} situs kampus hanya mengirim
           \texttt{Last-Modified} dan \texttt{ETag}.
     \item Request for Comments (RFC) 9111 membolehkan browser menebak masa
-          \textit{fresh} dari umur berkas. Angka yang lazim adalah sepersepuluh selang
-          sejak berkas terakhir diubah.
-    \item Berkas diubah 14 Maret 2025. Pada 10 September 2026 umurnya sekitar
+          \textit{fresh} dari umur file. Angka yang lazim adalah sepersepuluh selang
+          sejak file terakhir diubah.
+    \item File diubah 14 Maret 2025. Pada 10 September 2026 umurnya sekitar
           545 hari, sehingga dianggap \textit{fresh} sekitar 54 hari.
   \end{itemize}
   \vspace{8pt}
@@ -407,7 +407,7 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
     \hline
     \textbf{Titik} & \textbf{Dipakai oleh} & \textbf{Diatur lewat} & \textbf{Cara membuang \textit{copy}} \\
     \hline
-    Browser & Satu pengguna & Header \texttt{Cache-Control} dari server & Tidak dapat dari server. Tunggu kedaluwarsa, atau ganti nama berkas. \\
+    Browser & Satu pengguna & Header \texttt{Cache-Control} dari server & Tidak dapat dari server. Tunggu kedaluwarsa, atau ganti nama file. \\
     \hline
     CDN & Banyak pengguna di satu wilayah & \texttt{Cache-Control}, terutama \texttt{s-maxage}, dan aturan di panel CDN & Perintah \textit{purge} ke penyedia CDN. \\
     \hline
@@ -472,7 +472,7 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
     \item Menulis: ubah basis data lebih dahulu, lalu hapus kunci terkait di
           Redis.
     \item Redis tidak pernah menjadi \textit{source of truth}. Bila Redis kosong atau
-          \textit{down}, jawaban tetap benar, hanya lebih lambat.
+          \textit{down}, \textit{response} tetap benar, hanya lebih lambat.
   \end{itemize}
   \vspace{4pt}
   {\footnotesize HIT dan MISS bukan singkatan, melainkan kata Inggris untuk
@@ -560,7 +560,7 @@ def ambil_terlaris_lewat_cache(pool_koneksi, cache):
   {\footnotesize
   \begin{tabularx}{\textwidth}{Xrrrl}
     \hline
-    \textbf{Keadaan} & \textbf{p50} & \textbf{p95} & \textbf{Terbesar} & \textbf{Asal jawaban} \\
+    \textbf{Keadaan} & \textbf{p50} & \textbf{p95} & \textbf{Terbesar} & \textbf{Asal \textit{response}} \\
     \hline
     Tanpa \textit{cache}, 50 permintaan & 70,44 & 81,99 & 94,41 & 50 \textit{query} ke basis data \\
     \hline
@@ -900,7 +900,7 @@ def single_flight(pool_koneksi, cache, penghitung_query):
     \node[baris] at (-0.15,0) {Biasa};
     \node[langkah, minimum width=1.2cm, fill=blue!8] at (0,0) {klik};
     \node[langkah, minimum width=3.6cm, fill=gray!35] at (1.2,0)
-      {pengguna menunggu jawaban server};
+      {pengguna menunggu \textit{response} server};
     \node[langkah, minimum width=2.0cm, fill=green!10] at (4.8,0)
       {layar berubah};
     \node[baris] at (-0.15,-1.3) {Optimistis};
@@ -908,7 +908,7 @@ def single_flight(pool_koneksi, cache, penghitung_query):
     \node[langkah, minimum width=2.0cm, fill=green!10] at (1.2,-1.3)
       {layar berubah};
     \node[langkah, minimum width=3.6cm, fill=blue!8] at (3.2,-1.3)
-      {jawaban diperiksa di belakang layar};
+      {\textit{response} diperiksa di belakang layar};
     \node[anchor=west, font=\tiny, gray] at (6.9,-1.3)
       {bila gagal: dikembalikan};
     \draw[-{Stealth[length=2mm]}, gray] (0,-2.0) -- (8.6,-2.0)
@@ -990,7 +990,7 @@ async function tekanSuka(
     \hline
     Bila anggapannya salah & Tampilan dikembalikan ke keadaan sebelum klik & Penulisan ditolak, lalu diulang dari awal \\
     \hline
-    Tujuannya & Pengguna tidak menunggu jawaban server & Tidak ada gembok yang ditahan selama transaksi \\
+    Tujuannya & Pengguna tidak menunggu \textit{response} server & Tidak ada gembok yang ditahan selama transaksi \\
     \hline
   \end{tabularx}}
 \end{frame}
@@ -1058,7 +1058,7 @@ async function tekanSuka(
   \vspace{10pt}
   \begin{itemize}
     \item \texttt{layanan-lambat.py}: layanan biaya kirim tiruan yang biasanya
-          menjawab dalam 20 milidetik, tetapi sebagian jawabannya ditahan 2
+          menjawab dalam 20 milidetik, tetapi sebagian \textit{response}-nya ditahan 2
           detik.
     \item \texttt{resilience.py}: 10 \textit{worker} bersama-sama mengirim 100
           permintaan, dengan empat cara.
@@ -1067,7 +1067,7 @@ async function tekanSuka(
           ditambah \textit{circuit breaker}.
   \end{itemize}
   \vspace{8pt}
-  {\footnotesize Kedua berkas hanya dijalankan terhadap layanan milik
+  {\footnotesize Kedua file hanya dijalankan terhadap layanan milik
   sendiri.}
 \end{frame}
 
@@ -1090,7 +1090,7 @@ async function tekanSuka(
   \end{tabularx}}
 
   \vspace{6pt}
-  {\footnotesize 20 persen jawaban ditahan 2 detik, waktu dalam milidetik.
+  {\footnotesize 20 persen \textit{response} ditahan 2 detik, waktu dalam milidetik.
   Tanpa batas waktu, p95-nya 2.002,3 milidetik. Dengan batas waktu, p95 turun
   menjadi 301,4 milidetik, dengan harga 18 permintaan yang menyerah.
   \textit{Retry} mengembalikan keberhasilan ke 100 persen dengan 123
@@ -1116,7 +1116,7 @@ async function tekanSuka(
   \end{tabularx}}
 
   \vspace{6pt}
-  {\footnotesize Semua jawaban ditahan 2 detik, yaitu keadaan layanan yang
+  {\footnotesize Semua \textit{response} ditahan 2 detik, yaitu keadaan layanan yang
   sedang kewalahan. Waktu dalam milidetik.}
 \end{frame}
 
@@ -1218,7 +1218,7 @@ def hitung_jeda_sebelum_retry(percobaan_ke, pengacak):
   \begin{itemize}
     \item Hanya untuk permintaan idempoten. \texttt{GET}, \texttt{PUT}, dan
           \texttt{DELETE} idempoten, sedangkan \texttt{POST} tidak.
-    \item \textit{Retry} pada \texttt{POST} pembayaran yang jawabannya hilang dapat
+    \item \textit{Retry} pada \texttt{POST} pembayaran yang \textit{response}-nya hilang dapat
           menagih pembeli dua kali. Cara menanganinya dibahas pada Bab 12.
     \item \textit{Retry} berlipat antarlapisan: tiga lapisan yang masing-masing
           mencoba tiga kali menjadi 3 $\times$ 3 $\times$ 3 = 27 panggilan.
@@ -1412,13 +1412,13 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
   \begin{itemize}
     \item \texttt{ETag} aset kampus, \texttt{67d3dca2-965}, tersusun dari dua
           bilangan heksadesimal.
-    \item \texttt{965} sama dengan 2.405, yaitu ukuran berkasnya dalam byte.
+    \item \texttt{965} sama dengan 2.405, yaitu ukuran file-nya dalam byte.
     \item \texttt{67d3dca2} sama dengan 1.741.937.826 detik sejak 1 Januari
-          1970, yaitu waktu \texttt{last-modified} berkas tersebut.
+          1970, yaitu waktu \texttt{last-modified} file tersebut.
   \end{itemize}
   \vspace{8pt}
   {\footnotesize Server kampus menurunkan tanda versinya dari waktu ubah dan
-  ukuran berkas, sedangkan \texttt{aplikasi.py} menurunkannya dari isi berkas.
+  ukuran file, sedangkan \texttt{aplikasi.py} menurunkannya dari isi file.
   Masa \textit{fresh} tebakan bergantung pada tanggal pemeriksaan.}
 \end{frame}
 
@@ -1442,7 +1442,7 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
 
   \vspace{6pt}
   {\footnotesize Pertanyaan: mengapa halaman selalu ditanyakan ulang sedangkan
-  aset aplikasi tidak pernah, berapa byte dan berapa RTT yang dihemat jawaban
+  aset aplikasi tidak pernah, berapa byte dan berapa RTT yang dihemat \textit{response}
   304, dan apa isi kolom \emph{Size} untuk \texttt{app.3f9a2c.js} pada muat
   ulang kedua?}
 \end{frame}
@@ -1507,7 +1507,7 @@ python ukur-ttfb.py http://localhost:8000/api/terlaris-cache 50
 
   \vspace{8pt}
   {\footnotesize Dalam milidetik. Baris ketiga tampak janggal: \textit{cache}
-  yang seharusnya mempercepat justru membuat jawaban dua setengah kali lebih
+  yang seharusnya mempercepat justru membuat \textit{response} dua setengah kali lebih
   lambat, karena dua kali penantian 50 milidetik ditambah \textit{query} yang tetap
   dijalankan.}
 \end{frame}
@@ -1829,7 +1829,7 @@ python resilience.py            # terminal lain
 
 \begin{frame}{{\Large Ringkasan}}
   \begin{itemize}
-    \item \textit{Copy} yang masih \textit{fresh} dipakai tanpa jaringan. Jawaban 304 menghemat isi,
+    \item \textit{Copy} yang masih \textit{fresh} dipakai tanpa jaringan. \textit{Response} 304 menghemat isi,
           tetapi tidak menghemat RTT.
     \item Tanpa kebijakan, browser menebak: aset kampus dianggap \textit{fresh} sekitar
           54 hari.

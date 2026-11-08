@@ -383,7 +383,7 @@ tempatnya bekerja.
   \label{fig:gate-keamanan}
 \end{figure}
 
-Listing \ref{lst:gate-keamanan} memuat keluaran gerbangnya pada aplikasi bab
+Listing \ref{lst:gate-keamanan} memuat keluaran \textit{gate}-nya pada aplikasi bab
 ini, dipersingkat pada bagian yang berulang.
 
 \begin{lstlisting}[language=bash, caption={Menjalankan gate keamanan, tersedia di \berkas{sources/chapter07/periksa-keamanan.py}}, label={lst:gate-keamanan}]
@@ -406,13 +406,13 @@ echo $?
 # 0
 \end{lstlisting}
 
-Gerbang yang selalu lolos tidak membuktikan apa pun, sehingga pemeriksaan
+\textit{Gate} yang selalu lolos tidak membuktikan apa pun, sehingga pemeriksaan
 yang sama dijalankan terhadap pembanding, yaitu server statis bawaan Python
 tanpa penyetelan. Tabel \ref{tab:gate-banding} memuat kedua hasilnya.
 
 \begin{table}[!htb]
   \centering
-  \caption{Verdict gerbang pada dua sasaran, hasil pengukuran nyata}
+  \caption{\textit{Verdict} \textit{gate} pada dua sasaran, hasil pengukuran nyata}
   \label{tab:gate-banding}
   \begin{tabularx}{\textwidth}{Xrrr}
     \hline
@@ -432,7 +432,7 @@ header CORS sama sekali. Syarat yang ditulis sebagai larangan dapat terpenuhi
 karena fiturnya tidak ada, bukan karena pengamanannya bekerja, dan syarat
 semacam itu perlu dipasangkan dengan syarat positifnya.
 
-Analisis statis melengkapi gerbang tersebut dari sisi kode. Pengaturan
+Analisis statis melengkapi \textit{gate} tersebut dari sisi kode. Pengaturan
 \texttt{ruff} pada bab ini menyalakan aturan keamanan dari bandit, misalnya
 peringatan untuk SQL yang disambung dari potongan teks dan untuk nilai yang
 tampak seperti kata sandi tertulis di kode. Pada seluruh file sumber Bab 7,
@@ -466,7 +466,7 @@ puluh delapan paket Python dan paket Node Bab 6 sama-sama bersih pada
 pemeriksaan hari itu, dan justru karena jawabannya bergantung pada hari,
 pemeriksaannya diulang di \textit{Continuous Integration}.
 
-Seluruhnya berakhir pada satu angka yang dapat dibaca mesin. Gerbang keamanan
+Seluruhnya berakhir pada satu angka yang dapat dibaca mesin. \textit{Gate} keamanan
 membaca \textit{response} yang benar-benar dikirim, menilainya terhadap 18
 syarat, lalu keluar dengan status 0. Pemeriksaan yang sama terhadap server
 tanpa penyetelan meloloskan satu syarat dari sembilan dan keluar dengan
@@ -704,23 +704,23 @@ curl -s --get --data-urlencode 'nama=<b>Mahasiswa</b>' \
 
 \subsection*{Latihan 4: Menegakkan Gate Keamanan}
 
-Latihan ini memasang seluruh syarat di atas sebagai satu gerbang, lalu
-membandingkan vonisnya pada dua sasaran.
+Latihan ini memasang seluruh syarat di atas sebagai satu \textit{gate}, lalu
+membandingkan \textit{verdict}-nya pada dua sasaran.
 
 \begin{enumerate}
   \item Baca \berkas{sources/chapter07/kebijakan.json}, lalu tulis dugaan
         berapa syarat yang akan terpenuhi aplikasi dan berapa pada server
         pembanding.
-  \item Jalankan gerbangnya terhadap keduanya seperti pada Listing
+  \item Jalankan \textit{gate}-nya terhadap keduanya seperti pada Listing
         \ref{lst:c7-lat4-jalan}, lalu catat jumlah syarat, jumlah yang lolos,
         dan status keluarnya ke Tabel \ref{tab:c7-lat4-hasil}. Tabel
         \ref{tab:c7-lat4-contoh} memperlihatkan contoh yang sudah terisi.
   \item Jalankan pemeriksaan dependensi dan analisis statis, lalu catat
         jumlah temuannya.
   \item Hapus sementara satu header dari \berkas{sources/chapter07/kebijakan.json},
-        nyalakan ulang aplikasinya, jalankan ulang gerbangnya, lalu
+        nyalakan ulang aplikasinya, jalankan ulang \textit{gate}-nya, lalu
         kembalikan seperti semula.
-  \item Jawab tiga pertanyaan berikut. Pertama, mengapa gerbang menilai
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa \textit{gate} menilai
         \textit{response} yang dikirim dan bukan membaca kodenya? Kedua,
         mengapa satu syarat justru lolos pada server pembanding? Ketiga,
         mengapa hasil pemeriksaan dependensi punya umur simpan?

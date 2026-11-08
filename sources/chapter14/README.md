@@ -15,7 +15,7 @@ atau Chromium.
 | `penyeimbang.py` | Penyeimbang beban *round robin* di port 8110, daftar replikanya dari *environment* `REPLIKA` |
 | `pengukur.py` | Alat ukur bersama: menyalakan proses, menunggu port, mematikan proses, dan menghitung persentil |
 | `ukur-skala.py` | Mengukur permintaan per detik, p50, p95, dan efisiensi pada 1, 2, 4, dan 8 replika |
-| `panggilan-jaringan.py` | Membandingkan pemanggilan fungsi di dalam proses dengan pemanggilan HTTP ke proses lain |
+| `panggilan-jaringan.py` | Membandingkan panggilan fungsi di dalam proses dengan panggilan HTTP ke proses lain |
 | `partisi.py` | Membandingkan modulo dengan *consistent hashing*: kunci yang pindah dan beban node terberat |
 | `rencana.json` | Angka masukan rencana kapasitas: beban tiap layanan, kapasitas hasil Latihan 1, dan asumsi biaya |
 | `rencana-kapasitas.py` | Menghitung replika, replika baca, shard, koneksi, dan biaya bulanan untuk beban berlipat |
@@ -24,9 +24,9 @@ atau Chromium.
 | `statis/sw.js` | *Service worker*: kerangka dari *cache* lebih dahulu, data dari jaringan lebih dahulu |
 | `statis/manifest.webmanifest`, `statis/ikon.svg` | Manifest aplikasi beserta ikonnya |
 | `chrome_pipa.py` | Mengendalikan Chrome tanpa jendela lewat Chrome DevTools Protocol di atas pipa, tanpa pustaka tambahan |
-| `ukur-offline.py` | Empat kunjungan dengan Chrome: dua ketika server hidup, dua ketika server mati |
+| `ukur-offline.py` | Empat kunjungan dengan Chrome: dua ketika server hidup, dua ketika server *down* |
 | `fungsi.py` | Fungsi serverless tiruan yang menghitung ongkos kirim dari satu peristiwa |
-| `ukur-cold-start.py` | Membandingkan pemanggilan *warm*, *cold start*, dan *cold start* dengan dependensi |
+| `ukur-cold-start.py` | Membandingkan panggilan *warm*, *cold start*, dan *cold start* dengan dependensi |
 | `model-tiruan.py` | Model bahasa tiruan di port 8122: waktu tokennya ditetapkan, jumlah tokennya dilaporkan |
 | `asisten.py` | Fitur berbantuan LLM di port 8121: memegang kunci API, mengalirkan jawaban, dan *cache* kecocokan persis |
 | `ukur-llm.py` | Mengukur token pertama, jawaban selesai, token yang dibayar, dan *cache* dari sisi browser |
@@ -77,6 +77,6 @@ dari WSL.
 `ukur-skala.py` sengaja membebani, tetapi yang dibebaninya hanya proses yang
 dinyalakannya sendiri di 127.0.0.1. Seluruh alat ukur lain bersifat mengamati.
 Tidak ada satu pun skrip di direktori ini yang boleh diarahkan ke sistem milik
-orang lain. Angka throughput bergantung pada jumlah core dan pembatasan daya
+orang lain. Angka *throughput* bergantung pada jumlah *core* dan batas daya
 komputer, sehingga hasil tiap mahasiswa akan berbeda, sedangkan pola
 perbandingannya akan sama.

@@ -1,6 +1,6 @@
 # Pekerjaan yang Belum Selesai
 
-Catatan ini menandai keadaan repositori pada 7 November 2026, supaya pekerjaan
+Catatan ini menandai keadaan repositori pada 8 November 2026, supaya pekerjaan
 berikutnya tidak dimulai dari menebak-nebak.
 
 ## Yang sudah lengkap
@@ -9,57 +9,95 @@ Bab 1 sampai Bab 14 sudah punya naskah, slide, file sumber, dan angka yang
 diukur sungguhan. Seluruh empat belas bab sudah masuk buku, dan bukunya
 terbangun di 275 halaman.
 
-## Penyeragaman istilah
+Seluruh perintah di README sumber dan di listing latihan Bab 1 sampai Bab 14
+sudah dijalankan pada 7 dan 8 November 2026, dan seluruhnya berjalan.
+Perkecualiannya hanya `sources/chapter02/skrip-beban.js`, karena `k6` belum
+terpasang di komputer pengukuran.
 
-Istilah Inggris yang disepakati sudah dipakai penuh di Bab 5 sampai Bab 14
-beserta slidenya, tetapi belum di bab lain. Yang tertinggal di Bab 2 sampai
-Bab 4 beserta slidenya: `berkas`, `jawaban`, `anggaran`, `latensi`, `gejala`,
-`pita`, `kewarasan`, `pemanasan`, dan `vonis`. Daftar lengkap istilahnya ada
-di `CLAUDE.md`.
+Istilah di naskah, slide, dan README sumber sudah mengikuti daftar istilah di
+`CLAUDE.md`. Seluruh slide memberi baris kosong sesudah tabel dan gambar, dan
+tidak ada lagi judul slide yang menutupi logo.
 
-## Pemeriksaan sumber Bab 2 sampai Bab 13
+## Nama di kode yang masih memakai istilah lama
 
-Belum ada pemeriksaan bahwa seluruh sumber Bab 2 sampai Bab 13 masih dapat
-dijalankan. Pemeriksaan yang sempat dimulai pada 7 November 2026 menemukan
-lima hal yang perlu disiapkan atau diperiksa lebih dahulu:
+Sekitar 150 nama variabel dan fungsi di `sources/` masih memakai istilah lama,
+terutama `jawaban`, `berkas`, dan `rakit`. Contohnya `kirim_jawaban` dan
+`isi_berkas` di Bab 4, `LAMA_RAKIT_DETIK` di Bab 8, serta `periksa_jawaban`
+dan `rakit_halaman` di Bab 12. Banyak di antaranya dikutip di listing naskah
+dan slide, sehingga penggantiannya harus ikut memperbarui listing itu, dan
+juga keluaran yang dikutip bila nama tersebut tercetak.
 
-- `sources/.venv` belum memuat seluruh pustaka yang diminta README Bab 4,
-  Bab 6, dan Bab 7. Pemasangannya sempat dihentikan di tengah jalan.
-- `sources/chapter06/node_modules` belum ada. Pengujian E2E Bab 6 dan
-  pemeriksaan tipe Bab 12 membutuhkannya.
-- `k6` belum terpasang, padahal `sources/chapter02/skrip-beban.js`
-  membutuhkannya.
-- README Bab 12 menjalankan `python3`, sedangkan aplikasinya membutuhkan
-  `jsonschema` yang tidak ada di Python sistem. Hal ini belum diperiksa dengan
-  menjalankannya.
-- Di komputer pengukuran, port 5433, 8000, dan 8080 dipakai layanan proyek
-  lain, sehingga Bab 3, `aplikasi.py` Bab 4, dan Bab 11 tidak dapat dinyalakan
-  tanpa mematikan layanan itu lebih dahulu.
+Beberapa kata lama sengaja dibiarkan, karena maknanya berbeda:
 
-## Singkatan yang belum dieja di bab sendiri
+- `berkas` dan `papan` di dalam analogi: berkas di loket, papan harga warung,
+  papan pengumuman, papan tulis, dan papan peringkat.
+- `jawaban` dalam arti jawaban atas pertanyaan, termasuk jawaban model LLM di
+  Bab 14.
+- `Skrip mati` di Bab 11, yang berarti JavaScript dimatikan, bukan *down*.
 
-Bab 8 memakai HTML, SPA, SSR, SSG, dan ISR tanpa mengejanya lebih dahulu di
-bab itu, padahal aturannya mengeja tiap singkatan pada kemunculan pertama di
-tiap bab. Semua singkatan itu sudah ada di tabel **Daftar Singkatan**
-`README.md`, jadi yang kurang hanya ejaan pertamanya di naskah Bab 8.
+Bagian topik penelitian di `README.md` juga belum diseragamkan, dan masih
+memakai `latensi`, `anggaran`, `basi`, `segar`, dan `jawaban`.
 
-## Catatan bentuk praktikum Bab 7
+## Temuan pemeriksaan sumber yang belum dibereskan
 
-Peta pertemuan di `README.md` menuliskan praktikum Bab 7 sebagai menyerang
-*branch* yang sengaja dibuat rentan. Bentuk itu diganti menjadi mengaudit dan
-mengeraskan aplikasi sendiri, lalu menegakkannya sebagai *gate* keamanan.
-Cakupan materinya tetap sama, dan seluruh pemeriksaannya bersifat mengamati
-terhadap aplikasi di komputer sendiri. Bila bentuk lamanya tetap diinginkan,
-teks peta pertemuan perlu disesuaikan atau dibahas lebih dahulu.
+Pemeriksaan 8 November 2026 menemukan hal-hal berikut. Perintahnya tetap
+berjalan, tetapi naskah, langkah latihan, atau isi file belum sesuai.
+
+- Bab 5: `lst:gate-jalan` disebut keluaran apa adanya, tetapi tidak memuat
+  baris "8 worker, 25 permintaan per worker".
+- Bab 6: langkah 4 Latihan 3 tidak dapat dikerjakan, karena seluruh 200.000
+  pesanan berisi tepat 3 item. Langkah 4 Latihan 4, mengarahkan ulang
+  `statis/pesanan.js`, tidak mengubah hasil *gate*, karena *gate* meminta
+  `/api/pesanan-n1/1` secara langsung dan tetap keluar dengan status 1.
+- Bab 7: langkah 4 Latihan 4 menghapus header dari `kebijakan.json`, sehingga
+  header itu hilang dari aplikasi dan dari syarat *gate* sekaligus. Hasilnya
+  15 dari 15 syarat, dengan status 0.
+- Bab 8: listing `wc` tidak memuat baris `1635 total`. Latihan 4 menyapa
+  pembaca dengan "Anda".
+- Bab 9: komentar `Dockerfile` menyebut dua file disalin, padahal hanya satu.
+  Docstring `ukur-rilis.py` menyebut cara persentil Bab 5, padahal yang
+  dipakai *nearest-rank*. `ci-contoh.yml` gagal bila dijalankan apa adanya:
+  tidak ada langkah pemasangan dependensi, pengujian Bab 6 butuh basis data,
+  dan ruff 0.17 menandai RUF010 di `alarm.py` dan `dashboard.py`. Latihan 3
+  dan `ci-contoh.yml` menyapa pembaca dengan "Anda".
+- Bab 10: `pengguna.json` menyebut password disimpan sebagai *hash*, padahal
+  isinya teks asli.
+- Bab 12: kontrak hanya mendeklarasikan 201, 409, dan 422 untuk `POST`
+  pesanan, padahal server dan naskah memakai 200 untuk permintaan ulang.
+  `lst:c12-siapkan` belum mengaktifkan venv, padahal README sudah.
+  `openapi.json | head -5` mencetak seluruh JSON, karena isinya satu baris.
+- Bab 13: `BATAS_PERCOBAAN = 5` di `antrean.py` tidak pernah dipakai, padahal
+  naskah menyebut batas lima percobaan. `LEBAR_HASIL` di `ukur-antrean.py`
+  juga tidak dipakai. `curl -sN .../sse | head -4` baru selesai sesudah dua
+  *event* atau *keep-alive* 15 detik, dan memotong blok kedua. Baris awal
+  `webhook.py` mencetak "jenis gagal-dua-kali" yang tidak ada di listing.
+  Listing `| tail -3` tidak memuat baris tabel dan baris kosong yang
+  sebenarnya tercetak.
 
 ## Catatan pemeliharaan
 
-- Container basis data Bab 6 (`awe6-db`, 5436) dan Bab 7 (`awe7-db`, 5437)
-  masih menyala. Matikan dengan `docker compose down -v` dari direktori
-  sumber masing-masing bila tidak dipakai. Bab 8, Bab 11, dan Bab 14 sengaja
-  tidak memakai container sama sekali.
-- Kotak meluap 1,42 pt pada log buku berasal dari nomor halaman tiga digit di
-  daftar isi, dan memang dibiarkan.
+- Port 5433, 8000, dan 8080 dipakai layanan proyek lain di komputer
+  pengukuran. Bab 3, `aplikasi.py` Bab 4, dan Bab 11 hanya dapat dinyalakan di
+  port bawaannya bila layanan itu dimatikan lebih dahulu.
+- Container `awe4-db`, `awe4-redis`, `awe5-db`, `awe6-db`, `awe7-db`,
+  `awe9-biru`, dan `awe9-hijau` dalam keadaan *stop*. Volume basis data Bab 4
+  sampai Bab 7 dan image `awe9-layanan` masih ada. Hapus dengan
+  `docker compose down -v` dari direktori sumber masing-masing bila tidak
+  dipakai. Bab 8, Bab 11, dan Bab 14 sengaja tidak memakai container sama
+  sekali.
+- Label keluaran `ukur-query.py` Bab 3, `worker.py` Bab 13, dan
+  `ukur-offline.py` Bab 14 diganti mengikuti daftar istilah. Kutipan
+  keluarannya ditulis ulang dengan angka pengukuran yang sama, seperti pada
+  commit 25bc112. `ukur-antrean.py` dan `ukur-offline.py` sudah dijalankan
+  ulang dan mencetak label baru itu.
+- Kalimat hasil di `worker.py` Bab 13 dipendekkan, agar keluaran
+  `ukur-antrean.py` muat utuh di listing 78 karakter tanpa dipotong tangan.
+- Judul slide dibatasi sekitar 37 karakter. Judul yang tepi kanannya lewat
+  343 pt menutupi logo Pradita, karena kotak judul berlatar putih digambar di
+  atas logo.
+- Kotak meluap 1,42 pt dan 1,71 pt pada log buku berasal dari nomor halaman
+  tiga digit di daftar isi, dan memang dibiarkan. Kotak meluap 0,43 pt di
+  Bab 7 berasal dari kata `Content-Security-Policy` yang tidak dapat dipenggal.
 - `package-lock.json` Bab 6 tetap dilacak git, karena ia yang mengunci versi
   Playwright yang dipakai mengukur.
 - Bab 13 memakai port 8100 untuk server peristiwa, 8101 untuk WebSocket, dan
@@ -92,6 +130,3 @@ teks peta pertemuan perlu disesuaikan atau dibahas lebih dahulu.
 - Angka `simulasi-cabang.py` Bab 1 diukur dengan Git 2.43. Benih acaknya
   tetap, tetapi versi Git lain dapat menghitung batas blok konflik sedikit
   berbeda.
-- Slide sesi 1 dan sesi 14 memberi baris kosong sesudah tabel dan gambar,
-  agar jarak sebelum teks penjelasnya jatuh di tempat yang benar. Slide sesi
-  lain belum diperiksa untuk hal yang sama.

@@ -408,7 +408,7 @@ Batasnya ditulis di satu file, \berkas{sources/chapter06/mutu.json}, dan
 diperlakukan seperti kode. Isinya empat jenis: batas waktu tiap lapisan
 pengujian, \textit{coverage} minimum, jumlah temuan analisis statis yang
 ditoleransi, dan jumlah \textit{query} maksimum tiap alamat. Listing
-\ref{lst:gate-mutu} memperlihatkan penutup gerbangnya, dan Listing
+\ref{lst:gate-mutu} memperlihatkan penutup \textit{gate}-nya, dan Listing
 \ref{lst:gate-mutu-jalan} memuat keluarannya apa adanya.
 
 \begin{lstlisting}[style=PythonStyle, caption={Status keluar yang memblokir merge, tersedia di \berkas{sources/chapter06/gate-mutu.py}}, label={lst:gate-mutu}]
@@ -472,7 +472,7 @@ dikira. Dua suite yang berbeda sama-sama mencetak 100 persen pada
 menjadi \texttt{>}. Angka \textit{coverage} menyatakan baris mana yang
 dijalankan, bukan apakah hasilnya benar-benar diperiksa.
 
-Seluruhnya baru berarti ketika ada yang menegakkannya. Gerbang mutu membaca
+Seluruhnya baru berarti ketika ada yang menegakkannya. \textit{Gate} mutu membaca
 \berkas{mutu.json}, menilai waktu tiap lapisan, \textit{coverage}, temuan
 analisis statis, dan jumlah \textit{query} per alamat, lalu keluar dengan
 status 1 begitu satu batas dilanggar. Pada aplikasi bab ini, satu-satunya
@@ -704,13 +704,13 @@ diff sehat.json n1.json && echo "isi response sama persis"
 
 \subsection*{Latihan 4: Menegakkan Quality Gate}
 
-Latihan ini memasang seluruh pengukuran di atas sebagai satu gerbang yang
-vonisnya dapat dibaca mesin.
+Latihan ini memasang seluruh pengukuran di atas sebagai satu \textit{gate} yang
+\textit{verdict}-nya dapat dibaca mesin.
 
 \begin{enumerate}
   \item Baca \berkas{sources/chapter06/mutu.json}, lalu tulis dugaan
         pemeriksaan mana yang akan dilanggar dan mengapa.
-  \item Jalankan gerbangnya seperti pada Listing \ref{lst:c6-lat4-jalan},
+  \item Jalankan \textit{gate}-nya seperti pada Listing \ref{lst:c6-lat4-jalan},
         lalu catat \textit{verdict} tiap baris beserta status keluarnya ke
         Tabel \ref{tab:c6-lat4-hasil}. Tabel \ref{tab:c6-lat4-contoh}
         memperlihatkan contoh yang sudah terisi.

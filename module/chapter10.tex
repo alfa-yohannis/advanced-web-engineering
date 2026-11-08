@@ -108,7 +108,7 @@ ini.
     \hline
     Dicabut saat keluar & seketika & tidak bisa, menunggu kedaluwarsa \\
     \hline
-    Hilang saat proses mati & ya & tidak \\
+    Hilang saat proses berhenti & ya & tidak \\
     \hline
     Isinya terbaca klien & tidak & ya, tetapi tidak dapat diubah \\
     \hline
@@ -236,7 +236,7 @@ demo bab ini.
   \end{tabularx}
 \end{table}
 
-Baris ketiga itu yang sering mengejutkan. Penanda baru ikut mati karena
+Baris ketiga itu yang sering mengejutkan. Penanda baru ikut tidak berlaku karena
 seluruh keluarganya dicabut, dan pengguna yang sah harus masuk ulang. Harga
 itu memang disengaja: ketika satu penanda terbukti bocor, tidak ada cara
 membedakan pemilik aslinya dari pemegang lainnya.
@@ -311,7 +311,7 @@ pesanan nomor 3 milik kampus-b berlaku sebaliknya.
 
 Pilihan status itu disengaja dan layak diperhatikan. Permintaan lintas
 \textit{tenant} dijawab 404, bukan 403, karena 403 berarti "ada, tetapi Anda
-tidak boleh", dan jawaban itu sendiri sudah membocorkan keberadaan datanya.
+tidak boleh", dan \textit{response} itu sendiri sudah membocorkan keberadaan datanya.
 Penolakan di dalam satu \textit{tenant} tetap 403, karena di sana keberadaan
 pesanan memang bukan rahasia.
 
@@ -377,7 +377,7 @@ satu pesanan miliknya sendiri sedangkan staf melihat dua.
 
 Batas \textit{tenant} diperiksa paling depan, sebelum peran dan sebelum
 kepemilikan. Permintaan lintas \textit{tenant} dijawab 404, bukan 403, karena
-jawaban 403 sudah menyatakan bahwa datanya ada. Dalam sistem yang melayani
+\textit{response} 403 sudah menyatakan bahwa datanya ada. Dalam sistem yang melayani
 banyak penyewa, keberadaan data pun termasuk yang dijaga.
 
 \section{Latihan}
@@ -477,14 +477,14 @@ berbeda.
         statusnya.
   \item Ubah satu huruf terakhir token itu, lalu pakai lagi dan catat
         alasan penolakannya.
-  \item Segarkan dengan \textit{refresh token}, catat pasangan baru yang
+  \item Lakukan \textit{refresh} dengan \textit{refresh token}, catat pasangan baru yang
         terbit, lalu pakai ulang penanda lama seperti pada Listing
         \ref{lst:c10-lat2-jalan}.
   \item Coba penanda baru sesudah pemakaian ulang itu, lalu isi Tabel
         \ref{tab:c10-lat2-hasil}. Tabel \ref{tab:c10-lat2-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Jawab dua pertanyaan berikut. Pertama, mengapa penanda baru ikut
-        mati? Kedua, apa yang terjadi bila rotasi dipakai tanpa penangkapan
+        tidak berlaku? Kedua, apa yang terjadi bila rotasi dipakai tanpa penangkapan
         pemakaian ulang?
 \end{enumerate}
 

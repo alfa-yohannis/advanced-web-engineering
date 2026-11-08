@@ -128,7 +128,7 @@
       \item mencari alamat server,
       \item membangun koneksi,
       \item menunggu byte pertama,
-      \item mengunduh berkas,
+      \item mengunduh file,
       \item menyusun tampilan.
     \end{itemize}
     \item Tiap tahap punya biaya, dan biaya itu sering tidak terlihat dari
@@ -376,7 +376,7 @@ curl -o /dev/null -s -w @format-curl.txt https://www.pradita.ac.id/
   \end{tikzpicture}}
 
   \vspace{6pt}
-  {\footnotesize Gejalanya disebut \textit{head-of-line blocking}. Browser
+  {\footnotesize \textit{Symptom}-nya disebut \textit{head-of-line blocking}. Browser
   menyiasatinya dengan membuka sekitar enam koneksi paralel per domain, dan
   tiap koneksi menanggung biaya pembukaan sendiri.}
 \end{frame}
@@ -554,7 +554,7 @@ console.log("2: kode sinkron");
   \Huge{\textbf{Rendering Pipeline dan\\Critical Rendering Path}}
 \end{frame}
 
-\begin{frame}{{\Large Dari Berkas Mentah sampai Piksel}}
+\begin{frame}{{\Large Dari File Mentah sampai Piksel}}
   \vspace{10pt}
   \centering
   \scalebox{1.2}{
@@ -583,13 +583,13 @@ console.log("2: kode sinkron");
   isi, Composite penggabungan lapisan.}
 \end{frame}
 
-\begin{frame}[fragile]{{\Large Dua Penghambat yang Paling Sering Muncul}}
+\begin{frame}[fragile]{{\Large Dua Penghambat yang Paling Umum}}
   \vspace{3pt}
   \begin{itemize}
     \item \textbf{CSS bersifat \textit{render blocking}}: halaman tidak
           digambar sebelum seluruh CSS diunduh dan di-\textit{parse}.
     \item \textbf{Script tanpa penanda bersifat \textit{parser blocking}}:
-          penguraian HTML berhenti sampai berkas selesai dijalankan.
+          penguraian HTML berhenti sampai file selesai dijalankan.
   \end{itemize}
   \vspace{3pt}
 \begin{lstlisting}[language=html]
@@ -688,7 +688,7 @@ console.log("2: kode sinkron");
     \hline
     \textbf{Panel} & \textbf{Kegunaan} \\
     \hline
-    Network & Melihat urutan permintaan, ukuran berkas, dan rincian waktu tiap tahap. \\
+    Network & Melihat urutan permintaan, ukuran file, dan rincian waktu tiap tahap. \\
     \hline
     Performance & Melihat pekerjaan \textit{main thread} dan menemukan \textit{long task}. \\
     \hline
@@ -842,7 +842,7 @@ cd sources/chapter02
     \hline
     Tunggu server & Lama server memproses sampai byte pertama & \texttt{starttransfer} kurangi \texttt{appconnect} \\
     \hline
-    Unduh isi & Lama memindahkan sisa isi respons & \texttt{total} kurangi \texttt{starttransfer} \\
+    Unduh isi & Lama memindahkan sisa isi \textit{response} & \texttt{total} kurangi \texttt{starttransfer} \\
     \hline
   \end{tabularx}}
 \end{frame}

@@ -18,10 +18,10 @@
 
 Dua kebutuhan sering disatukan padahal berbeda. Kebutuhan pertama, pengguna
 ingin melihat perubahan segera, tanpa menekan tombol \textit{refresh}.
-Kebutuhan kedua, pekerjaan yang lama tidak boleh menahan jawaban, sehingga
+Kebutuhan kedua, pekerjaan yang lama tidak boleh menahan \textit{response}, sehingga
 harus dikerjakan di belakang.
 
-Keduanya menolak pola permintaan dan jawaban yang biasa. Yang pertama
+Keduanya menolak pola permintaan dan \textit{response} yang biasa. Yang pertama
 menuntut jalan dari server ke klien, padahal HyperText Transfer Protocol (HTTP) dirancang untuk arah
 sebaliknya. Yang kedua menuntut pekerjaan hidup lebih lama daripada
 permintaan yang memulainya, sehingga harus dititipkan ke tempat lain.
@@ -37,7 +37,7 @@ idempoten \cite{rfc9110}, dan dokumentasi Amazon SQS untuk
 \section{Polling, Server-Sent Events, dan WebSocket}
 
 Tiga cara dipakai luas untuk membawa peristiwa dari server ke klien.
-\textit{Polling} membuat klien bertanya berulang kali, dan jawabannya sering
+\textit{Polling} membuat klien bertanya berulang kali, dan \textit{response}-nya sering
 kosong. SSE membuat satu sambungan HTTP tetap terbuka, lalu server menulis
 peristiwa ke sambungan itu \cite{whatwg-html}. WebSocket menukar sambungan
 HTTP menjadi sambungan dua arah lewat jabat tangan khusus \cite{rfc6455}.
@@ -67,7 +67,7 @@ Gambar \ref{fig:transport} memperlihatkan ketiganya pada demo bab ini.
     \draw[panah] (server.east |- sse) -- node[font=\tiny, above] {dorong} (sse.west);
     \draw[panah] (server.east |- ws) -- node[font=\tiny, above] {dorong} (ws.west);
     \draw[panah] (ws.west) ++(0,-0.3) -- ++(-2.1,0);
-    \node[font=\tiny, gray, anchor=west] at (6.0,1.4) {jawaban sering kosong};
+    \node[font=\tiny, gray, anchor=west] at (6.0,1.4) {\textit{response} sering kosong};
     \node[font=\tiny, gray, anchor=west] at (6.0,0) {satu arah};
     \node[font=\tiny, gray, anchor=west] at (6.0,-2.0) {dua arah};
   \end{tikzpicture}
@@ -132,10 +132,10 @@ Tabel itu punya dua konsekuensi praktis. Pertama, keterlambatan
 milidetik pada jeda 0,5 detik, sedangkan kedua transport yang mendorong
 berada di bawah 2 milidetik. Kedua, satu sambungan mengganti sebelas
 permintaan, dan sebelas permintaan itu masing-masing membawa header
-permintaan dan header jawaban yang tidak ikut terhitung di kolom byte.
+permintaan dan header \textit{response} yang tidak ikut terhitung di kolom byte.
 
 Kolom byte perlu dibaca hati-hati. Yang dihitung hanya isi yang diterima
-klien, yaitu badan jawaban untuk \textit{polling}, baris data untuk SSE, dan
+klien, yaitu isi \textit{response} untuk \textit{polling}, baris data untuk SSE, dan
 isi frame untuk WebSocket. SSE mencapai 400 byte karena tiap peristiwa
 ditulis sebagai dua baris teks, sedangkan WebSocket mencapai 490 byte karena
 tiap frame membawa seluruh peristiwa sebagai JSON (JavaScript Object
@@ -254,14 +254,14 @@ def ambil(sekarang):
 
 Pergeseran waktu siap itu disebut \textit{visibility timeout} pada layanan
 antrean sungguhan \cite{aws-sqs-visibility}. Akibatnya dua. Pertama,
-pekerjaan tidak hilang ketika \textit{worker}-nya mati, karena pekerjaannya
+pekerjaan tidak hilang ketika \textit{worker}-nya \textit{crash}, karena pekerjaannya
 muncul kembali. Kedua, pekerjaan dapat dikerjakan dua kali, karena kematian
 itu bisa terjadi sesudah pekerjaannya tuntas tetapi sebelum di-\textit{ack}.
 
 \textit{Webhook} adalah sisi lain dari hal yang sama. Pada \textit{polling},
 sistem kita yang bertanya ke sistem lain. Pada \textit{webhook}, sistem lain
 yang memanggil alamat kita ketika ada kabar. Keduanya memindahkan masalah ke
-tempat yang sama, yaitu apa yang terjadi ketika pemanggilannya gagal.
+tempat yang sama, yaitu apa yang terjadi ketika \textit{request}-nya gagal.
 
 \section{Retry dan Exponential Backoff}
 
@@ -299,7 +299,7 @@ diterima.
     \hline
     \texttt{kerja-0002} & 1 & gagal, \textit{webhook} 500 & 0,01 \\
     \hline
-    \texttt{kerja-0003} & 1 & terkirim, \textit{worker} mati sebelum \textit{ack} & 0,01 \\
+    \texttt{kerja-0003} & 1 & terkirim, \textit{crash} sebelum \textit{ack} & 0,01 \\
     \hline
     \texttt{kerja-0002} & 2 & gagal, \textit{webhook} 500 & 0,51 \\
     \hline
@@ -346,17 +346,17 @@ def kerjakan(pesan, tirukan_crash):
     return "duplikat ditahan"
   status = kirim_webhook(pesan)
   if status != 200:
-    return f"gagal, webhook {status}, dicoba lagi nanti"
+    return f"gagal, webhook {status}"
   antrean.tandai_diproses(pesan["id"])
   if pesan["jenis"] == JENIS_CRASH and tirukan_crash:
-    return "terkirim, worker mati sebelum ack"
+    return "terkirim, crash sebelum ack"
   antrean.selesai(pesan["id"])
   return "terkirim dan di-ack"
 \end{lstlisting}
 
 Pekerjaan \texttt{kerja-0003} menirukan kejadian yang paling sering
 melahirkan duplikat: \textit{webhook}-nya terkirim, pekerjaannya ditandai
-selesai, lalu \textit{worker}-nya mati sebelum meng-\textit{ack}. Tabel
+selesai, lalu \textit{worker}-nya \textit{crash} sebelum meng-\textit{ack}. Tabel
 \ref{tab:atleastonce} membandingkan jumlah percobaan dengan jumlah pengiriman
 yang benar-benar tiba.
 
@@ -373,7 +373,7 @@ yang benar-benar tiba.
     \hline
     \texttt{kerja-0002}, ditolak dua kali & 3 & 3 & satu kali, pada percobaan ketiga \\
     \hline
-    \texttt{kerja-0003}, \textit{worker} mati & 2 & 1 & satu kali \\
+    \texttt{kerja-0003}, \textit{worker} \textit{crash} & 2 & 1 & satu kali \\
     \hline
     \textbf{Jumlah} & \textbf{6} & \textbf{5} & \textbf{3 pekerjaan tuntas} \\
     \hline
@@ -450,14 +450,14 @@ pertama, sedangkan penyuntingan bersama membutuhkan yang kedua.
 Alur asinkron memindahkan pekerjaan lama keluar dari permintaan, dan
 memindahkan masalahnya juga. Antrean pada demo ini menggeser waktu siap tiap
 pekerjaan yang diambil, sehingga pekerjaan tidak hilang ketika
-\textit{worker}-nya mati, dengan ganti bahwa pekerjaan dapat terkirim lebih
+\textit{worker}-nya \textit{crash}, dengan ganti bahwa pekerjaan dapat terkirim lebih
 dari sekali.
 
 Pengukurannya memperlihatkan keduanya sekaligus. Enam percobaan
 \textit{worker} menghasilkan lima pengiriman yang tiba, dan tiga pekerjaan
 tuntas. Pekerjaan yang ditolak dua kali dicoba ulang pada detik 0,51 dan
 1,52, yaitu jeda dasar lalu dua kali jeda dasar. Pekerjaan yang
-\textit{worker}-nya mati sesudah mengirim dikirim ulang, lalu ditahan
+\textit{worker}-nya \textit{crash} sesudah mengirim dikirim ulang, lalu ditahan
 pemeriksaan duplikat sebelum menyentuh tujuannya.
 
 Pesan utama bab ini adalah tempat jaminan itu ditegakkan. Antrean hanya dapat
@@ -500,7 +500,7 @@ yang sama, lalu memisahkan biaya yang terlihat dari biaya yang tersembunyi.
   \item Jalankan \berkas{ukur-transport.py}, seperti pada Listing
         \ref{lst:c13-lat1-jalan}, lalu catat ketiga barisnya.
   \item Catat jumlah permintaan tiap transport, lalu hitung berapa permintaan
-        yang jawabannya kosong pada varian \textit{polling}.
+        yang \textit{response}-nya kosong pada varian \textit{polling}.
   \item Buka \texttt{http://127.0.0.1:8100/sse} dengan \texttt{curl -sN},
         lalu terbitkan satu peristiwa dari terminal lain. Catat bentuk blok
         yang tiba.
@@ -651,7 +651,7 @@ python3 ukur-antrean.py
 #   Pekerjaan    Jenis                 Ke   Detik  Hasil
 #   kerja-0001   kirim-laporan          1    0.01  terkirim dan di-ack
 #   kerja-0002   gagal-dua-kali         1    0.01  gagal, webhook 500
-#   kerja-0003   crash-setelah-kirim    1    0.01  terkirim, mati sebelum ack
+#   kerja-0003   crash-setelah-kirim    1    0.01  terkirim, crash sebelum ack
 #   kerja-0002   gagal-dua-kali         2    0.51  gagal, webhook 500
 #   kerja-0003   crash-setelah-kirim    2    0.51  duplikat ditahan
 #   kerja-0002   gagal-dua-kali         3    1.52  terkirim dan di-ack
@@ -695,7 +695,7 @@ akibat gandanya hanya dapat ditahan \textit{consumer}.
         jumlah pengiriman yang tiba di \textit{webhook}.
   \item Catat pekerjaan mana yang dikirim dua kali oleh \textit{worker}
         tetapi hanya sekali tiba di \textit{webhook}.
-  \item Matikan pemeriksaan duplikat dengan memberi komentar pada pemanggilan
+  \item Matikan pemeriksaan duplikat dengan memberi komentar pada panggilan
         \texttt{sudah\_diproses} di \berkas{worker.py}, jalankan ulang, lalu
         catat jumlah pengiriman yang tiba sekarang.
   \item Pulihkan kembali pemeriksaannya.
@@ -741,7 +741,7 @@ python3 ukur-antrean.py | tail -3
     \hline
     pemeriksaan duplikat hidup & \dots & \dots & \dots \\
     \hline
-    pemeriksaan duplikat mati & \dots & \dots & \dots \\
+    pemeriksaan duplikat dimatikan & \dots & \dots & \dots \\
     \hline
   \end{tabularx}
 \end{table}

@@ -403,7 +403,7 @@ def pilih_tujuan(rilis, nomor_permintaan):
   selalu jatuh pada salah satu batas ember.}
 \end{frame}
 
-\begin{frame}{{\Large Papan Operasional Sesudah 500 Permintaan}}
+\begin{frame}{{\Large Dashboard Sesudah 500 Permintaan}}
   \vspace{6pt}
   \centering
   {\footnotesize
@@ -478,7 +478,7 @@ grep -h "300a032b60413b55e53009cc0660f240" proxy.log hijau.log
   \end{tabularx}}
 
   \vspace{6pt}
-  {\footnotesize Alarm keluar dengan status 1, sama seperti gerbang Bab 5
+  {\footnotesize Alarm keluar dengan status 1, sama seperti \textit{gate} Bab 5
   sampai 7. Perhatikan baris terakhir: versi hijau dua setengah kali lebih
   lambat, tetapi masih di bawah batas. Pelan belum tentu melanggar.}
 \end{frame}
@@ -490,7 +490,7 @@ grep -h "300a032b60413b55e53009cc0660f240" proxy.log hijau.log
   \Huge{\textbf{Persiapan Latihan}}
 \end{frame}
 
-\begin{frame}[fragile]{{\Large Tiga Proses, Satu Perintah Masing-Masing}}
+\begin{frame}[fragile]{{\Large Tiga Proses, Tiga Perintah}}
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
 cd sources/chapter09
@@ -553,18 +553,18 @@ python3 ukur-rilis.py 200
   pertimbangan memilih bobot pertama sebuah rilis?}
 \end{frame}
 
-\section{Latihan 2: Papan Operasional}
+\section{Latihan 2: Dashboard Operasional}
 
 \begin{frame}{\hfill}
   \centering
-  \Huge{\textbf{Latihan 2\\Membaca Papan Operasional}}
+  \Huge{\textbf{Latihan 2\\Membaca Dashboard Operasional}}
 \end{frame}
 
-\begin{frame}[fragile]{{\Large Dari Metrik Mentah ke Papan}}
+\begin{frame}[fragile]{{\Large Dari Metrik Mentah ke Dashboard}}
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
 curl -s http://127.0.0.1:8061/metrics | head -8
-python3 papan.py
+python3 dashboard.py
 
 # Keluarannya:
 #   Versi                       Minta   Gagal  % gagal   Rata ms   p95 ms

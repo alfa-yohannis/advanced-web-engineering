@@ -17,7 +17,8 @@ sebagai satu suara.
   berbicara tentang sistem, bukan kepada orang.
 - Istilah asing yang belum punya padanan mapan ditulis miring: `\textit{cache}`,
   `\textit{main thread}`, `\textit{frame}`. Istilah yang sudah diserap ditulis
-  biasa: server, browser, klien, data.
+  biasa: server, browser, klien, data, file. Kata berkas hanya dipakai dalam
+  analogi tentang dokumen kertas.
 - Istilah yang terasa janggal atau tidak lazim bila diterjemahkan tetap ditulis
   dalam bahasa Inggris dan dicetak miring: `\textit{pool}`, `\textit{circuit
   breaker}`, `\textit{retry}`, `\textit{race condition}`, `\textit{source of
@@ -28,13 +29,16 @@ sebagai satu suara.
   `\textit{noise}`, `\textit{refresh}`, `\textit{throttling}`, `\textit{gate}`, `\textit{query}`,
   `\textit{stale}`, `\textit{fresh}`, `\textit{copy}`, `\textit{down}`,
   `\textit{tradeoff}`, `\textit{crash}`, `\textit{slow}`, `\textit{bandwidth}`, `\textit{sanity check}`, `\textit{warmup}`, `\textit{verdict}`,
-  `\textit{render}`, `\textit{rendering}`, `\textit{preference}`, bukan kolam,
+  `\textit{render}`, `\textit{rendering}`, `\textit{preference}`,
+  `\textit{response}`, `\textit{budget}`, `\textit{latency}`, `\textit{symptom}`,
+  bukan kolam,
   pemutus sirkuit, pengulangan, balapan, sumber kebenaran, pemanggilan,
   kunci-nilai, dimampatkan, papan pemantauan, jaringan pertemanan,
   dibangkitkan, galat, pekerja, benturan, cakram, simpul, derau,
   menyegarkan, pembatasan, gerbang, kueri, basi, segar, salinan, mati,
   harga dalam arti untung rugi, menjatuhkan, pita, kewarasan, pemanasan, vonis,
-  dirakit, merakit, perakitan, selera,
+  dirakit, merakit, perakitan, selera, jawaban atau respons dalam arti
+  \textit{response} HTTP, anggaran, latensi, gejala,
   batasan
   dalam arti \textit{constraint} basis data, atau rentang dalam arti
   \textit{range} pada query dan penyimpanan. Judul slide dan

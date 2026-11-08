@@ -96,7 +96,7 @@
 
 \begin{frame}{\hfill}
   \centering
-  \Huge{\textbf{Apa yang sebenarnya terjadi ketika client selama \emph{Waiting Time}\\ menunggu respons dari server?}}
+  \Huge{\textbf{Apa yang terjadi ketika klien selama \emph{Waiting Time}\\ menunggu \emph{response} dari server?}}
 \end{frame}
 
 \section{Tujuan dan Kerangka Bahasan}
@@ -115,7 +115,7 @@
     \item Membaca rencana eksekusi PostgreSQL, lalu menentukan indeks yang
           tepat beserta kasus ketika indeks justru tidak dipakai.
     \item Membuktikan secara terukur bahwa batas transaksi, tingkat isolasi,
-          dan jumlah perjalanan ke basis data menentukan latensi dan
+          dan jumlah perjalanan ke basis data menentukan \textit{latency} dan
           kebenaran data.
   \end{itemize}
   \vspace{10pt}
@@ -132,7 +132,7 @@
     \item Biayanya tidak bisa terlihat dari kode:
     \begin{itemize}
       \item satu \textit{event} menjadi ratusan \textit{request} ke basis data, 
-      \item satu kolom tanpa indeks tidak menunjukkan gejala perlambatan sampai tabelnya membesar,
+      \item satu kolom tanpa indeks tidak menunjukkan \textit{symptom} perlambatan sampai tabelnya membesar,
       \item satu transaksi besar menahan \textit{request} lain.
     \end{itemize}
   \end{itemize}
@@ -484,7 +484,7 @@ def lewat_sql_langsung():
     \item \textit{Data Source Name} (DSN) adalah satu baris teks berisi
           keterangan untuk menghubungi basis data, misalnya
           \texttt{postgresql://admin:admin123@localhost:5433/toko}.
-    \item Ketiga cara menghasilkan baris yang identik, dan berkas
+    \item Ketiga cara menghasilkan baris yang identik, dan file
           \texttt{tiga-lapis-akses.py} membuktikannya setiap kali dijalankan.
   \end{itemize}
 \end{frame}
@@ -497,7 +497,7 @@ def lewat_sql_langsung():
     \hline
     \textbf{Tingkat} & \textbf{Kekuatan} & \textbf{Kelemahan} \\
     \hline
-    ORM & Kode singkat, struktur tabel cukup ditulis sekali di kelas model, perubahan skema dicatat sebagai berkas migrasi & SQL yang dikirim tidak terlihat, sehingga N+1 dan indeks hilang mudah lolos \\
+    ORM & Kode singkat, struktur tabel cukup ditulis sekali di kelas model, perubahan skema dicatat sebagai file migrasi & SQL yang dikirim tidak terlihat, sehingga N+1 dan indeks hilang mudah lolos \\
     \hline
     Query builder & Bentuk \textit{query} terbaca, nama kolom diperiksa lebih awal & \textit{Query} rumit menjadi bertele-tele \\
     \hline
@@ -1581,13 +1581,13 @@ CREATE INDEX IF NOT EXISTS idx_buku_judul_trgm
 
 \begin{frame}{{\Large Tiga Aturan Migrasi}}
   \vspace{8pt}
-  Perubahan skema ditulis sebagai berkas bernomor di repositori, diperiksa
+  Perubahan skema ditulis sebagai file bernomor di repositori, diperiksa
   lewat \textit{code review}, dan dijalankan oleh \textit{pipeline} yang sama
   untuk seluruh lingkungan.
   \vspace{2pt}
   \begin{enumerate}
     \item Migrasi yang sudah dijalankan tidak pernah diubah lagi. Perubahan
-          berikutnya ditulis sebagai berkas baru.
+          berikutnya ditulis sebagai file baru.
     \item Tiap migrasi dapat dijalankan pada basis data kosong maupun yang
           sudah berisi.
     \item Migrasi dijalankan sebelum versi aplikasi baru dinyalakan, sehingga
@@ -1741,7 +1741,7 @@ python3 -m venv ../.venv
   \begin{enumerate}
     \item Jalankan penyiapan, lalu pastikan jumlah barisnya sesuai.
     \item Jalankan \texttt{03-query-baseline.sql}, lalu simpan seluruh
-          keluarannya ke berkas.
+          keluarannya ke file.
     \item Untuk tiap \textit{query}, catat baris yang dikembalikan, \textit{node}
           pemindaian teratas, \texttt{Rows Removed by Filter}, dan
           \texttt{Execution Time}.
@@ -1765,7 +1765,7 @@ grep -E "^===|Rows Removed by Filter|Execution Time" baseline.txt
 
   \vspace{4pt}
   \begin{itemize}
-    \item Berkas ini menjalankan \texttt{EXPLAIN (ANALYZE, BUFFERS)} untuk Q1
+    \item File ini menjalankan \texttt{EXPLAIN (ANALYZE, BUFFERS)} untuk Q1
           sampai Q4, lalu keluarannya disimpan ke \texttt{baseline.txt}.
     \item \texttt{grep} pertama menampilkan baris pertama rencana, tempat
           jumlah baris yang dikembalikan dibaca. \texttt{grep} kedua
@@ -1782,7 +1782,7 @@ source ../.venv/bin/activate
 python ukur-query.py query/q1.sql 20
 
 # Keluarannya:
-# Berkas       : query/q1.sql
+# File         : query/q1.sql
 # Ulangan      : 20, jalankan pertama dibuang
 # p50          :    5.602 ms
 # p95          :    5.905 ms

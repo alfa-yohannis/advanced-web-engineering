@@ -2,7 +2,7 @@
 // compiler, bukan pengguna. Isinya memakai kontrak versi 2 dengan cara klien
 // versi 1: field harga sudah berganti nama menjadi harga_rupiah.
 //
-// Diperiksa dengan: tsc --noEmit --strict pakai-tipe-salah.ts
+// Diperiksa dengan: tsc --noEmit --strict --ignoreConfig pakai-tipe-salah.ts
 
 import type { Buku } from "./tipe-katalog-v2";
 

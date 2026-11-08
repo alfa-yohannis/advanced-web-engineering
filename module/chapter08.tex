@@ -15,7 +15,7 @@
 
 \section{Pendahuluan}
 
-Bab 2 sampai Bab 7 memperbaiki satu aplikasi dari dalam: kuerinya, ingatannya,
+Bab 2 sampai Bab 7 memperbaiki satu aplikasi dari dalam: \textit{query}-nya, ingatannya,
 kecepatannya, pengujiannya, dan pertahanannya. Bab ini mundur satu langkah dan
 menanyakan hal yang lebih awal, yaitu di mana halaman sebaiknya di-\textit{render}.
 Jawabannya menentukan banyak hal sesudahnya, termasuk berapa byte yang harus
@@ -247,7 +247,7 @@ seluruh halaman.
 
 Baris terakhir itu yang sering menentukan pilihan pada halaman publik.
 Katalog, artikel, dan halaman produk tetap berguna tanpa JavaScript,
-sedangkan papan kendali yang penuh interaksi memang tidak.
+sedangkan \textit{dashboard} yang penuh interaksi memang tidak.
 
 \section{Server Component dan Client Component}
 
@@ -370,7 +370,7 @@ Tabel \ref{tab:edge} memuat contohnya.
 \end{table}
 
 Dua hal pada \textit{edge} sering tertukar. Pembagiannya begini. Menyimpan
-salinan di \textit{edge} hanya memindahkan \textit{copy}, dan isinya dapat
+\textit{copy} di \textit{edge} hanya memindahkan data, dan isinya dapat
 \textit{stale} seperti dibahas Bab 4. Menjalankan kode di \textit{edge}
 memindahkan perhitungannya, dan di sana jarak ke basis data justru bertambah
 jauh. Karena itu kode yang banyak menyentuh basis data biasanya lebih cepat
@@ -421,7 +421,7 @@ Memulai dari \textit{monolith} dan memecahnya ketika batasnya sudah
 kelihatan lebih murah daripada memecah lebih dahulu lalu menyatukan kembali
 \cite{fowler-monolith-first}. BFF dipakai ketika dua jenis klien benar-benar
 menuntut bentuk data yang berbeda, misalnya aplikasi mobile yang butuh
-jawaban jauh lebih ringkas daripada halaman web.
+\textit{response} jauh lebih ringkas daripada halaman web.
 
 Contoh ketiganya pada satu toko buku daring. Bentuk
 \textit{monolith} menaruh halaman katalog, pemesanan, dan pengiriman email
@@ -732,7 +732,7 @@ keputusan yang dapat dipertanggungjawabkan.
 
 \begin{enumerate}
   \item Pilih satu kebutuhan nyata, misalnya halaman katalog publik, halaman
-        rincian pesanan milik pengguna yang sudah masuk, atau papan kendali
+        rincian pesanan milik pengguna yang sudah masuk, atau \textit{dashboard}
         admin.
   \item Pilih tiga varian yang masuk akal bagi kebutuhan itu, lalu tulis
         angka pembandingnya dari Tabel \ref{tab:c8-lat1-hasil}.

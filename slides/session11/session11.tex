@@ -144,7 +144,7 @@
   \Huge{\textbf{Batas Komponen dan Komposisi}}
 \end{frame}
 
-\begin{frame}{{\Large Komponen Besar Disusun dari Komponen Kecil}}
+\begin{frame}{{\Large Komponen Besar dari Komponen Kecil}}
   \vspace{4pt}
   \centering
   \begin{tikzpicture}[
@@ -168,6 +168,7 @@
     \node[font=\tiny, gray, anchor=west] at (3.6,-0.4) {menerima satu buku};
     \node[font=\tiny, gray, anchor=west] at (3.6,0.9) {menerima daftar buku};
   \end{tikzpicture}
+
   \vspace{2pt}
   {\small Analoginya beton pracetak: tiap panel dicetak terpisah dengan
   ukuran yang sudah pasti, lalu dipasang di tempatnya.}
@@ -187,7 +188,7 @@
   dengan satu perintah, dan biaya menghidupkannya dapat diukur.}
 \end{frame}
 
-\begin{frame}[fragile]{{\Large Komponen Terkecil: Satu Fungsi, Satu Buku}}
+\begin{frame}[fragile]{{\Large Kartu Buku: Satu Fungsi, Satu Buku}}
   \vspace{2pt}
 \begin{lstlisting}[style=PythonStyle]
 def kartu_buku(buku):
@@ -254,6 +255,7 @@ TOKEN = {
     \texttt{lebar\_halaman} & 720px & lebar maksimum badan halaman \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Pada proyek besar, token inilah yang membuat dua tim yang bekerja
   terpisah tetap menghasilkan tampilan yang sama.}
@@ -286,6 +288,7 @@ TOKEN = {
     \draw[panah] (blok.east) -- ++(0.3,0) |- (browser.west);
     \node[font=\tiny, gray, anchor=north] at (4.3,-1.5) {hanya diperlukan bila komponen dibangun ulang};
   \end{tikzpicture}
+
   \vspace{4pt}
   {\small \textit{Server state} dimiliki server, dan browser memegang
   \textit{copy}-nya. \textit{Client state} lahir dan mati di browser.}
@@ -334,6 +337,7 @@ TOKEN = {
     \textbf{Jumlah dihidupkan} & & \textbf{403} & \textbf{2} \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Varian penuh memasang 200 \textit{listener} di 200 tombol. Varian
   selektif memasang satu \textit{listener} di daftarnya. Perilakunya sama:
@@ -366,7 +370,7 @@ def state_pulau():
   \Huge{\textbf{Hidrasi Penuh dan\\Hidrasi Selektif}}
 \end{frame}
 
-\begin{frame}{{\Large Jangkauan Hidrasi pada Halaman yang Sama}}
+\begin{frame}{{\Large Jangkauan Hidrasi pada Satu Halaman}}
   \vspace{4pt}
   \centering
   \begin{tikzpicture}[
@@ -441,6 +445,7 @@ function hidrasiPenuh() {
     2.000 & selektif & 2 & 553.677 & 0,80 & 0,70--0,90 \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Lima kali pengukuran tiap varian, yang dicatat nilai tengahnya.}
 \end{frame}
@@ -486,6 +491,7 @@ function hidrasiPenuh() {
     \draw[panah] (fragmen) -- (wilayah);
     \draw[panah, dashed] (dokumen.west) -- ++(-0.5,0) |- (judul.east);
   \end{tikzpicture}
+
   \vspace{2pt}
   {\small Analoginya ruang kuliah dengan satu papan tulis: dinding dan
   mejanya tidak dibongkar tiap kali mata kuliahnya berganti.}
@@ -508,6 +514,7 @@ function hidrasiPenuh() {
     \texttt{/gagal} & 500 & 1.023 & 169 & 16,5 \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Baris pertama dibiarkan apa adanya walaupun melawan harapan:
   fragmen katalog 98,5 persen sebesar dokumennya, karena yang dituju memang
@@ -576,6 +583,7 @@ async function muatWilayah(alamat) {
     \texttt{/kerangka/katalog?saring=jaringan} & 33 baris & 33 baris & ada \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Kedua kolom angkanya sama, dan kesamaan itulah hasilnya: tidak ada
   satu baris katalog pun yang bergantung pada skrip. Pengujiannya memakai Content Security Policy (CSP)
@@ -625,7 +633,7 @@ python3 aplikasi.py &
   \Huge{\textbf{Latihan 1:\\Komponen dan State}}
 \end{frame}
 
-\begin{frame}[fragile]{{\Large Menghitung Komponen dan Ukuran Halaman}}
+\begin{frame}[fragile]{{\Large Jumlah Komponen dan Ukuran Halaman}}
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
 curl -s http://127.0.0.1:8080/penuh | grep -c 'data-komponen='
@@ -682,6 +690,7 @@ python3 ukur-hidrasi.py
     2.000 & \dots & \dots & \dots & \dots \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Angka milidetik tiap mahasiswa akan berbeda, karena bergantung pada
   komputernya. Yang dilaporkan pola perbandingannya, bukan angka persisnya.}

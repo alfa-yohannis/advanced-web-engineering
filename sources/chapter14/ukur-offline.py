@@ -78,7 +78,7 @@ def jumlah_permintaan_server():
 
 def cetak_baris(nama, server_hidup, hasil, permintaan):
   """Mencetak satu baris hasil kunjungan, ditambah teks error bila ada."""
-  server = "hidup" if server_hidup else "mati"
+  server = "hidup" if server_hidup else "down"
   tampil = f"{hasil['tampilMs']:.0f}" if hasil["tampilMs"] else "-"
   print(f"  {nama:<{LEBAR_KUNJUNGAN}} {server:<6} {hasil['buku']:>4}  "
         f"{hasil['sumber']:<{LEBAR_SUMBER}} "

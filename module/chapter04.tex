@@ -4,7 +4,7 @@
 \section*{Tujuan Pembelajaran}
 \begin{itemize}
   \item Menjelaskan cara browser, Content Delivery Network (CDN), dan
-        \textit{cache} aplikasi memutuskan apakah sebuah jawaban boleh dipakai
+        \textit{cache} aplikasi memutuskan apakah sebuah \textit{response} boleh dipakai
         ulang, berdasarkan header \texttt{Cache-Control}, \texttt{ETag}, dan
         masa berlakunya.
   \item Mengukur untung rugi pola \textit{cache-aside}, termasuk data \textit{stale} dan
@@ -17,10 +17,10 @@
 \section{Pendahuluan}
 
 Bab 3 ditutup dengan \textit{query} buku terlaris 30 hari yang tetap memakan puluhan
-milidetik walaupun indeksnya sudah dipasang. Jawaban \textit{query} itu sama untuk semua
+milidetik walaupun indeksnya sudah dipasang. Hasil \textit{query} itu sama untuk semua
 pengunjung dan hanya berubah sedikit dari menit ke menit. Menghitungnya ulang
 untuk setiap permintaan adalah pekerjaan yang terbuang. \textit{Caching}
-menyimpan jawaban yang sudah jadi, lalu memakainya lagi untuk permintaan
+menyimpan hasil yang sudah jadi, lalu memakainya lagi untuk permintaan
 berikutnya.
 
 \textit{Copy} itu ada \textit{tradeoff}-nya. \textit{Copy} dapat tertinggal dari data aslinya, dan
@@ -42,14 +42,14 @@ breaker}. Referensi utamanya adalah dokumen Request for Comments (RFC) 9111
 \section{Caching di Browser dan HTTP}
 \label{sec:cache-http}
 
-Browser menyimpan \textit{copy} jawaban yang pernah diterimanya. Sebelum memakai
+Browser menyimpan \textit{copy} \textit{response} yang pernah diterimanya. Sebelum memakai
 \textit{copy} itu lagi, browser memeriksa apakah \textit{copy}-nya masih \textit{fresh}. \textit{Copy}
 yang \textit{fresh} langsung dipakai tanpa menghubungi server sama sekali. \textit{Copy} yang
 sudah \textit{stale} tidak langsung dibuang. Browser bertanya dulu ke server apakah isinya
 berubah, sambil menyebutkan tanda versi \textit{copy} yang dimilikinya. Tanda versi
 ini dikirim server dalam header \texttt{ETag}, lalu dikirim balik oleh browser
 dalam header \texttt{If-None-Match}. Nilai \texttt{ETag} diturunkan server dari
-isi jawabannya, sehingga nilainya ikut berubah begitu isinya berubah. Bila isinya belum berubah, server menjawab
+isi \textit{response}-nya, sehingga nilainya ikut berubah begitu isinya berubah. Bila isinya belum berubah, server menjawab
 \texttt{304 Not Modified} tanpa isi, dan browser memakai \textit{copy} lamanya. Bila
 sudah berubah, server mengirim isi baru dengan status \texttt{200}
 \cite{rfc9111}.
@@ -94,7 +94,7 @@ setiap kali sebuah sumber diminta.
     \draw[panah] (tanya.east) -- node[ket, above, sloped] {sama} (tetap.west);
     \draw[panah] (tanya.east) -- node[ket, below, sloped] {berubah} (baru.west);
   \end{tikzpicture}
-  \caption{Keputusan browser sebelum memakai \textit{copy} jawaban}
+  \caption{Keputusan browser sebelum memakai \textit{copy} \textit{response}}
   \label{fig:alur-cache-http}
 \end{figure}
 
@@ -110,13 +110,13 @@ paling sering dipakai \cite{rfc9111, rfc5861, rfc8246}.
     \hline
     \textbf{Perintah} & \textbf{Artinya} \\
     \hline
-    \texttt{max-age=N} & \textit{Copy} tetap \textit{fresh} selama N detik sejak jawaban dibuat. Selama itu server tidak ditanya. \\
+    \texttt{max-age=N} & \textit{Copy} tetap \textit{fresh} selama N detik sejak \textit{response} dibuat. Selama itu server tidak ditanya. \\
     \hline
     \texttt{s-maxage=N} & Sama dengan \texttt{max-age}, tetapi khusus untuk \textit{cache} bersama seperti CDN. Browser mengabaikannya. \\
     \hline
     \texttt{no-cache} & \textit{Copy} boleh disimpan, tetapi setiap pemakaian wajib ditanyakan ulang ke server. \\
     \hline
-    \texttt{no-store} & Jawaban tidak boleh disimpan sama sekali, di mana pun. \\
+    \texttt{no-store} & \textit{Response} tidak boleh disimpan sama sekali, di mana pun. \\
     \hline
     \texttt{private} & Hanya browser pengguna itu yang boleh menyimpan. CDN dan \textit{proxy} tidak boleh. \\
     \hline
@@ -132,9 +132,9 @@ paling sering dipakai \cite{rfc9111, rfc5861, rfc8246}.
 \end{table}
 
 Dua perintah pada tabel itu sering tertukar, yaitu \texttt{no-cache} dan
-\texttt{no-store}. Pembagiannya begini. \texttt{no-cache} membolehkan jawaban
+\texttt{no-store}. Pembagiannya begini. \texttt{no-cache} membolehkan \textit{response}
 disimpan, tetapi setiap pemakaiannya harus ditanyakan ulang ke server.
-\texttt{no-store} melarang jawaban disimpan sama sekali. Nama
+\texttt{no-store} melarang \textit{response} disimpan sama sekali. Nama
 \texttt{no-cache} menyesatkan, karena halaman yang diberi perintah itu tetap
 tersimpan di browser. Untuk halaman yang tidak boleh tertinggal di komputer
 pengguna, misalnya halaman rekening, perintah yang dipakai adalah
@@ -143,13 +143,13 @@ pengguna, misalnya halaman rekening, perintah yang dipakai adalah
 Dua contoh dari aplikasi pada bab ini, yaitu \berkas{sources/chapter04/aplikasi.py}:
 
 \begin{enumerate}
-  \item Berkas JavaScript aplikasi disimpan sebagai
+  \item File JavaScript aplikasi disimpan sebagai
         \berkas{sources/chapter04/statis/app.3f9a2c.js}. Potongan
-        \texttt{3f9a2c} di dalam namanya diturunkan dari isi berkas, sehingga
+        \texttt{3f9a2c} di dalam namanya diturunkan dari isi file, sehingga
         disebut \textit{fingerprinted asset}. Server mengirimnya dengan
         \texttt{max-age=31536000}, yaitu satu tahun, ditambah
         \texttt{immutable}. Ketika isinya berubah, namanya ikut berubah,
-        misalnya menjadi \texttt{app.9b1e07.js}. Browser pun mengunduh berkas
+        misalnya menjadi \texttt{app.9b1e07.js}. Browser pun mengunduh file
         baru tanpa menunggu \textit{copy} lama kedaluwarsa.
   \item Alamat halaman HyperText Markup Language (HTML) tidak dapat diganti
         setiap kali isinya berubah,
@@ -157,7 +157,7 @@ Dua contoh dari aplikasi pada bab ini, yaitu \berkas{sources/chapter04/aplikasi.
         \berkas{sources/chapter04/statis/index.html} dikirim dengan
         \texttt{no-cache} dan \texttt{ETag}. Permintaan pertama
         menerima 331 byte. Permintaan yang membawa \texttt{If-None-Match}
-        menerima status 304 dengan 0 byte. Jawaban 304 menghemat isi, tetapi
+        menerima status 304 dengan 0 byte. \textit{Response} 304 menghemat isi, tetapi
         browser tetap menunggu satu \textit{round-trip time} (RTT) untuk
         mendapatkannya.
 \end{enumerate}
@@ -202,16 +202,16 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
 Pertanyaan kemudian muncul: bagaimana bila server tidak mengirim
 \texttt{Cache-Control} sama sekali? Bab 2 menemukan keadaan ini pada aset situs
 kampus, yang hanya mengirim \texttt{Last-Modified} dan \texttt{ETag}. Dalam
-keadaan itu RFC 9111 membolehkan browser menebak masa \textit{fresh} dari umur berkas,
-dan menyebut sepersepuluh selang sejak berkas terakhir diubah sebagai angka
-yang lazim \cite{rfc9111}. Berkas \texttt{stylenew.css} milik situs kampus
+keadaan itu RFC 9111 membolehkan browser menebak masa \textit{fresh} dari umur file,
+dan menyebut sepersepuluh selang sejak file terakhir diubah sebagai angka
+yang lazim \cite{rfc9111}. File \texttt{stylenew.css} milik situs kampus
 terakhir diubah pada 14 Maret 2025. Pada pemeriksaan tanggal 10 September 2026
 umurnya sekitar 545 hari, sehingga browser boleh menganggapnya \textit{fresh} sekitar
 54 hari tanpa bertanya ke server. Itulah sebab aset yang tercatat 0 milidetik
 pada Latihan 3 di Bab 2.
 
 Tebakan semacam itu jarang cocok dengan kebutuhan pemilik situs. Kebijakan
-yang lebih aman ditulis sendiri untuk tiap jenis sumber, termasuk jawaban
+yang lebih aman ditulis sendiri untuk tiap jenis sumber, termasuk \textit{response}
 Application Programming Interface (API), seperti pada Tabel
 \ref{tab:kebijakan-sumber}.
 
@@ -239,7 +239,7 @@ Application Programming Interface (API), seperti pada Tabel
 Aplikasi latihan pada bab ini menyimpang dari baris ketiga tabel tersebut.
 Tetapan \texttt{CACHE\_CONTROL\_API} di dalam
 \berkas{sources/chapter04/aplikasi.py} berisi \texttt{no-store}, sehingga
-jawaban API tidak tersimpan di browser maupun di \textit{cache} perantara.
+\textit{response} API tidak tersimpan di browser maupun di \textit{cache} perantara.
 Satu-satunya \textit{copy} yang tersisa ada di Redis, sehingga pengaruh
 \textit{cache-aside} terbaca bersih pada pengukuran di Seksi
 \ref{sec:cache-aside}.
@@ -288,7 +288,7 @@ letaknya jauh.
     \node[font=\tiny, gray, anchor=north east] at (9.4,-3.2)
       {makin dekat ke data: makin tahu kapan data berubah};
   \end{tikzpicture}
-  \caption{Titik-titik tempat \textit{copy} jawaban dapat disimpan}
+  \caption{Titik-titik tempat \textit{copy} \textit{response} dapat disimpan}
   \label{fig:lapisan-cache}
 \end{figure}
 
@@ -304,7 +304,7 @@ lama sebuah kesalahan bertahan.
     \hline
     \textbf{Titik} & \textbf{Dipakai oleh} & \textbf{Diatur lewat} & \textbf{Cara membuang \textit{copy}} \\
     \hline
-    Browser & Satu pengguna & Header \texttt{Cache-Control} dari server & Tidak dapat dari server. Tunggu kedaluwarsa, atau ganti nama berkas. \\
+    Browser & Satu pengguna & Header \texttt{Cache-Control} dari server & Tidak dapat dari server. Tunggu kedaluwarsa, atau ganti nama file. \\
     \hline
     CDN & Banyak pengguna di satu wilayah & \texttt{Cache-Control}, terutama \texttt{s-maxage}, dan aturan di panel CDN & Perintah \textit{purge} ke penyedia CDN. \\
     \hline
@@ -359,7 +359,7 @@ berlakunya, lalu memakainya. Masa berlaku ini disebut \textit{Time To Live}
 (TTL). HIT dan MISS bukan singkatan, melainkan kata Inggris untuk ketemu dan
 tidak ketemu, dipakai sebagai nama status \textit{cache}. Untuk menulis, aplikasi mengubah basis data lebih dahulu, lalu menghapus
 kunci terkait di Redis. Redis tidak pernah menjadi \textit{source of truth}. Bila Redis
-kosong atau \textit{down}, aplikasi tetap memberi jawaban yang benar, hanya lebih
+kosong atau \textit{down}, aplikasi tetap memberi \textit{response} yang benar, hanya lebih
 lambat.
 
 Analoginya warung dengan satu kasir dan satu kulkas di depan. Minuman laris
@@ -441,7 +441,7 @@ Tabel \ref{tab:hasil-ttfb} memuat hasilnya untuk tiga keadaan.
   \label{tab:hasil-ttfb}
   \begin{tabularx}{\textwidth}{Xrrrl}
     \hline
-    \textbf{Keadaan} & \textbf{p50} & \textbf{p95} & \textbf{Terbesar} & \textbf{Asal jawaban} \\
+    \textbf{Keadaan} & \textbf{p50} & \textbf{p95} & \textbf{Terbesar} & \textbf{Asal \textit{response}} \\
     \hline
     Tanpa \textit{cache}, 50 permintaan & 70,44 & 81,99 & 94,41 & 50 \textit{query} ke basis data \\
     \hline
@@ -550,7 +550,7 @@ Pembaca yang lambat lalu menyimpan harga lama pada t5, dan harga itu bertahan
 sampai TTL habis. Seperti \textit{lost update} pada Bab 3, tidak ada \textit{error} yang
 muncul.
 
-Berkas \berkas{sources/chapter04/invalidasi.py} memaksa urutan tersebut terjadi,
+File \berkas{sources/chapter04/invalidasi.py} memaksa urutan tersebut terjadi,
 lalu mengukur berapa lama harga lama masih terbaca. Harga diubah dari 50.000
 menjadi 55.000, TTL-nya 5 detik, dan pembaca memeriksa setiap 100 milidetik.
 Tabel \ref{tab:hasil-invalidasi} memuat hasilnya.
@@ -620,7 +620,7 @@ yang sama ke basis data. Kejadian ini disebut \textit{cache stampede}.
 Analoginya warung yang kulkasnya mendadak kosong saat jam istirahat: sepuluh
 pembeli sekaligus pergi ke gudang belakang untuk mengambil minuman yang sama.
 
-Berkas \berkas{sources/chapter04/stampede.py} melepas 50 permintaan serentak
+File \berkas{sources/chapter04/stampede.py} melepas 50 permintaan serentak
 tepat setelah kunci kedaluwarsa, dengan \textit{pool} berisi 10 koneksi ke basis data. Tiga
 cara dibandingkan. Pada \texttt{tanpa\_pengaman}, tiap permintaan yang meleset
 menghitung sendiri. Pada \texttt{single\_flight}, hanya satu permintaan yang
@@ -757,7 +757,7 @@ biasa.
     \node[baris] at (-0.15,0) {Biasa};
     \node[langkah, minimum width=1.2cm, fill=blue!8] at (0,0) {klik};
     \node[langkah, minimum width=3.6cm, fill=gray!35] at (1.2,0)
-      {pengguna menunggu jawaban server};
+      {pengguna menunggu \textit{response} server};
     \node[langkah, minimum width=2.0cm, fill=green!10] at (4.8,0)
       {layar berubah};
     \node[baris] at (-0.15,-1.3) {Optimistis};
@@ -765,13 +765,13 @@ biasa.
     \node[langkah, minimum width=2.0cm, fill=green!10] at (1.2,-1.3)
       {layar berubah};
     \node[langkah, minimum width=3.6cm, fill=blue!8] at (3.2,-1.3)
-      {jawaban diperiksa di belakang layar};
+      {\textit{response} diperiksa di belakang layar};
     \node[anchor=west, font=\tiny, gray] at (6.9,-1.3)
       {bila gagal: dikembalikan};
     \draw[-{Stealth[length=2mm]}, gray] (0,-2.0) -- (8.6,-2.0)
       node[anchor=north east, font=\tiny] {waktu};
   \end{tikzpicture}
-  \caption{Cara biasa membuat pengguna menunggu jawaban server, sedangkan
+  \caption{Cara biasa membuat pengguna menunggu \textit{response} server, sedangkan
            \textit{optimistic update} memindahkan penantian itu ke belakang
            layar}
   \label{fig:optimistic-update}
@@ -849,7 +849,7 @@ seperti pada Tabel \ref{tab:dua-optimistis}.
     \hline
     Bila anggapannya salah & Tampilan dikembalikan ke keadaan sebelum klik & Penulisan ditolak, lalu diulang dari awal \\
     \hline
-    Tujuannya & Pengguna tidak menunggu jawaban server & Tidak ada gembok yang ditahan selama transaksi \\
+    Tujuannya & Pengguna tidak menunggu \textit{response} server & Tidak ada gembok yang ditahan selama transaksi \\
     \hline
   \end{tabularx}
 \end{table}
@@ -910,20 +910,20 @@ serentak. \textit{Circuit breaker} berarti berhenti menelepon selama satu jam bi
 sepanjang pagi telepon tidak diangkat, sambil menempel catatan ``loket tutup''
 untuk teman lain, lalu mencoba sekali lagi setelah satu jam lewat.
 
-Keempat cara diukur memakai dua berkas. Berkas
+Keempat cara diukur memakai dua file. File
 \berkas{sources/chapter04/layanan-lambat.py} adalah layanan biaya kirim tiruan
-yang biasanya menjawab dalam 20 milidetik, tetapi sebagian jawabannya sengaja
-ditahan 2 detik. Berkas \berkas{sources/chapter04/resilience.py} menjalankan
+yang biasanya menjawab dalam 20 milidetik, tetapi sebagian \textit{response}-nya sengaja
+ditahan 2 detik. File \berkas{sources/chapter04/resilience.py} menjalankan
 10 \textit{worker} yang bersama-sama mengirim 100 permintaan, dengan empat cara:
 tanpa batas waktu, batas waktu 300 milidetik, batas waktu ditambah \textit{retry}
 sampai tiga percobaan, dan semua itu ditambah \textit{circuit breaker}. Kedua
-berkas hanya
+file hanya
 dijalankan terhadap layanan milik sendiri. Tabel \ref{tab:hasil-sesekali}
-memuat hasil ketika satu dari lima jawaban ditahan.
+memuat hasil ketika satu dari lima \textit{response} ditahan.
 
 \begin{table}[!htb]
   \centering
-  \caption{Layanan sesekali lambat, 20 persen jawaban ditahan 2 detik, waktu
+  \caption{Layanan sesekali lambat, 20 persen \textit{response} ditahan 2 detik, waktu
            dalam milidetik, hasil pengukuran nyata}
   \label{tab:hasil-sesekali}
   \begin{tabularx}{\textwidth}{Xrrrrr}
@@ -951,12 +951,12 @@ karena ketiga percobaan harus sama-sama tertahan agar gagal. Hasil 100 persen
 berarti tidak ada permintaan yang tertahan tiga kali berturut-turut. Pada 100
 permintaan, hal itu wajar terjadi karena undian acak.
 
-Tabel \ref{tab:hasil-lambat} memuat hasil ketika seluruh jawaban ditahan,
+Tabel \ref{tab:hasil-lambat} memuat hasil ketika seluruh \textit{response} ditahan,
 yaitu keadaan layanan yang sedang kewalahan.
 
 \begin{table}[!htb]
   \centering
-  \caption{Layanan seluruhnya lambat, semua jawaban ditahan 2 detik, waktu
+  \caption{Layanan seluruhnya lambat, semua \textit{response} ditahan 2 detik, waktu
            dalam milidetik, hasil pengukuran nyata}
   \label{tab:hasil-lambat}
   \begin{tabularx}{\textwidth}{Xrrrrr}
@@ -1061,7 +1061,7 @@ def hitung_jeda_sebelum_retry(percobaan_ke, pengacak):
 yang hasil akhirnya sama walaupun dikirim berkali-kali. Menurut RFC 9110,
 \texttt{GET}, \texttt{PUT}, dan \texttt{DELETE} bersifat idempoten, sedangkan
 \texttt{POST} tidak \cite{rfc9110}. \textit{Retry} pada \texttt{POST}
-pembayaran yang jawabannya hilang di jalan dapat menagih pembeli dua kali. Cara
+pembayaran yang \textit{response}-nya hilang di jalan dapat menagih pembeli dua kali. Cara
 menanganinya dibahas pada Bab 12.
 
 \textit{Retry} juga berlipat bila dipasang di banyak lapisan. Bila browser,
@@ -1113,16 +1113,16 @@ seluruh permintaan, panggilan ke layanan biaya kirim di dalamnya harus diberi
 batas lebih kecil, misalnya 300 milidetik seperti pada percobaan ini, agar
 masih ada sisa waktu untuk pekerjaan lain. Kedua, ketika \textit{circuit
 breaker} dalam keadaan \textit{open}, aplikasi tetap perlu menjawab sesuatu.
-Untuk biaya kirim, jawabannya dapat
+Untuk biaya kirim, \textit{response}-nya dapat
 berupa tarif terakhir yang tersimpan di \textit{cache}, atau pesan bahwa biaya
 kirim dihitung saat pembayaran. Perintah \texttt{stale-if-error} pada Tabel
 \ref{tab:cache-control} adalah bentuk yang sama pada HTTP.
 
 \section{Ringkasan}
 
-Browser menyimpan \textit{copy} jawaban dan memutuskan pemakaiannya dari header
+Browser menyimpan \textit{copy} \textit{response} dan memutuskan pemakaiannya dari header
 \texttt{Cache-Control}. \textit{Copy} yang \textit{fresh} dipakai tanpa jaringan. \textit{Copy} yang
-\textit{stale} ditanyakan ulang lewat \texttt{ETag}, dan jawaban 304 menghemat isi tetapi
+\textit{stale} ditanyakan ulang lewat \texttt{ETag}, dan \textit{response} 304 menghemat isi tetapi
 tetap membutuhkan satu RTT. Perintah \texttt{no-cache} membolehkan \textit{copy}
 disimpan, sedangkan \texttt{no-store} melarangnya. \textit{Fingerprinted asset}
 boleh disimpan setahun karena namanya berganti bersama isinya. Server yang
@@ -1164,7 +1164,7 @@ pengukuran.
 
 \section{Latihan}
 
-Seluruh berkas yang dipakai pada latihan ini tersedia di
+Seluruh file yang dipakai pada latihan ini tersedia di
 \berkas{sources/chapter04/}, dihitung relatif terhadap akar repositori. Basis
 data, Redis, dan layanan biaya kirim dijalankan di komputer sendiri, sehingga
 tidak ada sistem milik pihak lain yang dibebani. Satu-satunya permintaan ke
@@ -1239,7 +1239,7 @@ bersyarat.
         memperlihatkan contoh yang sudah terisi.
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa halaman selalu
         ditanyakan ulang, sedangkan aset aplikasi tidak pernah ditanyakan
-        ulang? Kedua, berapa byte yang dihemat oleh jawaban 304 pada halaman
+        ulang? Kedua, berapa byte yang dihemat oleh \textit{response} 304 pada halaman
         dan pada aset kampus, dan berapa RTT yang dihemat? Ketiga, apa yang
         tertulis pada kolom \emph{Size} untuk \texttt{app.3f9a2c.js} pada muat
         ulang kedua, dan mengapa?
@@ -1307,10 +1307,10 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
 
 Satu hal pada contoh tersebut layak diperhatikan. \texttt{ETag} aset kampus,
 yaitu \texttt{67d3dca2-965}, tersusun dari dua bilangan heksadesimal. Bilangan
-\texttt{965} sama dengan 2.405, yaitu ukuran berkasnya dalam byte. Bilangan
+\texttt{965} sama dengan 2.405, yaitu ukuran file-nya dalam byte. Bilangan
 \texttt{67d3dca2} sama dengan 1.741.937.826 detik sejak 1 Januari 1970, yaitu
-waktu \texttt{last-modified} berkas tersebut. Server kampus menurunkan tanda
-versinya dari waktu ubah dan ukuran berkas, tidak dari isinya seperti
+waktu \texttt{last-modified} file tersebut. Server kampus menurunkan tanda
+versinya dari waktu ubah dan ukuran file, tidak dari isinya seperti
 \texttt{aplikasi.py}. Masa \textit{fresh} pada baris ketiga bergantung pada tanggal
 pemeriksaan, sehingga angka tiap mahasiswa akan berbeda.
 
@@ -1392,7 +1392,7 @@ python ukur-ttfb.py http://localhost:8000/api/terlaris-cache 50
 \end{table}
 
 Baris ketiga pada contoh terisi tampak janggal, karena \textit{cache} yang
-seharusnya mempercepat justru membuat jawaban dua setengah kali lebih lambat.
+seharusnya mempercepat justru membuat \textit{response} dua setengah kali lebih lambat.
 Penyebabnya dua kali penantian 50 milidetik, sekali untuk GET dan sekali untuk
 SET, ditambah \textit{query} yang tetap harus dijalankan. Aplikasi tetap menjawab
 seluruh 20 permintaan karena \textit{error} Redis ditelan dan \textit{retry} bawaan

@@ -24,7 +24,7 @@ banyak layanan menambah jaringan di antara bagian yang dahulu cukup saling
 memanggil.
 
 Bab ini menjawabnya dengan pengukuran. Replika ditambah sampai satu
-komponen bersama penuh. Pemanggilan fungsi dibandingkan dengan pemanggilan
+komponen bersama penuh. Panggilan fungsi dibandingkan dengan panggilan
 lewat jaringan. Dua cara membagi data diadu, lalu seluruh angkanya disusun
 menjadi satu rencana kapasitas. Bagian akhir membahas teknologi yang sedang
 tumbuh, yaitu PWA, WebAssembly, \textit{serverless}, dan LLM, karena
@@ -208,7 +208,7 @@ di-\textit{deploy} sendiri-sendiri, masing-masing memiliki datanya sendiri,
 dan saling berbicara lewat jaringan, umumnya dengan HyperText Transfer
 Protocol (HTTP) \cite{newman2021microservices}. Bab 8
 sudah membandingkan keduanya dari sisi arsitektur. Bab ini mengukur biaya yang
-paling sering dilupakan, yaitu harga satu pemanggilan.
+paling sering dilupakan, yaitu biaya satu panggilan.
 
 Analoginya seperti kantor fakultas. Pada \textit{monolith}, bagian keuangan
 cukup menoleh ke meja sebelah untuk menanyakan harga. Pada
@@ -310,9 +310,9 @@ penyebut yang amat kecil, sehingga berubah cukup jauh antara dua pengukuran.
 Yang tetap adalah ordenya: satu panggilan jaringan berharga ribuan kali satu
 panggilan fungsi.
 
-Biaya itu baru sisi yang terlihat. Pemanggilan lewat jaringan juga dapat
+Biaya itu baru sisi yang terlihat. Panggilan lewat jaringan juga dapat
 gagal sebagian, sehingga \textit{timeout}, \textit{retry}, dan \textit{circuit
-breaker} dari Bab 4 menjadi wajib. Pemanggilan yang menyebar ke banyak
+breaker} dari Bab 4 menjadi wajib. Panggilan yang menyebar ke banyak
 layanan juga memperbesar ekor \textit{latency}. Bila tiap panggilan punya
 peluang 1\% untuk lambat, satu halaman dengan sepuluh panggilan punya peluang
 $1 - 0{,}99^{10} \approx 9{,}6\%$ untuk terkena setidaknya satu panggilan lambat
@@ -368,7 +368,7 @@ yang diskalakan di bab ini.
 Tiga tanda membantu memeriksa batasnya. Pertama, satu perubahan kebutuhan
 jarang menyentuh lebih dari satu layanan. Kedua, satu layanan tidak perlu
 menanyai layanan lain berkali-kali untuk menjawab satu permintaan, karena
-pemanggilan seperti itu berharga ribuan kali pemanggilan fungsi, seperti
+panggilan seperti itu berharga ribuan kali panggilan fungsi, seperti
 terukur di seksi sebelumnya. Ketiga, batasnya cocok dengan susunan tim, karena
 sistem cenderung meniru jalur komunikasi organisasi yang membuatnya
 \cite{conway1968committees}.
@@ -546,7 +546,7 @@ tiap layanan tumbuh dan dibatasi oleh hal yang berbeda. Listing
 \end{lstlisting}
 
 Tiap \textit{budget} hanya 60\% dari kapasitas terukur. Sisanya adalah ruang
-untuk lonjakan dan untuk \textit{node} yang mati, sehingga rencananya tidak bergantung
+untuk lonjakan dan untuk \textit{node} yang \textit{down}, sehingga rencananya tidak bergantung
 pada keadaan yang serba lancar. Kapasitas satu replika, 106,8 permintaan per
 detik, dan kapasitas satu \textit{node} basis data, 198,2 \textit{query} per detik,
 diambil dari Tabel \ref{tab:skala14}. Biaya per \textit{node} hanyalah asumsi contoh,
@@ -676,7 +676,7 @@ sendiri
 \cite{w3c-service-workers}.
 
 Analoginya seperti petugas loket perpustakaan yang menyimpan \textit{copy} daftar
-buku di laci. Ketika sistem pusat mati, petugas tetap dapat menunjukkan daftar
+buku di laci. Ketika sistem pusat \textit{down}, petugas tetap dapat menunjukkan daftar
 terakhir, lengkap dengan tanggal \textit{copy}-nya, alih-alih menyuruh mahasiswa
 pulang. Mahasiswa yang belum pernah datang, sayangnya, tidak punya \textit{copy}
 apa pun di laci itu.
@@ -745,7 +745,7 @@ lewat Chrome DevTools Protocol, sehingga alat ukur menunggu sampai
 \begin{table}[!htb]
   \centering
   \caption{Empat kunjungan ke katalog PWA, dua di antaranya ketika server
-           mati, hasil pengukuran nyata}
+           \textit{down}, hasil pengukuran nyata}
   \label{tab:offline14}
   \begin{tabularx}{\textwidth}{Xlllll}
     \hline
@@ -755,19 +755,19 @@ lewat Chrome DevTools Protocol, sehingga alat ukur menunggu sampai
     \hline
     2, profil sama & hidup & 8 & jaringan & 62 & 2 \\
     \hline
-    3, profil sama & mati & 8 & \textit{cache} & 31 & 0 \\
+    3, profil sama & \textit{down} & 8 & \textit{cache} & 31 & 0 \\
     \hline
-    4, profil baru & mati & 0 & gagal & - & 0 \\
+    4, profil baru & \textit{down} & 0 & gagal & - & 0 \\
     \hline
   \end{tabularx}
 \end{table}
 
 Dua contoh dari tabel itu:
 \begin{enumerate}
-  \item Pada kunjungan ketiga servernya sudah mati, tetapi delapan buku tetap
+  \item Pada kunjungan ketiga servernya sudah \textit{down}, tetapi delapan buku tetap
         tampil dalam 31 milidetik, dan tidak satu permintaan pun sampai ke
         server. Seluruh halaman dan datanya datang dari \textit{cache}.
-  \item Pada kunjungan keempat servernya sama-sama mati, tetapi profilnya
+  \item Pada kunjungan keempat servernya sama-sama \textit{down}, tetapi profilnya
         baru. Chrome melaporkan \texttt{net::ERR\_CONNECTION\_REFUSED}, dan
         tidak ada buku yang tampil. \textit{Service worker} hanya melindungi
         pengguna yang pernah datang.
@@ -837,9 +837,9 @@ pada Bab 5.
 \textit{Serverless} memindahkan urusan server ke penyedia. Pengembang hanya
 menulis satu fungsi, penyedia menyalakannya ketika ada permintaan,
 menambah \textit{copy}-nya ketika permintaan bertambah, mematikannya ketika sepi,
-lalu menagih per pemanggilan \cite{jonas2019serverless}. Harganya adalah
-\textit{cold start}: pemanggilan pertama pada \textit{copy} yang baru harus
-menunggu lingkungannya dinyalakan, sedangkan pemanggilan berikutnya pada
+lalu menagih per panggilan \cite{jonas2019serverless}. Harganya adalah
+\textit{cold start}: panggilan pertama pada \textit{copy} yang baru harus
+menunggu lingkungannya dinyalakan, sedangkan panggilan berikutnya pada
 \textit{copy} yang sama, disebut \textit{warm}, langsung dikerjakan
 \cite{aws-lambda-lifecycle}.
 
@@ -851,7 +851,7 @@ dimatikan lagi.
 Fungsi demo bab ini menghitung ongkos kirim, seperti pada Listing
 \ref{lst:fungsi14}. Bentuknya bentuk \textit{handler} \textit{serverless}:
 menerima satu peristiwa, mengembalikan satu hasil, dan tidak menyimpan apa
-pun di antara dua pemanggilan.
+pun di antara dua panggilan.
 
 \begin{lstlisting}[style=PythonStyle, caption={Satu \textit{handler} tanpa \textit{state}, tersedia di \berkas{sources/chapter14/fungsi.py}}, label={lst:fungsi14}]
 def tangani(peristiwa):
@@ -869,7 +869,7 @@ def tangani(peristiwa):
 
 Tabel \ref{tab:coldstart14} membandingkan tiga cara memanggil fungsi yang
 sama. \textit{Warm} memakai satu proses yang terus hidup. \textit{Cold start}
-menyalakan proses baru untuk tiap pemanggilan. Varian ketiga ditambah memuat
+menyalakan proses baru untuk tiap panggilan. Varian ketiga ditambah memuat
 sepuluh modul pustaka standar saat proses dinyalakan, menirukan fungsi yang
 membawa dependensi.
 
@@ -910,7 +910,7 @@ Web Services (AWS) Lambda, dilaporkan menyala dalam waktu sekitar 125 milidetik
 Aturan ini punya dua konsekuensi praktis. Pertama, pekerjaan persiapan,
 misalnya membuka koneksi basis data, ditaruh di luar \textit{handler},
 karena bagian itu dikerjakan sekali per lingkungan lalu dipakai ulang pada
-tiap pemanggilan \textit{warm} \cite{aws-lambda-lifecycle}. Kedua, fungsi
+tiap panggilan \textit{warm} \cite{aws-lambda-lifecycle}. Kedua, fungsi
 yang diskalakan menjadi ratusan \textit{copy} dapat membuka ratusan koneksi
 sekaligus ke satu basis data \cite{aws-lambda-concurrency}, sehingga
 \textit{pool} atau \textit{connection pooler} dari Bab 3 tetap dibutuhkan,
@@ -1077,7 +1077,7 @@ menjadi \textit{bottleneck}, dan empat maupun delapan replika berhenti di
 replika mencapai 347,8 permintaan per detik dengan efisiensi 41\%, karena
 \textit{bottleneck}-nya pindah ke komputer itu sendiri.
 
-Memecah aplikasi menjadi layanan menambah harga pada tiap pemanggilan.
+Memecah aplikasi menjadi layanan menambah biaya pada tiap panggilan.
 Sepuluh panggilan harga memakan 0,0012 milidetik sebagai fungsi dan 1,4436
 milidetik lewat HTTP, lebih dari seribu kali lipat, bahkan di 127.0.0.1.
 Imbalannya adalah layanan yang di-\textit{deploy} dan diskalakan sendiri,
@@ -1093,8 +1093,8 @@ dibagi ke replika baca, sedangkan \textit{cache} katalog menghemat 18 \textit{no
 
 Teknologi yang sedang tumbuh memindahkan masalah yang sama ke tempat baru.
 \textit{Service worker} menampilkan delapan buku dalam 31 milidetik ketika
-server mati, tetapi hanya bagi pengguna yang pernah datang. \textit{Cold
-start} memakan 19,069 milidetik, lebih dari seribu kali pemanggilan
+server \textit{down}, tetapi hanya bagi pengguna yang pernah datang. \textit{Cold
+start} memakan 19,069 milidetik, lebih dari seribu kali panggilan
 \textit{warm}, dan 105,565 milidetik dengan dependensi. \textit{Streaming}
 LLM memajukan token pertama dari 2.983,8 menjadi 601,7 milidetik tanpa
 memajukan selesainya, dan \textit{cache} kecocokan persis tidak mengenali
@@ -1116,8 +1116,8 @@ sendiri proses yang diukurnya.
 
 \berkas{ukur-skala.py} sengaja membebani, tetapi yang dibebaninya hanya
 proses yang dinyalakannya sendiri di 127.0.0.1. Seluruh alat ukur lain
-bersifat mengamati. Angka throughput bergantung pada jumlah core dan
-pembatasan daya komputer, sehingga hasil tiap mahasiswa akan berbeda,
+bersifat mengamati. Angka \textit{throughput} bergantung pada jumlah \textit{core} dan
+batas daya komputer, sehingga hasil tiap mahasiswa akan berbeda,
 sedangkan pola perbandingannya akan sama. Angka pada bab ini diukur dengan
 Python 3.15 dan Chrome 157 pada laptop Intel Core i9-11900H.
 
@@ -1377,7 +1377,7 @@ batas mana yang terlewati lebih dahulu.
 \subsection*{Latihan 4: Mode Offline Progressive Web App}
 
 Latihan ini membuktikan bahwa halaman yang dilindungi \textit{service worker}
-tetap tampil ketika servernya mati, dan bahwa perlindungan itu hanya berlaku
+tetap tampil ketika servernya \textit{down}, dan bahwa perlindungan itu hanya berlaku
 bagi pengguna yang pernah datang.
 
 \begin{enumerate}
@@ -1407,8 +1407,8 @@ python3 ukur-offline.py
 #   Kunjungan       Server Buku  Sumber    Saat mulai    Tampil ms Ke server
 #   1, profil baru  hidup     8  jaringan  belum               377        11
 #   2, profil sama  hidup     8  jaringan  mengendalikan        62         2
-#   3, profil sama  mati      8  cache     mengendalikan        31         0
-#   4, profil baru  mati      0  gagal     -                     -         0
+#   3, profil sama  down      8  cache     mengendalikan        31         0
+#   4, profil baru  down      0  gagal     -                     -         0
 #                   Chrome: net::ERR_CONNECTION_REFUSED
 \end{lstlisting}
 
@@ -1424,9 +1424,9 @@ python3 ukur-offline.py
     \hline
     2, profil sama & hidup & 8 & jaringan & 2 \\
     \hline
-    3, profil sama & mati & 8 & \textit{cache} & 0 \\
+    3, profil sama & \textit{down} & 8 & \textit{cache} & 0 \\
     \hline
-    4, profil baru & mati & 0 & gagal & 0 \\
+    4, profil baru & \textit{down} & 0 & gagal & 0 \\
     \hline
   \end{tabularx}
 \end{table}
@@ -1443,9 +1443,9 @@ python3 ukur-offline.py
     \hline
     2, profil sama & hidup & \dots & \dots & \dots \\
     \hline
-    3, profil sama & mati & \dots & \dots & \dots \\
+    3, profil sama & \textit{down} & \dots & \dots & \dots \\
     \hline
-    4, profil baru & mati & \dots & \dots & \dots \\
+    4, profil baru & \textit{down} & \dots & \dots & \dots \\
     \hline
   \end{tabularx}
 \end{table}
@@ -1471,7 +1471,7 @@ dimuat sebelum fungsinya dipanggil, bukan oleh fungsinya sendiri.
   \item Isi Tabel \ref{tab:c14-lat5-hasil}. Tabel \ref{tab:c14-lat5-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa \textit{cold start}
-        lebih dari seribu kali pemanggilan \textit{warm}, padahal fungsinya
+        lebih dari seribu kali panggilan \textit{warm}, padahal fungsinya
         sama? Kedua, bagian mana dari \textit{cold start} layanan
         \textit{serverless} sungguhan yang tidak terukur di sini? Ketiga,
         mengapa pekerjaan persiapan seperti membuka koneksi basis data

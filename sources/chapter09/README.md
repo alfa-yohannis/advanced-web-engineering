@@ -10,8 +10,8 @@ standar; Docker hanya dipakai pada bagian *container*.
 | `proxy.py` | *Reverse proxy* yang membagi permintaan ke dua versi menurut bobot, sekaligus membuat *trace id* |
 | `rilis.json` | Pembagian rilis: bobot persen untuk versi kedua, beserta alamat kedua versi |
 | `ukur-rilis.py` | Mengukur pembagian yang benar-benar terjadi, dibaca dari header `X-Dilayani` |
-| `metrik.py` | Pembaca metrik format Prometheus, dipakai papan dan alarm |
-| `papan.py` | Papan operasional: permintaan, kegagalan, rata-rata, dan p95 tiap versi |
+| `metrik.py` | Pembaca metrik format Prometheus, dipakai *dashboard* dan alarm |
+| `dashboard.py` | *Dashboard* operasional: permintaan, kegagalan, rata-rata, dan p95 tiap versi |
 | `slo.json` | Tujuan layanan: ketersediaan minimum dan p95 maksimum |
 | `alarm.py` | Menilai layanan terhadap SLO, keluar dengan status 1 bila ada yang dilanggar |
 | `Dockerfile` | Image layanan, hanya menyalin satu file dan tanpa dependensi |
@@ -26,7 +26,7 @@ VERSI=biru PORT=8061 python3 aplikasi.py &
 VERSI=hijau PORT=8062 python3 aplikasi.py &
 python3 proxy.py &
 python3 ukur-rilis.py 200
-python3 papan.py
+python3 dashboard.py
 python3 alarm.py
 ```
 

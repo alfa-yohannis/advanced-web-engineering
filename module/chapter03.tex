@@ -7,7 +7,7 @@
   \item Membaca rencana eksekusi PostgreSQL, lalu menentukan indeks yang tepat
         beserta kasus ketika indeks justru tidak dipakai.
   \item Membuktikan secara terukur bahwa batas transaksi, tingkat isolasi, dan
-        jumlah perjalanan ke basis data menentukan latensi dan kebenaran data.
+        jumlah perjalanan ke basis data menentukan \textit{latency} dan kebenaran data.
 \end{itemize}
 
 \section{Pendahuluan}
@@ -19,7 +19,7 @@ web, bagian terbesarnya dihabiskan di basis data.
 
 Yang membuat lapisan ini sulit adalah biayanya tidak terlihat dari kode. Satu
 \textit{event} yang tampak sepele dapat berubah menjadi ratusan \textit{request}
-ke basis data. Satu kolom yang lupa diberi indeks tidak menimbulkan gejala apa
+ke basis data. Satu kolom yang lupa diberi indeks tidak menimbulkan \textit{symptom} apa
 pun sampai tabelnya membesar. Satu transaksi yang batasnya kelewat lebar
 menahan baris yang dibutuhkan permintaan lain. Ketiganya lolos dari pengujian
 fungsional, karena hasilnya memang benar. Yang salah hanya biayanya.
@@ -243,7 +243,7 @@ ada yang paling benar. Yang ada adalah kecocokan dengan medannya.
 
 Listing \ref{lst:tiga-lapis} menunjukkan ketiganya untuk kebutuhan yang sama,
 yaitu sepuluh pesanan terakhir milik satu pelanggan beserta jumlah itemnya.
-Ketiganya menghasilkan baris yang identik, dan berkas sumbernya membuktikan hal
+Ketiganya menghasilkan baris yang identik, dan file sumbernya membuktikan hal
 itu pada setiap kali dijalankan.
 
 Fungsi \texttt{lewat\_sql\_langsung} pada listing tersebut membuka koneksi
@@ -298,7 +298,7 @@ Tabel \ref{tab:abstraksi} merangkum \textit{trade-off} ketiganya.
     \hline
     \textbf{Tingkat} & \textbf{Kekuatan} & \textbf{Kelemahan} \\
     \hline
-    ORM & Kode singkat, struktur tabel cukup ditulis sekali di kelas model, perubahan skema dicatat sebagai berkas migrasi & SQL yang dikirim tidak terlihat, sehingga N+1 dan indeks hilang mudah lolos \\
+    ORM & Kode singkat, struktur tabel cukup ditulis sekali di kelas model, perubahan skema dicatat sebagai file migrasi & SQL yang dikirim tidak terlihat, sehingga N+1 dan indeks hilang mudah lolos \\
     \hline
     Query builder & Bentuk \textit{query} terbaca, nama kolom diperiksa lebih awal & \textit{Query} rumit menjadi bertele-tele \\
     \hline
@@ -376,13 +376,13 @@ satu permintaan yang sama.
     \node[ket] at (7.35,-1.5) {kunci singkat};
   \end{tikzpicture}
   \caption{Panggilan ke layanan luar dikeluarkan dari batas transaksi, sehingga
-           baris tidak terkunci selama menunggu jawaban jaringan}
+           baris tidak terkunci selama menunggu \textit{response} jaringan}
   \label{fig:batas-transaksi}
 \end{figure}
 
 Aturannya satu kalimat: transaksi hanya memuat pekerjaan basis data, dan
 dibuka selambat mungkin. Panggilan Hypertext Transfer Protocol (HTTP) ke
-layanan luar, pengiriman surel, dan pengunggahan berkas dikeluarkan darinya.
+layanan luar, pengiriman surel, dan pengunggahan file dikeluarkan darinya.
 Alasannya, selama transaksi terbuka, baris yang disentuhnya terkunci bagi
 penulis lain. Panggilan jaringan yang biasanya 200 milidetik dapat menjadi 30
 detik ketika layanan tujuan sedang lambat, dan selama itu pula seluruh
@@ -466,7 +466,7 @@ yang salah dengan \textit{error} yang sampai ke pengguna.
 \section{Konkurensi dan Masalah N+1}
 
 Dua persoalan pada seksi ini sama-sama lahir dari kode yang terlihat benar.
-Yang pertama merusak data, yang kedua merusak latensi.
+Yang pertama merusak data, yang kedua merusak \textit{latency}.
 
 \subsection*{Lost update}
 
@@ -496,7 +496,7 @@ menunjukkan apa yang terjadi ketika ada dua.
 Dua buku terjual, tetapi stok hanya berkurang satu. Tidak ada \textit{error}, tidak ada
 peringatan, dan pengujian dengan satu pengguna tidak akan pernah menemukannya.
 
-Berkas \berkas{sources/chapter03/transaksi-konkuren.py} membuktikannya, sekaligus
+File \berkas{sources/chapter03/transaksi-konkuren.py} membuktikannya, sekaligus
 membandingkan tiga cara pencegahannya. Listing \ref{lst:konkuren} memuat
 intinya, dan Tabel \ref{tab:hasil-konkuren} memuat hasil pengukurannya.
 
@@ -1123,7 +1123,7 @@ dari seluruh instans aplikasi harus lebih kecil daripada
 \texttt{max\_connections}, dan sisakan beberapa koneksi untuk keperluan
 administrasi. Kedua, \textit{pool} yang terlalu besar tidak mempercepat apa pun.
 Setelah seluruh inti prosesor dan \textit{disk} basis data jenuh, menambah koneksi
-hanya memperpanjang antrean di dalam basis data, dan latensi tiap permintaan
+hanya memperpanjang antrean di dalam basis data, dan \textit{latency} tiap permintaan
 justru naik.
 
 Pertanyaan berikutnya, bagaimana bila aplikasi berjalan di lingkungan
@@ -1267,13 +1267,13 @@ sejak versi 1.21, lewat pengaturan \texttt{max\_prepared\_statements}
 \section{Migrasi sebagai Artefak Berversi}
 
 Skema berubah sepanjang umur aplikasi. Perubahan itu tidak dijalankan dengan
-mengetik perintah di terminal produksi, melainkan ditulis sebagai berkas
+mengetik perintah di terminal produksi, melainkan ditulis sebagai file
 bernomor yang disimpan di dalam repositori, diperiksa lewat \textit{code
 review}, dan dijalankan oleh \textit{pipeline} yang sama untuk seluruh
 lingkungan.
 
 Tiga aturan berlaku. Pertama, migrasi yang sudah dijalankan di lingkungan mana
-pun tidak pernah diubah lagi. Perubahan berikutnya ditulis sebagai berkas baru.
+pun tidak pernah diubah lagi. Perubahan berikutnya ditulis sebagai file baru.
 Kedua, tiap migrasi harus dapat dijalankan pada basis data kosong maupun pada
 basis data yang sudah berisi. Ketiga, migrasi dijalankan sebelum versi aplikasi
 yang baru dinyalakan, sehingga selama beberapa saat versi lama dan skema baru
@@ -1374,7 +1374,7 @@ melihat SQL yang benar-benar dikirim, karena dari situlah masalah N+1 dan
 indeks yang hilang ketahuan sebelum sampai ke produksi.
 
 Transaksi menjaga kebenaran, tetapi batasnya harus sempit. Panggilan jaringan
-di dalam transaksi menahan baris selama menunggu jawaban dari pihak lain. Pola
+di dalam transaksi menahan baris selama menunggu \textit{response} dari pihak lain. Pola
 baca lalu tulis tanpa pengaman kehilangan 350 dari 400 pembaruan pada
 pengukuran bab ini, dan pengaman termurahnya adalah menyerahkan perhitungan
 kepada basis data.
@@ -1389,14 +1389,14 @@ sama sekali karena Seq Scan memang pilihan yang benar.
 
 Koneksi adalah sumber daya mahal yang jumlahnya terbatas di sisi server,
 sehingga dipinjam dari \textit{pool}, bukan dibuka sesuai kebutuhan. Seluruh perubahan
-skema ditulis sebagai berkas migrasi berversi yang aman dijalankan sementara
+skema ditulis sebagai file migrasi berversi yang aman dijalankan sementara
 versi lama aplikasi masih berjalan. Pesan Bab 2 tetap berlaku di lapisan ini,
 hanya alatnya yang berganti: yang dibaca bukan lagi panel Network, melainkan
 rencana eksekusi.
 
 \section{Latihan}
 
-Seluruh berkas yang dipakai pada latihan ini tersedia di
+Seluruh file yang dipakai pada latihan ini tersedia di
 \berkas{sources/chapter03/}, dihitung relatif terhadap akar repositori.
 Latihan membutuhkan Docker dengan Compose versi 2 dan Python 3. Listing
 penyiapan masuk ke direktori itu lebih dahulu, dan seluruh perintah sesudahnya
@@ -1464,13 +1464,13 @@ rencananya, sebelum satu indeks pun ditambahkan.
         barisnya sesuai.
   \item Jalankan \berkas{sources/chapter03/03-query-baseline.sql} seperti pada
         Listing \ref{lst:c3-lat1-baseline}, lalu simpan seluruh keluarannya ke
-        berkas. Rencana ini tidak dapat diperoleh
+        file. Rencana ini tidak dapat diperoleh
         kembali setelah indeks terpasang, kecuali indeksnya dihapus lagi.
   \item Dari keluaran itu, catat untuk tiap \textit{query} jumlah baris yang
         dikembalikan, yaitu \texttt{rows} pada bagian \texttt{actual} di baris
         pertama rencananya, lalu \textit{node} pemindaian teratas, nilai
         \texttt{Rows Removed by Filter}, dan \texttt{Execution Time}. Semuanya
-        berasal dari \texttt{EXPLAIN ANALYZE} di dalam berkas tersebut, karena
+        berasal dari \texttt{EXPLAIN ANALYZE} di dalam file tersebut, karena
         \texttt{ukur-query.py} hanya melaporkan p50, p95, dan pemindaian.
   \item Ukur sebarannya memakai perintah pada Listing \ref{lst:c3-lat1-jalan}
         untuk \texttt{query/q1.sql} sampai \texttt{query/q4.sql}, lalu catat p50
@@ -1501,7 +1501,7 @@ source ../.venv/bin/activate
 python ukur-query.py query/q1.sql 20
 
 # Keluarannya:
-# Berkas       : query/q1.sql
+# File         : query/q1.sql
 # Ulangan      : 20, jalankan pertama dibuang
 # p50          :    5.602 ms
 # p95          :    5.905 ms

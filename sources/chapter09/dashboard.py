@@ -1,11 +1,11 @@
-"""Papan operasional sederhana untuk kedua versi layanan.
+"""Dashboard operasional sederhana untuk kedua versi layanan.
 
 Angkanya dibaca dari alamat /metrics tiap layanan, lalu ditampilkan
 berdampingan. Inilah bentuk paling sederhana sebuah dashboard: beberapa
 angka yang sama, dari beberapa sumber, dalam satu layar.
 
 Pemakaian (dari sources/chapter09, setelah kedua layanan menyala):
-    python3 papan.py
+    python3 dashboard.py
 """
 
 import json
@@ -17,8 +17,8 @@ FILE_RILIS = Path(__file__).parent / "rilis.json"
 LEBAR_NAMA = 24
 
 
-def baris_papan(nama, hasil):
-  """Menyusun satu baris papan untuk satu versi layanan."""
+def baris_dashboard(nama, hasil):
+  """Menyusun satu baris dashboard untuk satu versi layanan."""
   permintaan = hasil["permintaan"]
   gagal = hasil["gagal"]
   persen_gagal = (gagal * 100 / permintaan) if permintaan else 0.0
@@ -29,14 +29,14 @@ def baris_papan(nama, hasil):
 
 
 def main():
-  """Membaca metrik kedua versi, lalu mencetaknya sebagai satu papan."""
+  """Membaca metrik kedua versi, lalu mencetaknya sebagai satu dashboard."""
   rilis = json.loads(FILE_RILIS.read_text(encoding="utf-8"))
   print(f"  {'Versi':<{LEBAR_NAMA}} {'Minta':>8} {'Gagal':>7} "
         f"{'% gagal':>8} {'Rata ms':>9} {'p95 ms':>8}")
   for kunci in ("versi_pertama", "versi_kedua"):
     tujuan = rilis[kunci]
     hasil = metrik.baca(tujuan["host"], tujuan["port"])
-    print(baris_papan(tujuan["nama"], hasil))
+    print(baris_dashboard(tujuan["nama"], hasil))
 
 
 if __name__ == "__main__":

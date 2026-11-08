@@ -110,7 +110,18 @@ class PenanganProxy(BaseHTTPRequestHandler):
     self.send_header("X-Dilayani", tujuan["nama"])
     self.send_header("X-Trace-Id", trace_id)
     self.end_headers()
-    self.wfile.write(isi)
+    if self.command != "HEAD":
+      self.wfile.write(isi)
+
+  def do_HEAD(self):
+    """Menjawab HEAD dengan header yang sama persis, tanpa isinya.
+
+    Latihan membaca X-Trace-Id lewat curl -sI, yaitu permintaan HEAD. Tanpa
+    metode ini, proxy menjawab 501 dan trace id-nya tidak pernah terbaca.
+    Permintaannya tetap diteruskan sebagai GET, sehingga layanan ikut
+    mencatat trace id yang sama.
+    """
+    self.do_GET()
 
   def log_message(self, format_pesan, *argumen):
     """Mematikan log bawaan, karena log terstruktur sudah ditulis sendiri."""

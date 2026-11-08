@@ -6,7 +6,7 @@ data, tanpa container, dan tanpa npm.
 
 | File | Kegunaan |
 | --- | --- |
-| `katalog.py` | Data katalog dan perakit HTML yang dipakai bersama kelima varian |
+| `katalog.py` | Data katalog dan fungsi yang me-*render* HTML, dipakai bersama kelima varian |
 | `bangun-statis.py` | Langkah *build* varian SSG: me-*render* halaman sekali, lalu menyimpannya sebagai file |
 | `aplikasi.py` | Server yang melayani kelima varian di port 8040 |
 | `ukur-varian.py` | Mengukur byte, jumlah permintaan, dan waktu tiap varian |

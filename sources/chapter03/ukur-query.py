@@ -59,9 +59,9 @@ def simpul_pemindaian(simpul, ditemukan=None):
 
 
 def main():
-  """Mengukur satu berkas query, lalu mencetak sebaran waktunya."""
+  """Mengukur satu file query, lalu mencetak sebaran waktunya."""
   if len(sys.argv) < 2:
-    sys.exit("Pemakaian: python ukur-query.py <berkas.sql> [ulangan]")
+    sys.exit("Pemakaian: python ukur-query.py <file.sql> [ulangan]")
   berkas = Path(sys.argv[1])
   ulangan = int(sys.argv[2]) if len(sys.argv) > 2 else 20
   sql = berkas.read_text(encoding="utf-8").strip().rstrip(";")
@@ -74,7 +74,7 @@ def main():
       rencana = ambil_rencana(koneksi, sql)
       daftar_waktu.append(rencana["Execution Time"])
 
-  print(f"Berkas       : {berkas}")
+  print(f"File         : {berkas}")
   print(f"Ulangan      : {ulangan}, jalankan pertama dibuang")
   print(f"p50          : {persentil(daftar_waktu, 50):8.3f} ms")
   print(f"p95          : {persentil(daftar_waktu, 95):8.3f} ms")

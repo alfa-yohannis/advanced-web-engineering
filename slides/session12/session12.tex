@@ -152,11 +152,11 @@
   sekaligus, dengan satu \textit{gateway} di depannya.}
 \end{frame}
 
-\section{Kontrak sebagai Sumber Kebenaran}
+\section{Kontrak sebagai Source of Truth}
 
 \begin{frame}{\hfill}
   \centering
-  \Huge{\textbf{Kontrak sebagai Sumber Kebenaran}}
+  \Huge{\textbf{Kontrak sebagai Source of Truth}}
 \end{frame}
 
 \begin{frame}{{\Large Satu Kontrak, Empat Pemakaian}}
@@ -171,7 +171,7 @@
     \node[kotak, fill=praditagreen!15, minimum height=1.0cm] (kontrak) at (0,0) {kontrak.json\\{\tiny\mdseries OpenAPI 3.1, 5 skema}};
     \node[kotak, fill=orange!12] (tipe) at (5.0,1.6) {Tipe TypeScript\\{\tiny\mdseries 50 baris, di-generate}};
     \node[kotak, fill=blue!8] (validasi) at (5.0,0.5) {Validasi di batas\\{\tiny\mdseries jsonschema}};
-    \node[kotak, fill=blue!8] (uji) at (5.0,-0.6) {Uji kontrak\\{\tiny\mdseries jawaban server}};
+    \node[kotak, fill=blue!8] (uji) at (5.0,-0.6) {Uji kontrak\\{\tiny\mdseries \textit{response} server}};
     \node[kotak, fill=gray!35] (diff) at (5.0,-1.7) {Beda versi\\{\tiny\mdseries aman atau merusak}};
 
     \draw[panah] (kontrak.east) -- ++(0.4,0) |- (tipe.west);
@@ -179,6 +179,7 @@
     \draw[panah] (kontrak.east) -- ++(0.4,0) |- (uji.west);
     \draw[panah] (kontrak.east) -- ++(0.4,0) |- (diff.west);
   \end{tikzpicture}
+
   \vspace{2pt}
   {\small Analoginya gambar kerja bangunan: tukang tidak menebak lebar pintu
   dari dinding yang sudah berdiri.}
@@ -244,6 +245,7 @@ def periksa_isi(versi, isi):
     ada field asing \texttt{catatan} & 422 & isi tidak sesuai \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Baris terakhir sering mengejutkan: field asing ditolak, bukan
   diabaikan. Salah tulis nama field ketahuan seketika, dan menambah field
@@ -276,11 +278,12 @@ def periksa_isi(versi, isi):
     Pada demo ini & \texttt{jsonschema} di server & \texttt{tsc --strict} di klien \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Keduanya diperlukan, dan keduanya menangkap hal yang berbeda.}
 \end{frame}
 
-\begin{frame}[fragile]{{\Large Tipe Datang dari Kontrak, Bukan dari Tangan}}
+\begin{frame}[fragile]{{\Large Tipe dari Kontrak, Bukan dari Tangan}}
   \vspace{2pt}
 \begin{lstlisting}[language=TypeScript]
 export interface HalamanBuku {
@@ -381,6 +384,7 @@ export interface Pesanan {
     kunci sama, isi beda & 409 & ditolak, kunci sudah dipakai \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Perhatikan baris kedua: 200, bukan 201, karena tidak ada yang
   dibuat. Selisih satu angka itu membedakan "pesanan sudah masuk" dari
@@ -413,6 +417,7 @@ export interface Pesanan {
     \texttt{PesananBaru.jumlah} batas naik ke 20 & aman bagi klien lama \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Baris terakhir dibaca dua arah: batas yang dilonggarkan aman bagi
   klien lama, tetapi klien v2 yang memesan 15 ditolak 422 oleh v1.}
@@ -435,10 +440,11 @@ export interface Pesanan {
     klien v2 memesan 15 ke \texttt{/v1} & 422 & isi tidak sesuai \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Baris kedua memuat pelajaran terpentingnya: servernya tidak salah
   sedikit pun, yang rusak kesepakatannya. Kerusakan itu hanya terlihat bila
-  ada yang memvalidasi jawaban terhadap kontrak lama.}
+  ada yang memvalidasi \textit{response} terhadap kontrak lama.}
 \end{frame}
 
 \section{Rate Limiting dan API Gateway}
@@ -466,12 +472,13 @@ export interface Pesanan {
     \draw[panah] (ember.east) -- ++(0.3,0) |- node[font=\tiny, above, pos=0.75] {token ada} (aplikasi.west);
     \draw[panah] (ember.east) -- ++(0.3,0) |- node[font=\tiny, below, pos=0.75] {token habis} (tolak.west);
   \end{tikzpicture}
+
   \vspace{2pt}
   {\small Analoginya kupon fotokopi: jatahnya diisi berkala, boleh dipakai
   sekaligus, dan begitu habis harus menunggu pengisian berikutnya.}
 \end{frame}
 
-\begin{frame}{{\Large Angkanya Dapat Dihitung Sebelum Diukur}}
+\begin{frame}{{\Large Angkanya Terhitung Sebelum Diukur}}
   \vspace{6pt}
   \centering
   {\footnotesize
@@ -486,6 +493,7 @@ export interface Pesanan {
     klien lain, ember sendiri & 20 & 10 & 0,19 s & 0,02 s \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small Baris pertama melayani 20 karena embernya berisi 20 token. Baris
   kedua melayani 10, karena 2 detik mengisi $2 \times 5$ token. Baris ketiga
@@ -518,6 +526,7 @@ export interface Pesanan {
     Cocok untuk & API publik & layar dengan kebutuhan beragam & layanan ke layanan \\
     \hline
   \end{tabularx}}
+
   \vspace{6pt}
   {\small RPC adalah Remote Procedure Call, dan baris Cache HyperText
   Transfer Protocol (HTTP) menyebut cache bawaan protokolnya. Pilihan gayanya
@@ -605,7 +614,7 @@ python3 uji-kontrak.py
   \Huge{\textbf{Latihan 3:\\Kompatibilitas Antarversi}}
 \end{frame}
 
-\begin{frame}[fragile]{{\Large Membandingkan Kontrak lalu Mengujinya}}
+\begin{frame}[fragile]{{\Large Kontrak Dibandingkan lalu Diuji}}
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
 python3 uji-kompatibilitas.py
@@ -631,7 +640,7 @@ python3 uji-kompatibilitas.py
   \Huge{\textbf{Latihan 4:\\Batas Laju di Gateway}}
 \end{frame}
 
-\begin{frame}[fragile]{{\Large Mengukur Lonjakan dan Pengisian Ulang}}
+\begin{frame}[fragile]{{\Large Mengukur Lonjakan dan Isi Ulang}}
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
 python3 ukur-gateway.py
@@ -659,7 +668,7 @@ python3 ukur-gateway.py
   \vspace{8pt}
   \begin{itemize}
     \item Satu dokumen OpenAPI berisi 5 skema dan 2 jalur dipakai empat kali:
-          50 baris tipe, validasi isi, validasi jawaban, dan perbandingan
+          50 baris tipe, validasi isi, validasi \textit{response}, dan perbandingan
           versi.
     \item Validasi \textit{runtime} menolak 4 dari 5 isi yang diuji dengan
           422. Pemeriksaan \textit{compile-time} menolak klien yang membaca
@@ -667,7 +676,7 @@ python3 ukur-gateway.py
     \item Idempotensi mengubah pengiriman ulang menjadi hal biasa: kunci sama
           dan isi sama dijawab 200 beserta pesanan yang sudah ada, kunci sama
           dan isi beda dijawab 409.
-    \item Kompatibilitas dapat diperiksa mesin. Klien v1 membaca jawaban v2
+    \item Kompatibilitas dapat diperiksa mesin. Klien v1 membaca \textit{response} v2
           dengan status 200 tetapi gagal memakainya.
     \item \textit{Token bucket} melayani 20 lalu menolak 10, dan menunggu 2
           detik memulihkan tepat 10 token.

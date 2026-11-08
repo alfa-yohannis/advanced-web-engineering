@@ -16,7 +16,7 @@
 Aplikasi web yang lambat jarang disebabkan oleh satu masalah besar. Biasanya
 penyebabnya adalah kumpulan keterlambatan kecil yang menumpuk. Ada waktu untuk
 mencari alamat server. Ada waktu untuk membangun koneksi. Ada waktu tunggu
-sampai byte pertama datang. Ada waktu untuk mengunduh berkas. Ada waktu untuk
+sampai byte pertama datang. Ada waktu untuk mengunduh file. Ada waktu untuk
 menyusun tampilan. Setiap tahap itu punya biaya, dan biaya tersebut sering
 tidak terlihat dari kode program.
 
@@ -184,7 +184,7 @@ Dua contoh kasus nyata:
   \item Sebuah tabel menampilkan 5.000 baris data. Proses penyusunan baris
         memakan waktu 900 milidetik. Selama 900 milidetik itu, tombol
         \emph{cari} tidak bereaksi ketika diklik.
-  \item Sebuah halaman mem-\textit{parse} berkas JavaScript Object Notation
+  \item Sebuah halaman mem-\textit{parse} file JavaScript Object Notation
         (JSON) berukuran 8 MB memakai \texttt{JSON.parse}. Proses
         \textit{parsing} tidak dapat dipotong di tengah jalan, sehingga halaman
         membeku sampai proses tersebut selesai.
@@ -311,13 +311,13 @@ kota, termasuk Jakarta dan Singapura. Server titipan itu disebut \textit{edge
 server}, sedangkan server asli milik aplikasi disebut \textit{origin}. Nama
 domain aplikasi diarahkan ke jaringan CDN, sehingga permintaan pengguna mendarat
 di \textit{edge server} terdekat, bukan langsung ke \textit{origin}. Bila \textit{copy}
-berkas yang diminta sudah ada di sana, berkas langsung dikirim. Bila belum ada,
+file yang diminta sudah ada di sana, file langsung dikirim. Bila belum ada,
 \textit{edge server} mengambilnya sekali ke \textit{origin}, menyimpannya, lalu
 melayani permintaan berikutnya dari \textit{copy} tersebut.
 
 Analoginya seperti gudang cabang. Pembeli di Jakarta tidak perlu memesan
 langsung ke pabrik di Jerman, karena barang yang sama sudah dititipkan di gudang
-Jakarta. Contohnya, gambar dan berkas CSS dari server Frankfurt yang tadinya
+Jakarta. Contohnya, gambar dan file CSS dari server Frankfurt yang tadinya
 menuntut RTT 190 milidetik cukup diambil dari Jakarta dengan RTT 10 milidetik.
 Contoh lain, halaman yang isinya berubah tiap detik tetap harus diambil dari
 \textit{origin}, sehingga manfaat CDN untuk halaman semacam itu terbatas pada
@@ -386,11 +386,11 @@ dengan puluhan aset.
 \subsection*{HTTP/1.1}
 
 Satu koneksi melayani satu permintaan pada satu waktu. Permintaan berikutnya
-menunggu sampai respons sebelumnya selesai. Gejala ini disebut
+menunggu sampai \textit{response} sebelumnya selesai. \textit{Symptom} ini disebut
 \textit{head-of-line blocking}. Browser menyiasatinya dengan membuka sekitar
 enam koneksi paralel per domain, dan tiap koneksi menanggung biaya pembukaan
 sendiri. Gambar \ref{fig:http1} menggambarkan pola tersebut. Misalkan sebuah
-halaman meminta empat berkas sekaligus, yaitu A berupa \texttt{style.css}, B
+halaman meminta empat file sekaligus, yaitu A berupa \texttt{style.css}, B
 berupa \texttt{app.js}, C berupa \texttt{logo.png}, dan D berupa
 \texttt{foto.jpg}. Lebar tiap kotak menggambarkan lama pengunduhannya.
 
@@ -504,7 +504,7 @@ selesai dikirim ulang, karena TCP tidak tahu paket itu milik permintaan yang
 mana. Pada HTTP/1.1, penahanan tersebut hanya menyangkut satu koneksi, dan
 permintaan lain di koneksi berbeda tetap berjalan. Pada HTTP/2, seluruh permintaan justru
 berbagi satu koneksi TCP, sehingga satu paket yang hilang menahan
-\textit{frame} milik semua permintaan sekaligus. Gejala ini disebut
+\textit{frame} milik semua permintaan sekaligus. \textit{Symptom} ini disebut
 \textit{head-of-line blocking} di tingkat TCP.
 
 QUIC memindahkan pencatatan urutan dari tingkat koneksi ke tingkat aliran.
@@ -597,7 +597,7 @@ Dua contoh dampaknya di lapangan:
         enam per waktu dan sisanya mengantre. Pada HTTP/2, seluruh permintaan
         berjalan di satu koneksi, dan waktu muat turun tajam.
   \item Pengguna berpindah dari Wi-Fi kampus ke jaringan seluler saat mengunggah
-        berkas. Pada HTTP/2, koneksi dikenali dari pasangan alamat IP dan nomor
+        file. Pada HTTP/2, koneksi dikenali dari pasangan alamat IP dan nomor
         port di kedua sisi. Begitu alamat IP berubah, pasangan itu ikut berubah,
         koneksi dianggap putus, dan unggahan diulang dari awal. Pada HTTP/3,
         koneksi dikenali dari \textit{connection ID}, yaitu nomor pengenal yang
@@ -607,15 +607,15 @@ Dua contoh dampaknya di lapangan:
 \end{enumerate}
 
 Perlu dicatat, HTTP/2 dan HTTP/3 tidak membuat jumlah aset menjadi tidak
-penting. Aset di sini berarti seluruh berkas yang diminta browser untuk
-menyusun satu halaman, di luar dokumen HTML-nya sendiri. Contohnya berkas CSS,
-berkas JavaScript, gambar, huruf, ikon, dan berkas video. Halaman katalog
+penting. Aset di sini berarti seluruh file yang diminta browser untuk
+menyusun satu halaman, di luar dokumen HTML-nya sendiri. Contohnya file CSS,
+file JavaScript, gambar, huruf, ikon, dan file video. Halaman katalog
 sederhana saja mudah memuat lebih dari seratus aset. Setiap aset tetap menuntut
 permintaan, \textit{parsing}, dan pemakaian memori.
 
 \section{Siklus Hidup Request dan Event Loop}
 
-Setelah respons tiba, pekerjaan berpindah ke \textit{main thread}. Utas
+Setelah \textit{response} tiba, pekerjaan berpindah ke \textit{main thread}. Utas
 tersebut diatur oleh \textit{event loop}. Cara kerjanya berulang dan sederhana:
 ambil satu tugas dari antrean, jalankan sampai selesai, kosongkan antrean
 \textit{microtask}, lalu beri kesempatan browser menggambar ulang layar. Gambar
@@ -630,7 +630,7 @@ Istilah tugas atau \textit{macrotask} berarti satu satuan pekerjaan yang
 dititipkan ke antrean untuk dijalankan \textit{main thread}. Contohnya
 menjalankan skrip yang baru selesai diunduh, menanggapi klik atau ketikan
 pengguna, menjalankan fungsi yang dijadwalkan lewat \texttt{setTimeout},
-memproses respons \texttt{fetch} yang sudah tiba, dan menangani pesan dari
+memproses \textit{response} \texttt{fetch} yang sudah tiba, dan menangani pesan dari
 \textit{web worker}. Isi antrean umumnya berupa eksekusi kode JavaScript, tetapi
 tidak selalu. Melanjutkan \textit{parsing} HTML yang tiba bertahap dari jaringan
 juga dijalankan sebagai tugas, dan pekerjaan itu tetap memakai \textit{main
@@ -785,7 +785,7 @@ menjadi CSSOM (\textit{CSS Object Model}). Keduanya lalu dipadukan. Gambar
     \draw[panah] (layout) -- (paint);
     \draw[panah] (paint) -- (comp);
   \end{tikzpicture}
-  \caption{Tahap penyusunan halaman dari berkas mentah sampai piksel di layar}
+  \caption{Tahap penyusunan halaman dari file mentah sampai piksel di layar}
   \label{fig:crp}
 \end{figure}
 
@@ -801,11 +801,11 @@ Dua hal menghambat rangkaian ini:
 
 \begin{enumerate}
   \item \textbf{CSS bersifat \textit{render blocking}.} Halaman tidak digambar
-        sebelum seluruh CSS diunduh dan di-\textit{parse}. Berkas CSS berukuran 400 KB
+        sebelum seluruh CSS diunduh dan di-\textit{parse}. File CSS berukuran 400 KB
         pada jaringan lambat menahan tampilan meski HTML sudah siap.
   \item \textbf{Script tanpa penanda bersifat \textit{parser blocking}.} Tag
         \texttt{script} biasa di dalam \texttt{head} menghentikan \textit{parsing}
-        HTML sampai berkas selesai diunduh dan dijalankan.
+        HTML sampai file selesai diunduh dan dijalankan.
 \end{enumerate}
 
 \begin{lstlisting}[language=html, caption={Script yang menahan \textit{parsing} dan perbaikannya, tersedia di \berkas{sources/chapter02/defer-async.html}}, label={lst:defer}]
@@ -821,7 +821,7 @@ Dua hal menghambat rangkaian ini:
 
 Kata paralel di sini berarti pengunduhan berjalan bersamaan dengan
 \textit{parsing} HTML, bukan menggantikannya. Browser tetap membaca HTML dari
-atas ke bawah, sedangkan berkas skrip diambil di latar belakang. Beda
+atas ke bawah, sedangkan file skrip diambil di latar belakang. Beda
 \texttt{defer} dan \texttt{async} ada pada waktu eksekusinya. Skrip
 \texttt{defer} baru dijalankan setelah \textit{parsing} selesai, dan bila ada
 beberapa, urutannya mengikuti urutan penulisan di HTML. Skrip \texttt{async}
@@ -1004,7 +1004,7 @@ Semua konsep di atas dapat dilihat langsung memakai DevTools. Tabel
     \hline
     \textbf{Panel} & \textbf{Kegunaan} \\
     \hline
-    Network & Melihat urutan permintaan, ukuran berkas, dan rincian waktu tiap tahap. \\
+    Network & Melihat urutan permintaan, ukuran file, dan rincian waktu tiap tahap. \\
     \hline
     Performance & Melihat pekerjaan \textit{main thread} dan menemukan \textit{long task}. \\
     \hline
@@ -1020,13 +1020,13 @@ menjadi beberapa bagian. Bagian \emph{Queueing} dan \emph{Stalled} menandakan
 permintaan menunggu giliran koneksi. Bagian \emph{DNS Lookup},
 \emph{Initial connection}, dan \emph{SSL} (\textit{Secure Sockets Layer}, nama lama TLS) sesuai dengan
 tahap pada Gambar
-\ref{fig:koneksi}. Bagian \emph{Waiting} adalah waktu tunggu respons server,
+\ref{fig:koneksi}. Bagian \emph{Waiting} adalah waktu tunggu \textit{response} server,
 yang lebih dikenal sebagai Time To First Byte (TTFB). Bagian \emph{Content Download} adalah waktu
 pengunduhan isi.
 
 Cara membacanya sederhana. Bila bagian \emph{Waiting} yang panjang, masalahnya
 ada di server atau basis data. Bila bagian \emph{Content Download} yang
-panjang, masalahnya ada pada ukuran berkas. Bila bagian \emph{Queueing} yang
+panjang, masalahnya ada pada ukuran file. Bila bagian \emph{Queueing} yang
 panjang, jumlah permintaan serentak terlalu banyak.
 
 Pengukuran wajib dilakukan dengan \textit{throttling} yang mendekati kondisi pengguna.
@@ -1049,14 +1049,14 @@ sekaligus. HTTP/2 menyelang-nyeling \textit{frame} milik banyak permintaan di
 atas satu koneksi. HTTP/3 memisahkan tiap permintaan menjadi aliran mandiri,
 sehingga satu paket yang hilang tidak lagi menahan permintaan lain.
 
-Setelah respons tiba, giliran \textit{main thread} yang menjadi penentu. Tugas
+Setelah \textit{response} tiba, giliran \textit{main thread} yang menjadi penentu. Tugas
 JavaScript berjalan sampai selesai tanpa dapat dipotong, sehingga tugas panjang
 membuat antarmuka berhenti menanggapi. Penggambaran layar pun bukan proses
 terpisah, melainkan salah satu tahap dalam putaran \textit{event loop} yang
-sama. Di sisi berkas, CSS menahan penggambaran, dan skrip tanpa \texttt{defer}
+sama. Di sisi file, CSS menahan penggambaran, dan skrip tanpa \texttt{defer}
 menahan \textit{parsing} HTML.
 
-Seluruh gejala tersebut diringkas oleh Core Web Vitals menjadi tiga angka yang
+Seluruh \textit{symptom} tersebut diringkas oleh Core Web Vitals menjadi tiga angka yang
 mewakili pengalaman pengguna, dan angka itu dibaca pada persentil ke-75 agar
 pengguna dengan perangkat lambat tidak tertutupi. Pesan terakhirnya paling
 penting: optimasi tanpa \textit{baseline} tidak dapat dibuktikan, sehingga
@@ -1182,7 +1182,7 @@ for ((i = 1; i <= ulangan; i++)); do
 done
 \end{lstlisting}
 
-Kode di atas tidak perlu diketik ulang. Berkasnya tersedia pada
+Kode di atas tidak perlu diketik ulang. File-nya tersedia pada
 \berkas{sources/chapter02/ukur-koneksi.sh}, dihitung relatif terhadap akar
 repositori. Jalankan dengan perintah berikut.
 
@@ -1207,7 +1207,7 @@ cd sources/chapter02
     \hline
     Tunggu server & Lama server memproses permintaan sampai byte pertama keluar & \texttt{time\_starttransfer} dikurangi \texttt{time\_appconnect} \\
     \hline
-    Unduh isi & Lama memindahkan sisa isi respons setelah byte pertama & \texttt{time\_total} dikurangi \texttt{time\_starttransfer} \\
+    Unduh isi & Lama memindahkan sisa isi \textit{response} setelah byte pertama & \texttt{time\_total} dikurangi \texttt{time\_starttransfer} \\
     \hline
   \end{tabularx}
 \end{table}
@@ -1328,11 +1328,11 @@ menambahkan kolom \emph{Protocol} dan \emph{Connection ID}.
 \end{figure}
 
   \item Buka \texttt{aset.txt} yang dihasilkan skrip pada langkah sebelumnya.
-        Berkas itu memuat lima alamat aset, misalnya
+        File itu memuat lima alamat aset, misalnya
         \texttt{stylenew.css}, \texttt{stylenewcustom.css},
         \texttt{font-awesome.css}, \texttt{logo\_universitas.png}, dan
         \texttt{Web-Banner-Juli-2019.jpg}.
-  \item Ketik nama salah satu berkas tersebut pada kotak filter di panel
+  \item Ketik nama salah satu file tersebut pada kotak filter di panel
         Network, misalnya \texttt{stylenew.css}. Daftar permintaan akan
         menyusut menjadi baris yang cocok saja. Catat nilai kolom
         \emph{Protocol} dan \emph{Connection ID} pada baris itu, lalu ulangi
@@ -1352,7 +1352,7 @@ menambahkan kolom \emph{Protocol} dan \emph{Connection ID}.
         faktor dapat dipisahkan.
   \item Perlu dicatat pula, tanpa filter, jumlah permintaan pada browser jauh
         lebih banyak daripada lima aset tersebut. Browser juga memuat dokumen
-        HTML-nya sendiri serta berkas yang baru ketahuan setelah CSS dan
+        HTML-nya sendiri serta file yang baru ketahuan setelah CSS dan
         JavaScript dijalankan. Filter itulah yang menyamakan cakupan
         pengukuran browser dengan pengukuran \texttt{curl}.
   \item Jalankan perintah pada Listing \ref{lst:lat2-jalan}. Skrip tersebut
@@ -1381,7 +1381,7 @@ Kejadian 0 milidetik tersebut layak diperiksa lebih jauh, karena aset situs
 kampus tidak mengirim header \texttt{Cache-Control} maupun \texttt{Expires}.
 Yang dikirim hanya \texttt{Last-Modified} dan \texttt{ETag}, seperti terlihat
 pada Listing \ref{lst:header-aset}. Dalam keadaan itu browser memakai
-\textit{heuristic caching}, yaitu menebak masa berlaku dari umur berkas. Berkas
+\textit{heuristic caching}, yaitu menebak masa berlaku dari umur file. File
 yang terakhir diubah lebih dari setahun lalu dianggap masih \textit{fresh} untuk waktu
 yang lama, sehingga permintaan berikutnya dilayani dari \textit{cache} tanpa
 menghubungi server. Perilaku ini dibahas lebih dalam pada bab \textit{caching},
@@ -1505,7 +1505,7 @@ menuntut \texttt{libcurl} yang dibangun bersama pustaka QUIC seperti ngtcp2 atau
 quiche, dan pembangunan tersebut di luar cakupan bab ini. Kedua,
 \texttt{www.pradita.ac.id} sendiri belum menyediakan HTTP/3. Hal itu dapat
 diperiksa tanpa mengunduh apa pun, yaitu lewat header \texttt{alt-svc} pada
-respons, seperti pada Listing \ref{lst:altsvc}. Pada browser, versi yang
+\textit{response}, seperti pada Listing \ref{lst:altsvc}. Pada browser, versi yang
 benar-benar dipakai terlihat pada kolom \emph{Protocol}, dengan nilai
 \texttt{h2} untuk HTTP/2 dan \texttt{h3} untuk HTTP/3.
 

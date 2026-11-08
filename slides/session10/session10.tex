@@ -198,7 +198,7 @@ curl -s -H "Cookie: sesi=..." http://127.0.0.1:8070/api/pesanan
     \hline
     Dicabut saat keluar & seketika & menunggu kedaluwarsa \\
     \hline
-    Hilang saat proses mati & ya & tidak \\
+    Hilang saat proses berhenti & ya & tidak \\
     \hline
     Isinya terbaca klien & tidak & ya, tetapi tidak dapat diubah \\
     \hline
@@ -290,7 +290,7 @@ curl -s -H "Cookie: sesi=..." http://127.0.0.1:8070/api/pesanan
   \end{tabularx}}
 
   \vspace{8pt}
-  {\small Penanda baru ikut mati karena seluruh keluarganya dicabut. Harga
+  {\small Penanda baru ikut tidak berlaku karena seluruh keluarganya dicabut. Harga
   itu disengaja: ketika satu penanda terbukti bocor, tidak ada cara
   membedakan pemilik aslinya dari pemegang lainnya.}
 \end{frame}
@@ -359,7 +359,7 @@ def boleh_baca_pesanan(identitas, pesanan):
 \begin{frame}{{\Large Mengapa 404 dan Bukan 403}}
   \vspace{14pt}
   \begin{itemize}
-    \item Jawaban 403 berarti "ada, tetapi Anda tidak boleh", dan jawaban itu
+    \item \textit{Response} 403 berarti "ada, tetapi Anda tidak boleh", dan \textit{response} itu
           sendiri sudah membocorkan keberadaan datanya.
     \item Permintaan lintas \textit{tenant} karena itu dijawab 404.
     \item Penolakan di dalam satu \textit{tenant} tetap 403, karena di sana
@@ -470,7 +470,7 @@ curl -s -X POST "http://127.0.0.1:8070/refresh?refresh=PENANDA_BARU"
 # {"pesan": "refresh token tidak dikenal"}
 \end{lstlisting}
   \vspace{4pt}
-  {\footnotesize Pertanyaan: mengapa penanda baru ikut mati, dan apa yang
+  {\footnotesize Pertanyaan: mengapa penanda baru ikut tidak berlaku, dan apa yang
   terjadi bila rotasi dipakai tanpa penangkapan pemakaian ulang?}
 \end{frame}
 

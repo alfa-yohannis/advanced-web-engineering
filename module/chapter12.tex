@@ -23,9 +23,9 @@ bekerja. Begitu ada klien lain, tiap perubahan menjadi taruhan.
 Bab ini memindahkan API dari kebiasaan menjadi kontrak. Kontraknya ditulis
 sebagai dokumen OpenAPI, lalu dokumen itu dipakai tiga kali: untuk
 meng-\textit{generate} tipe di sisi klien, untuk memvalidasi isi permintaan
-di batas sistem, dan untuk menguji apakah jawaban server masih sesuai
+di batas sistem, dan untuk menguji apakah \textit{response} server masih sesuai
 janjinya. Bagian kedua bab membahas keputusan desain yang menyertainya, yaitu
-bentuk \textit{error}, \textit{pagination}, idempotensi, dan pembatasan laju.
+bentuk \textit{error}, \textit{pagination}, idempotensi, dan \textit{rate limiting}.
 
 Demonya satu API katalog berisi 48 buku, dilayani dalam dua versi sekaligus,
 dengan satu \textit{gateway} di depannya. Referensi utamanya adalah OpenAPI
@@ -35,10 +35,10 @@ skemanya \cite{jsonschema-2020}, RFC 9457 untuk bentuk \textit{error}
 dan disertasi Fielding untuk \textit{constraint} REST (Representational
 State Transfer) \cite{fielding2000rest}.
 
-\section{Kontrak sebagai Sumber Kebenaran}
+\section{Kontrak sebagai Source of Truth}
 
 Kontrak adalah satu dokumen yang menyebutkan alamat, parameter, bentuk isi,
-dan bentuk jawaban sebuah API. Pada pengembangan \textit{contract-first},
+dan bentuk \textit{response} sebuah API. Pada pengembangan \textit{contract-first},
 dokumen itu ditulis lebih dahulu, dan kode mengikutinya. Arah sebaliknya juga
 mungkin, yaitu kontrak dibuat dari kode, tetapi arah itu membuat kontrak
 selalu tertinggal satu langkah.
@@ -62,7 +62,7 @@ pada demo bab ini.
     \node[kotak, fill=praditagreen!15, minimum height=1.0cm] (kontrak) at (0,0) {kontrak.json\\{\tiny\mdseries OpenAPI 3.1, 5 skema}};
     \node[kotak, fill=orange!12] (tipe) at (5.0,1.6) {Tipe TypeScript\\{\tiny\mdseries 50 baris, di-generate}};
     \node[kotak, fill=blue!8] (validasi) at (5.0,0.5) {Validasi di batas\\{\tiny\mdseries jsonschema}};
-    \node[kotak, fill=blue!8] (uji) at (5.0,-0.6) {Uji kontrak\\{\tiny\mdseries jawaban server}};
+    \node[kotak, fill=blue!8] (uji) at (5.0,-0.6) {Uji kontrak\\{\tiny\mdseries \textit{response} server}};
     \node[kotak, fill=gray!35] (diff) at (5.0,-1.7) {Beda versi\\{\tiny\mdseries aman atau merusak}};
 
     \draw[panah] (kontrak.east) -- ++(0.4,0) |- (tipe.west);
@@ -237,7 +237,7 @@ yang salah tanpa menebak.
 parameter, lengkap dengan batasnya. Parameter \texttt{per\_halaman} punya
 nilai bawaan 10 dan batas 50, dan batas itu bukan hiasan: permintaan
 \texttt{per\_halaman=99} dijawab 422 beserta alasannya. Tabel
-\ref{tab:paging} memuat ketiga jawaban yang diukur.
+\ref{tab:paging} memuat ketiga \textit{response} yang diukur.
 
 \begin{table}[!htb]
   \centering
@@ -246,7 +246,7 @@ nilai bawaan 10 dan batas 50, dan batas itu bukan hiasan: permintaan
   \label{tab:paging}
   \begin{tabularx}{\textwidth}{Xll}
     \hline
-    \textbf{Permintaan} & \textbf{Status} & \textbf{Isi jawaban} \\
+    \textbf{Permintaan} & \textbf{Status} & \textbf{Isi \textit{response}} \\
     \hline
     \texttt{/v1/buku} & 200 & 10 item, total 48, ada \texttt{berikutnya} \\
     \hline
@@ -257,8 +257,8 @@ nilai bawaan 10 dan batas 50, dan batas itu bukan hiasan: permintaan
   \end{tabularx}
 \end{table}
 
-Ketiga jawaban itu divalidasi terhadap skema di kontrak, dan ketiganya
-sesuai. Pengujian seperti itu murah dan sering menyelamatkan: jawaban yang
+Ketiga \textit{response} itu divalidasi terhadap skema di kontrak, dan ketiganya
+sesuai. Pengujian seperti itu murah dan sering menyelamatkan: \textit{response} yang
 bentuknya menyimpang dari kontrak ketahuan di mesin pengembang, bukan di
 aplikasi klien.
 
@@ -266,7 +266,7 @@ aplikasi klien.
 
 Metode \texttt{GET} tidak mengubah apa pun, sehingga mengulanginya aman.
 \texttt{POST} tidak punya jaminan itu \cite{rfc9110}. Pada jaringan yang
-putus sesudah permintaan terkirim tetapi sebelum jawabannya tiba, klien tidak
+putus sesudah permintaan terkirim tetapi sebelum \textit{response}-nya tiba, klien tidak
 tahu pesanannya sudah masuk atau belum, dan satu-satunya pilihannya adalah
 mengirim ulang.
 
@@ -320,7 +320,7 @@ Tabel \ref{tab:idempoten} memuat hasilnya pada server yang baru menyala.
   \end{tabularx}
 \end{table}
 
-Perhatikan status pada baris kedua. Jawabannya 200, bukan 201, karena tidak
+Perhatikan status pada baris kedua. \textit{Response}-nya 200, bukan 201, karena tidak
 ada yang dibuat. Selisih satu angka itu yang membedakan "pesanan Anda sudah
 masuk" dari "pesanan Anda masuk dua kali".
 
@@ -386,7 +386,7 @@ Keempat baris itu diukur sekali jalan, dengan skema versi 1 sebagai pemeriksa.
 
 Baris kedua memuat pelajaran terpentingnya. Statusnya 200, dan servernya
 tidak salah sedikit pun. Yang rusak adalah kesepakatannya, dan kerusakan itu
-hanya terlihat bila ada yang memvalidasi jawaban terhadap kontrak lama. Karena
+hanya terlihat bila ada yang memvalidasi \textit{response} terhadap kontrak lama. Karena
 itu versi lama tetap dilayani di alamatnya sendiri, dan klien dipindahkan
 ketika siap, bukan ketika servernya di-\textit{deploy}.
 
@@ -397,7 +397,7 @@ hal-hal yang berlaku bagi semua permintaan: membatasi laju, menempelkan
 penanda permintaan, memeriksa penanda identitas, lalu meneruskan sisanya.
 Dengan begitu aturan itu ditulis sekali, bukan di tiap layanan.
 
-Pembatasan lajunya memakai \textit{token bucket}. Tiap klien punya ember
+\textit{Rate limiting}-nya memakai \textit{token bucket}. Tiap klien punya ember
 berisi token, satu permintaan memakai satu token, dan embernya terisi ulang
 dengan laju tetap. Analoginya seperti kupon fotokopi gratis di sekretariat:
 jatahnya diisi berkala, boleh dipakai sekaligus atau sedikit-sedikit, dan
@@ -457,7 +457,7 @@ milik sistem.
 Pola BFF (Backend for Frontend) duduk satu lapis di atasnya, dan sudah
 dibahas di Bab 8. Bedanya begini. \textit{Gateway} tidak tahu kebutuhan
 layarnya dan memperlakukan semua klien sama, sedangkan BFF memang dibuat
-untuk satu jenis klien dan boleh menggabungkan beberapa jawaban menjadi satu
+untuk satu jenis klien dan boleh menggabungkan beberapa \textit{response} menjadi satu
 \cite{newman-bff}.
 
 \section{Gaya API: REST, GraphQL, dan RPC}
@@ -467,7 +467,7 @@ dengan cara berbeda. REST menyusun API sebagai kumpulan sumber daya beralamat
 sendiri, dengan metode HyperText Transfer Protocol (HTTP) sebagai kata kerjanya \cite{fielding2000rest}.
 GraphQL menyediakan satu alamat, dan kliennya yang menyebutkan field apa saja
 yang diinginkan \cite{graphql-spec}. RPC (Remote Procedure Call) memandang
-API sebagai pemanggilan fungsi, dan gRPC menuliskan kontraknya sebagai berkas
+API sebagai panggilan fungsi, dan gRPC menuliskan kontraknya sebagai file
 \textit{protocol buffer} \cite{grpc-docs}.
 
 Tabel \ref{tab:gaya-api} membandingkan ketiganya pada hal-hal yang biasanya
@@ -504,7 +504,7 @@ tidak diam-diam.
 Kontrak memindahkan kesepakatan API dari ingatan ke dokumen. Pada demo bab
 ini, satu dokumen OpenAPI berisi lima skema dan dua jalur dipakai empat kali:
 meng-\textit{generate} 50 baris tipe TypeScript, memvalidasi isi permintaan
-di batas sistem, memvalidasi jawaban server, dan membandingkan dua versi
+di batas sistem, memvalidasi \textit{response} server, dan membandingkan dua versi
 kontrak. Tidak ada aturan yang ditulis dua kali, sehingga tidak ada aturan
 yang dapat menyimpang sendiri.
 
@@ -524,7 +524,7 @@ tidak diminta siapa pun.
 Kompatibilitas dapat diperiksa mesin. Perbandingan kedua kontrak menamai lima
 perubahan: dua menghapus dan menambah field wajib, satu menambah field
 opsional yang aman, satu menambah nilai enum, dan satu melonggarkan batas.
-Pada server yang berjalan, klien versi 1 membaca jawaban versi 2 dengan
+Pada server yang berjalan, klien versi 1 membaca \textit{response} versi 2 dengan
 status 200 tetapi gagal memakainya, dan kegagalan seperti itu hanya terlihat
 bila ada yang memvalidasinya terhadap kontrak lama.
 
