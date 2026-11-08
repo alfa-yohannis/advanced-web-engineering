@@ -57,7 +57,7 @@ menegakkannya, dan bahwa \textit{verdict}-nya dapat dibaca mesin.
         untuk tiap alamat: lolos atau tidak, dan mengapa. Dugaan ditulis
         lebih dahulu agar tidak menyesuaikan diri dengan hasilnya.
   \item Jalankan \textit{gate}-nya seperti pada Listing \ref{lst:c5-lat1-jalan},
-        lalu catat \textit{verdict} tiap baris ke Tabel \ref{tab:c5-lat1-hasil}. Tabel
+        lalu catat \textit{verdict} tiap baris ke \tabisi{tab:c5-lat1-hasil}. Tabel
         \ref{tab:c5-lat1-contoh} memperlihatkan contoh yang sudah terisi.
   \item Catat status keluar prosesnya dengan \texttt{echo \$?} tepat sesudah
         \textit{gate} selesai. Angka itulah yang dibaca \textit{Continuous
@@ -105,6 +105,7 @@ echo $?
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 1}
@@ -127,6 +128,7 @@ echo $?
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 \ifajar
   \subsection*{Latihan 2: Menemukan Bagian Termahal}
@@ -141,8 +143,7 @@ membutuhkan perbaikan yang sama sekali berbeda.
   \item Jalankan profil kedua alamat seperti pada Listing
         \ref{lst:c5-lat2-jalan}.
   \item Untuk tiap alamat, catat tiga fungsi teratas menurut waktu kumulatif
-        beserta bagiannya terhadap waktu total, lalu isi Tabel
-        \ref{tab:c5-lat2-hasil}. Tabel \ref{tab:c5-lat2-contoh}
+        beserta bagiannya terhadap waktu total, lalu isi \tabisi{tab:c5-lat2-hasil}. Tabel \ref{tab:c5-lat2-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Untuk tiap alamat, tulis satu kalimat perbaikan yang menyentuh
         sebabnya, bukan \textit{symptom}-nya.
@@ -178,6 +179,7 @@ python profil-endpoint.py terlaris 20
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 2}
@@ -196,6 +198,7 @@ python profil-endpoint.py terlaris 20
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 \ifajar
   \subsection*{Latihan 3: Menemukan Titik Jenuh}
@@ -211,8 +214,7 @@ yang masih dapat dilayani sebelum \textit{latency}-nya meledak.
         satu \textit{worker},
         agar \textit{cache} basis data hangat sebelum pengukuran dimulai.
   \item Jalankan beban untuk 1, 2, 4, 8, 16, dan 32 \textit{worker} seperti
-        pada Listing \ref{lst:c5-lat3-jalan}, lalu isi Tabel
-        \ref{tab:c5-lat3-hasil}. Tabel \ref{tab:c5-lat3-contoh}
+        pada Listing \ref{lst:c5-lat3-jalan}, lalu isi \tabisi{tab:c5-lat3-hasil}. Tabel \ref{tab:c5-lat3-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Tandai baris tempat \textit{throughput} berhenti bertambah. Itulah
         titik jenuhnya.
@@ -251,6 +253,7 @@ python beban.py /api/terlaris 32 15
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 3}
@@ -273,6 +276,7 @@ python beban.py /api/terlaris 32 15
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 \ifajar
   \subsection*{Latihan 4: Mengumpulkan Core Web Vitals Lapangan}
@@ -290,8 +294,7 @@ dari kunjungan yang sungguhan.
         atau pindah ke tab lain. Laporan dikirim saat halaman ditinggalkan,
         bukan saat selesai dimuat.
   \item Periksa isi \berkas{sources/chapter05/vitals.jsonl} seperti pada
-        Listing \ref{lst:c5-lat4-jalan}, lalu catat ketiga metriknya ke Tabel
-        \ref{tab:c5-lat4-hasil}. Tabel \ref{tab:c5-lat4-contoh}
+        Listing \ref{lst:c5-lat4-jalan}, lalu catat ketiga metriknya ke \tabisi{tab:c5-lat4-hasil}. Tabel \ref{tab:c5-lat4-contoh}
         memperlihatkan bentuk isian yang diharapkan.
   \item Ulangi kunjungan sebanyak lima kali, lalu jalankan ulang \textit{gate}
         \textit{budget} dan catat perubahan \textit{verdict} ketiga baris Core Web Vitals.
@@ -323,6 +326,7 @@ python gate-budget.py
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 4}
@@ -345,6 +349,7 @@ python gate-budget.py
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 Setelah seluruh latihan selesai, container dihentikan dengan
 \texttt{docker compose down -v}. Opsi \texttt{-v} ikut menghapus volume

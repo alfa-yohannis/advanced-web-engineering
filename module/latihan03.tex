@@ -88,8 +88,13 @@ rencananya, sebelum satu indeks pun ditambahkan.
         untuk \texttt{query/q1.sql} sampai \texttt{query/q4.sql}, lalu catat p50
         dan p95. Jalankan pertama sengaja dibuang oleh skrip,
         karena menanggung pengisian \textit{cache}.
-  \item Isi Tabel \ref{tab:c3-lat1-hasil}. Tabel \ref{tab:c3-lat1-contoh}
+\ifajar
+  \item Isi \tabisi{tab:c3-lat1-hasil}. Tabel \ref{tab:c3-lat1-contoh}
         memperlihatkan contoh yang sudah terisi.
+\else
+  \item Bandingkan hasil pengukuran sendiri dengan Tabel
+        \ref{tab:c3-lat1-contoh}.
+\fi
   \item Jawab tiga pertanyaan berikut. Pertama, \textit{query} mana yang membuang baris
         terbanyak dibanding baris yang dikembalikannya? Kedua, \textit{query} mana yang
         punya \textit{node} Sort, dan mengapa \textit{node} itu muncul? Ketiga, mengapa p95
@@ -139,6 +144,7 @@ python ukur-query.py query/q1.sql 20
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 1, dalam milidetik}
@@ -157,6 +163,7 @@ python ukur-query.py query/q1.sql 20
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 \ifajar
   \subsection*{Latihan 2: Memilih Indeks dan Membaca Perubahannya}
@@ -179,9 +186,14 @@ melainkan jawaban atas satu bentuk \textit{query} tertentu.
         sama persis. Rencana sesudah indeks disimpan ke \texttt{sesudah.txt},
         bukan \texttt{baseline.txt}, agar rencana sebelum indeks tidak
         tertimpa.
-  \item Isi Tabel \ref{tab:c3-lat2-hasil}, lalu bandingkan dengan dugaan pada
+\ifajar
+  \item Isi \tabisi{tab:c3-lat2-hasil}, lalu bandingkan dengan dugaan pada
         langkah pertama. Tabel \ref{tab:c3-lat2-contoh} memperlihatkan contoh yang
         sudah terisi.
+\else
+  \item Bandingkan hasil pengukuran sendiri dengan Tabel
+        \ref{tab:c3-lat2-contoh}.
+\fi
   \item Jawab dua pertanyaan berikut. Pertama, mengapa Q4 tidak membaik
         walaupun kolom \texttt{status} sering dipakai sebagai penyaring? Kedua,
         mengapa Q2 hanya membaik sedikit padahal indeksnya terpakai?
@@ -231,6 +243,7 @@ bergantung pada perangkat keras dan versi PostgreSQL yang dipakai, sehingga
 hasil tiap mahasiswa akan berbeda. Yang dilaporkan adalah pola perbandingannya
 beserta penjelasannya, bukan angka persisnya.
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 2}
@@ -249,6 +262,7 @@ beserta penjelasannya, bukan angka persisnya.
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 \ifajar
   \subsection*{Latihan 3: Menghilangkan Masalah N+1}
@@ -264,8 +278,7 @@ tersendiri, terpisah dari lama tiap \textit{query}-nya.
         pesanan, yaitu \texttt{python n-plus-1.py 5} dan
         \texttt{python n-plus-1.py 25}. Pelanggan tersibuk pada data uji punya
         25 pesanan, sehingga angka yang lebih besar tetap mengambil 25.
-  \item Catat jumlah \textit{query} dan waktunya untuk tiap ukuran, lalu isi Tabel
-        \ref{tab:c3-lat3-hasil}. Tabel \ref{tab:c3-lat3-contoh} memperlihatkan contoh
+  \item Catat jumlah \textit{query} dan waktunya untuk tiap ukuran, lalu isi \tabisi{tab:c3-lat3-hasil}. Tabel \ref{tab:c3-lat3-contoh} memperlihatkan contoh
         yang sudah terisi.
   \item Perhatikan baris terakhir keluarannya, yang membuktikan kedua cara
         mengembalikan data yang sama persis. Perbaikan yang mengubah hasil bukan
@@ -308,6 +321,7 @@ python n-plus-1.py 25
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 3}
@@ -324,6 +338,7 @@ python n-plus-1.py 25
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 \ifajar
   \subsection*{Latihan 4: Membuktikan Lost Update}
@@ -337,8 +352,7 @@ untuk banyak pengguna, lalu membandingkan biaya tiap pengamannya.
 \begin{enumerate}
   \item Jalankan perintah pada Listing \ref{lst:c3-lat4-jalan} dengan 8 \textit{worker}
         dan 50 pengurangan.
-  \item Catat kolom Hilang dan Percobaan untuk keempat cara, lalu isi Tabel
-        \ref{tab:c3-lat4-hasil}.
+  \item Catat kolom Hilang dan Percobaan untuk keempat cara, lalu isi \tabisi{tab:c3-lat4-hasil}.
         Tabel \ref{tab:c3-lat4-contoh} memperlihatkan contoh yang sudah terisi.
   \item Ulangi dengan 2 \textit{worker}, yaitu
         \texttt{python transaksi-konkuren.py 2 50}, lalu dengan 16
@@ -383,6 +397,7 @@ python transaksi-konkuren.py 8 50
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 4, tiap sel diisi hilang / percobaan}
@@ -401,6 +416,7 @@ python transaksi-konkuren.py 8 50
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 Setelah seluruh latihan selesai, container dihentikan dengan
 \texttt{docker compose down -v}. Opsi \texttt{-v} ikut menghapus volume

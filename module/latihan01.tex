@@ -32,8 +32,13 @@ daripada yang ditemukan di tengah praktikum.
         nyalakan Docker, atau hentikan proses yang memakai port bab lain.
   \item Jalankan ulang sampai hasilnya hijau, lalu catat apa saja yang
         diperbaiki.
-  \item Isi Tabel \ref{tab:c01-lat1-hasil}. Tabel \ref{tab:c01-lat1-contoh}
+\ifajar
+  \item Isi \tabisi{tab:c01-lat1-hasil}. Tabel \ref{tab:c01-lat1-contoh}
         memperlihatkan contoh yang sudah terisi.
+\else
+  \item Bandingkan hasil pengukuran sendiri dengan Tabel
+        \ref{tab:c01-lat1-contoh}.
+\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa pemeriksaan Docker
         menanyai server, bukan hanya mencari perintah \texttt{docker}?
         Kedua, bab mana yang tertahan bila port 8080 sudah terpakai, dan
@@ -86,6 +91,7 @@ python3 periksa-lingkungan.py
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pemeriksaan Latihan 1}
@@ -104,6 +110,7 @@ python3 periksa-lingkungan.py
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 Contoh di atas merah karena ketiga port dipakai proyek lain di laptop yang
 sama, bukan karena perkakasnya kurang. Hasil di laptop lain hampir pasti
@@ -125,8 +132,13 @@ cabangnya, sehingga cabang pantas digabung selagi pendek.
   \item Ubah \texttt{BARIS\_PER\_HARI} di \berkas{simulasi-cabang.py} menjadi
         6, jalankan ulang, lalu catat kolom blok konfliknya.
   \item Kembalikan \texttt{BARIS\_PER\_HARI} menjadi 3.
-  \item Isi Tabel \ref{tab:c01-lat2-hasil}. Tabel \ref{tab:c01-lat2-contoh}
+\ifajar
+  \item Isi \tabisi{tab:c01-lat2-hasil}. Tabel \ref{tab:c01-lat2-contoh}
         memperlihatkan contoh yang sudah terisi.
+\else
+  \item Bandingkan hasil pengukuran sendiri dengan Tabel
+        \ref{tab:c01-lat2-contoh}.
+\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa blok konflik pada 14
         hari jauh lebih banyak daripada baris yang diubah kedua pengembang?
         Kedua, apa yang terjadi pada konflik ketika tiap pengembang bekerja
@@ -168,6 +180,7 @@ python3 simulasi-cabang.py
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 2}
@@ -186,6 +199,7 @@ python3 simulasi-cabang.py
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 Benih acaknya tetap, sehingga angka latihan ini sama persis pada komputer
 mana pun dengan Git versi yang sama. Versi Git yang berbeda dapat menghitung
@@ -214,8 +228,13 @@ membuktikan bahwa CI menahan perubahan yang melanggar aturan bisnis.
   \item Buat repositori tim, salin direktori ini ke dalamnya, salin
         \berkas{ci.yml} ke \berkas{.github/workflows/}, sesuaikan
         \texttt{paths}-nya, lalu commit.
-  \item Isi Tabel \ref{tab:c01-lat3-hasil}. Tabel \ref{tab:c01-lat3-contoh}
+\ifajar
+  \item Isi \tabisi{tab:c01-lat3-hasil}. Tabel \ref{tab:c01-lat3-contoh}
         memperlihatkan contoh yang sudah terisi.
+\else
+  \item Bandingkan hasil pengukuran sendiri dengan Tabel
+        \ref{tab:c01-lat3-contoh}.
+\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa uji API tidak
         dijalankan pada jalan yang merah, padahal salah satu ujinya juga
         akan gagal? Kedua, lapisan mana yang berubah bila SQLite diganti
@@ -266,6 +285,7 @@ curl -s http://127.0.0.1:8050/buku/9
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 3}
@@ -282,6 +302,7 @@ curl -s http://127.0.0.1:8050/buku/9
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 Kolom kode dirusak pada baris terakhir menunjukkan akibat yang ditahan CI.
 Pada kode yang dirusak, permintaan buku seharga nol dijawab 201, artinya buku

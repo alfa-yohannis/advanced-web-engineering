@@ -45,11 +45,11 @@ dapat dianggap serangan.
         angkanya mudah terlihat. Seluruh kondisi pengukuran dijaga sama persis,
         yaitu profil jaringan, faktor \textit{throttling} CPU, dan mode tampilan, agar
         yang dibandingkan benar-benar halamannya, bukan pengaturannya.
-  \item Isi Tabel \ref{tab:baseline} dengan kedua hasil tersebut, lalu
+  \item Isi \tabisi{tab:baseline} dengan kedua hasil tersebut, lalu
         bandingkan. Perhatikan metrik mana yang berubah paling besar, lalu
         jelaskan penyebabnya berdasarkan bukti dari panel Network dan panel
         Performance.
-  \item Isi Tabel \ref{tab:baseline}, lalu tambahkan satu paragraf berisi
+  \item Isi \tabisi{tab:baseline}, lalu tambahkan satu paragraf berisi
         dugaan penyebab keterlambatan terbesar beserta bukti yang mendasarinya.
 \end{enumerate}
 
@@ -58,6 +58,7 @@ k6 run --vus 20 --duration 60s skrip-beban.js
 # Catat http_req_duration untuk p(50) dan p(95).
 \end{lstlisting}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian baseline performa, diisi untuk dua halaman}
@@ -84,6 +85,7 @@ k6 run --vus 20 --duration 60s skrip-beban.js
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 \ifajar
   \subsection*{Latihan 2: Mengukur Biaya Pembukaan Koneksi}
@@ -102,8 +104,7 @@ bukan oleh kecepatan program di server.
   \item Skrip tersebut sudah menghitung durasi tiap tahap memakai rumus pada
         Tabel \ref{tab:lat1-rumus}, karena keluaran \texttt{curl} bersifat
         kumulatif sejak permintaan dimulai.
-  \item Ambil nilai tengah dari lima pengukuran, lalu isi Tabel
-        \ref{tab:lat1-hasil} dalam milidetik. Tabel \ref{tab:lat1-contoh}
+  \item Ambil nilai tengah dari lima pengukuran, lalu isi \tabisi{tab:lat1-hasil} dalam milidetik. Tabel \ref{tab:lat1-contoh}
         memperlihatkan contoh hasil yang sudah terisi.
   \item Jawab tiga pertanyaan berikut. Pertama, berapa persen waktu total yang
         habis sebelum byte pertama tiba? Kedua, tahap mana yang paling besar
@@ -189,6 +190,7 @@ perjalanan menuju \textit{origin} baru terasa pada tahap TLS dan tunggu server.
 Angka pada tabel tersebut juga bergantung pada lokasi pengukur, sehingga hasil
 tiap mahasiswa akan berbeda.
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 2, dalam milidetik}
@@ -205,6 +207,7 @@ tiap mahasiswa akan berbeda.
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 \ifajar
   \subsection*{Latihan 3: Membandingkan HTTP/1.1 dan HTTP/2}
@@ -293,12 +296,16 @@ menambahkan kolom \emph{Protocol} dan \emph{Connection ID}.
         menyusut menjadi baris yang cocok saja. Catat nilai kolom
         \emph{Protocol} dan \emph{Connection ID} pada baris itu, lalu ulangi
         untuk kelima aset. Karena hanya lima, penghitungannya cukup manual.
-  \item Isi baris browser pada Tabel \ref{tab:lat2-hasil} dari catatan
+\ifajar
+  \item Isi baris browser pada \tabisi{tab:lat2-hasil} dari catatan
         tersebut. Protokolnya sama untuk kelima aset. Jumlah koneksi dihitung
         dari banyaknya nilai \emph{Connection ID} yang berbeda. Konkurensi
         dilihat dari kolom \emph{Waterfall}, yaitu berapa batang yang mulai
         pada waktu berdekatan. Waktu diambil dari ringkasan \emph{Finish} di
         bagian bawah panel.
+\else
+  \item Catat hasil pengukurannya.
+\fi
   \item Perlu dicatat, pada browser konkurensi tidak dapat ditentukan sendiri.
         Browser yang memutuskan berapa permintaan berjalan bersamaan, dan
         keputusan itu dipengaruhi versi HTTP, prioritas aset, serta batas
@@ -321,8 +328,13 @@ menambahkan kolom \emph{Protocol} dan \emph{Connection ID}.
         dari \texttt{\%\{num\_connects\}} milik \texttt{curl}, sedangkan pada
         browser angka itu terlihat dari banyaknya nilai berbeda pada kolom
         \emph{Connection ID}.
-  \item Isi Tabel \ref{tab:lat2-hasil}. Tabel \ref{tab:lat2-contoh}
+\ifajar
+  \item Isi \tabisi{tab:lat2-hasil}. Tabel \ref{tab:lat2-contoh}
         memperlihatkan contoh hasilnya.
+\else
+  \item Bandingkan hasil pengukuran sendiri dengan Tabel
+        \ref{tab:lat2-contoh}.
+\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa skenario pertama
         memakai lima koneksi tetapi tetap paling lambat? Kedua, apa yang
         membedakan skenario ketiga dan keempat, padahal konkurensinya sama?
@@ -432,6 +444,7 @@ curl -sI https://www.google.com/ | grep -i alt-svc
 \end{lstlisting}
 
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 3}
@@ -452,6 +465,7 @@ curl -sI https://www.google.com/ | grep -i alt-svc
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 Pertanyaan berikutnya, mengapa HTTP/3 tidak ikut diukur. Ada dua alasan yang
 keduanya dapat diperiksa sendiri. Pertama, \texttt{curl} bawaan Ubuntu tidak

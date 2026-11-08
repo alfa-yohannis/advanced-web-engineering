@@ -79,8 +79,13 @@ bersyarat.
         terbuka dan \emph{Disable cache} tidak dicentang. Muat ulang halaman
         dua kali, lalu catat kolom \emph{Status} dan \emph{Size} untuk halaman
         dan untuk \texttt{app.3f9a2c.js}.
-  \item Isi Tabel \ref{tab:c4-lat1-hasil}. Tabel \ref{tab:c4-lat1-contoh}
+\ifajar
+  \item Isi \tabisi{tab:c4-lat1-hasil}. Tabel \ref{tab:c4-lat1-contoh}
         memperlihatkan contoh yang sudah terisi.
+\else
+  \item Bandingkan hasil pengukuran sendiri dengan Tabel
+        \ref{tab:c4-lat1-contoh}.
+\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa halaman selalu
         ditanyakan ulang, sedangkan aset aplikasi tidak pernah ditanyakan
         ulang? Kedua, berapa byte yang dihemat oleh \textit{response} 304 pada halaman
@@ -130,6 +135,7 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil Latihan 1}
@@ -148,6 +154,7 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 Satu hal pada contoh tersebut layak diperhatikan. \texttt{ETag} aset kampus,
 yaitu \texttt{67d3dca2-965}, tersusun dari dua bilangan heksadesimal. Bilangan
@@ -176,8 +183,13 @@ server, dan bahwa \textit{cache} yang macet justru memperlambat aplikasi.
   \item Bekukan Redis dengan \texttt{docker compose pause cache}, ukur
         \texttt{/api/terlaris-cache} 20 kali, lalu cairkan lagi dengan
         \texttt{docker compose unpause cache}.
-  \item Isi Tabel \ref{tab:c4-lat2-hasil}. Tabel \ref{tab:c4-lat2-contoh}
+\ifajar
+  \item Isi \tabisi{tab:c4-lat2-hasil}. Tabel \ref{tab:c4-lat2-contoh}
         memperlihatkan contoh yang sudah terisi.
+\else
+  \item Bandingkan hasil pengukuran sendiri dengan Tabel
+        \ref{tab:c4-lat2-contoh}.
+\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa nilai terbesar pada
         baris \textit{cache-aside} hampir sama dengan p50 baris tanpa
         \textit{cache}? Kedua, dari mana angka sekitar 185 milidetik pada
@@ -222,6 +234,7 @@ python ukur-ttfb.py http://localhost:8000/api/terlaris-cache 50
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil Latihan 2, dalam milidetik}
@@ -238,6 +251,7 @@ python ukur-ttfb.py http://localhost:8000/api/terlaris-cache 50
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 Baris ketiga pada contoh terisi tampak janggal, karena \textit{cache} yang
 seharusnya mempercepat justru membuat \textit{response} dua setengah kali lebih lambat.
@@ -264,8 +278,13 @@ data dengan banyak \textit{query} yang sama, lalu membandingkan dua cara meredam
   \item Jalankan sekali lagi dengan satu permintaan saja, yaitu
         \texttt{python stampede.py 1}, lalu bandingkan baris
         \texttt{stale\_while\_revalidate} dengan hasil 50 permintaan.
-  \item Isi Tabel \ref{tab:c4-lat3-hasil}. Tabel \ref{tab:c4-lat3-contoh}
+\ifajar
+  \item Isi \tabisi{tab:c4-lat3-hasil}. Tabel \ref{tab:c4-lat3-contoh}
         memperlihatkan contoh yang sudah terisi.
+\else
+  \item Bandingkan hasil pengukuran sendiri dengan Tabel
+        \ref{tab:c4-lat3-contoh}.
+\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa p50
         \texttt{tanpa\_pengaman} jauh lebih besar daripada waktu satu \textit{query},
         padahal \textit{query}-nya sama persis? Hubungkan jawabannya dengan ukuran \textit{connection
@@ -305,6 +324,7 @@ python stampede.py
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil Latihan 3, waktu dalam milidetik}
@@ -321,6 +341,7 @@ python stampede.py
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 Angka pada judul kolom menyatakan jumlah permintaan serentak. Kolom terakhir
 pada contoh terisi menjelaskan kejanggalan pada baris ketiga. Dengan satu
@@ -348,8 +369,13 @@ harga diubah, pada empat cara memperbarui \textit{cache}.
   \item Kembalikan \texttt{TTL\_DETIK} menjadi 5, ubah
         \texttt{JEDA\_HAPUS\_KEDUA\_DETIK} menjadi 1.0, jalankan ulang, lalu
         perhatikan baris terakhir.
-  \item Isi Tabel \ref{tab:c4-lat4-hasil}. Tabel \ref{tab:c4-lat4-contoh}
+\ifajar
+  \item Isi \tabisi{tab:c4-lat4-hasil}. Tabel \ref{tab:c4-lat4-contoh}
         memperlihatkan contoh yang sudah terisi.
+\else
+  \item Bandingkan hasil pengukuran sendiri dengan Tabel
+        \ref{tab:c4-lat4-contoh}.
+\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa
         \texttt{hapus\_kalah\_race} sama buruknya dengan
         \texttt{ttl\_saja}? Kedua, baris mana yang berubah ketika TTL dinaikkan
@@ -393,6 +419,7 @@ python invalidasi.py
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil Latihan 4, lama \textit{stale} dalam detik}
@@ -411,6 +438,7 @@ python invalidasi.py
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 Pada contoh terisi, baris pertama dan ketiga sama persis, termasuk kelebihan
 0,1 detik di atas TTL yang berasal dari selang pemeriksaan. Kesamaan itu
@@ -440,8 +468,13 @@ sesekali, tetapi memperparah keadaan ketika layanan kewalahan, dan bahwa
         \texttt{circuit\_breaker} pada skenario seluruhnya lambat.
   \item Bekukan Redis, jalankan \texttt{redis-macet.py} seperti pada Listing
         \ref{lst:redis-macet}, lalu cairkan Redis kembali.
-  \item Isi Tabel \ref{tab:c4-lat5-hasil}. Tabel \ref{tab:c4-lat5-contoh}
+\ifajar
+  \item Isi \tabisi{tab:c4-lat5-hasil}. Tabel \ref{tab:c4-lat5-contoh}
         memperlihatkan contoh yang sudah terisi.
+\else
+  \item Bandingkan hasil pengukuran sendiri dengan Tabel
+        \ref{tab:c4-lat5-contoh}.
+\fi
   \item Jawab tiga pertanyaan berikut. Pertama, pada skenario seluruhnya
         lambat, mengapa \texttt{tanpa\_batas\_waktu} berhasil 100 persen tetapi
         tetap disebut cara terburuk? Kedua, berapa kali lipat beban yang
@@ -486,6 +519,7 @@ python resilience.py            # terminal lain
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil Latihan 5}
@@ -508,6 +542,7 @@ python resilience.py            # terminal lain
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 Tiga angka pada contoh terisi menyimpang dari hitungan di atas kertas, dan
 ketiganya sudah dijelaskan pada Seksi \ref{sec:resilience}. Batas waktu saja

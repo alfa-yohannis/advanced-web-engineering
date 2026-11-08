@@ -35,8 +35,7 @@ yang menanggung risiko versi baru.
   \item Pastikan \texttt{bobot\_persen\_kedua} di
         \berkas{sources/chapter09/rilis.json} bernilai 10, lalu kirim 200
         permintaan seperti pada Listing \ref{lst:c9-lat1-jalan}.
-  \item Catat pembagian yang terjadi beserta jumlah kegagalannya ke Tabel
-        \ref{tab:c9-lat1-hasil}. Tabel \ref{tab:c9-lat1-contoh}
+  \item Catat pembagian yang terjadi beserta jumlah kegagalannya ke \tabisi{tab:c9-lat1-hasil}. Tabel \ref{tab:c9-lat1-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Ubah bobotnya menjadi 50, kirim 200 permintaan lagi, lalu catat
         kembali. Perhatikan bahwa proxy tidak perlu dinyalakan ulang.
@@ -73,6 +72,7 @@ python3 ukur-rilis.py 200
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 1}
@@ -91,6 +91,7 @@ python3 ukur-rilis.py 200
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 \ifajar
   \subsection*{Latihan 2: Membaca Dashboard Operasional}
@@ -104,8 +105,7 @@ perlu membaca kodenya.
 \begin{enumerate}
   \item Lihat teks metrik mentah salah satu versi, lalu kenali ketiga jenis
         metriknya, seperti pada Listing \ref{lst:c9-lat2-jalan}.
-  \item Jalankan \textit{dashboard} operasionalnya, lalu catat angka kedua versi ke Tabel
-        \ref{tab:c9-lat2-hasil}. Tabel \ref{tab:c9-lat2-contoh}
+  \item Jalankan \textit{dashboard} operasionalnya, lalu catat angka kedua versi ke \tabisi{tab:c9-lat2-hasil}. Tabel \ref{tab:c9-lat2-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Kirim 200 permintaan lagi, lalu jalankan \textit{dashboard}-nya sekali lagi dan
         perhatikan angka mana yang bertambah dan angka mana yang tetap.
@@ -139,6 +139,7 @@ python3 dashboard.py
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 2}
@@ -157,6 +158,7 @@ python3 dashboard.py
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 \ifajar
   \subsection*{Latihan 3: Menelusuri Satu Permintaan}
@@ -171,7 +173,7 @@ tidak dapat dijawab metrik maupun \textit{log} sendirian.
   \item Ambil satu \textit{trace id} dari header \texttt{X-Trace-Id} sebuah
         \textit{response}, seperti pada Listing \ref{lst:c9-lat3-jalan}.
   \item Cari penanda itu di kedua file log, lalu catat status dan lamanya di
-        tiap proses ke Tabel \ref{tab:c9-lat3-hasil}. Tabel
+        tiap proses ke \tabisi{tab:c9-lat3-hasil}. Tabel
         \ref{tab:c9-lat3-contoh} memperlihatkan contoh yang sudah terisi.
   \item Ulangi untuk satu permintaan yang gagal, lalu catat di proses mana
         kegagalannya berasal.
@@ -205,6 +207,7 @@ grep -h "300a032b60413b55e53009cc0660f240" proxy.log hijau.log
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil penelusuran Latihan 3}
@@ -223,6 +226,7 @@ grep -h "300a032b60413b55e53009cc0660f240" proxy.log hijau.log
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 \ifajar
   \subsection*{Latihan 4: Menegakkan SLO dan Menjalankan Container}
@@ -240,8 +244,7 @@ dinilai mesin, dan artefak yang dapat dijalankan di mana saja.
         \berkas{sources/chapter09/slo.json} menjadi 95, jalankan ulang
         alarmnya, lalu catat perubahannya.
   \item Bangun \textit{image} dan jalankan containernya, lalu catat ukuran
-        \textit{image} serta lama sampai siap melayani ke Tabel
-        \ref{tab:c9-lat4-hasil}. Tabel \ref{tab:c9-lat4-contoh}
+        \textit{image} serta lama sampai siap melayani ke \tabisi{tab:c9-lat4-hasil}. Tabel \ref{tab:c9-lat4-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Hapus baris \texttt{ENV HOST=0.0.0.0} dari
         \berkas{sources/chapter09/Dockerfile}, bangun ulang, lalu catat apa
@@ -284,6 +287,7 @@ curl -s http://127.0.0.1:8065/sehat
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 4}
@@ -306,6 +310,7 @@ curl -s http://127.0.0.1:8065/sehat
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 Setelah seluruh latihan selesai, ketiga proses dihentikan dengan
 \texttt{kill}, dan containernya dihapus dengan

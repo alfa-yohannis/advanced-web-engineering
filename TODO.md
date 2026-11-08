@@ -104,9 +104,13 @@ adalah edisi referensi.
 
 ### Masih harus dikerjakan
 
-1. Lembar isian kosong (57 tabel berjudul "Lembar isian") masih tercetak di
-   edisi referensi. Bungkus dengan `\ifajar`, karena tabel kosong itulah
-   penanda paling kuat yang membuat buku terbaca sebagai buku ajar.
+1. ~~Lembar isian kosong di edisi referensi.~~ Sudah dikerjakan. 57 tabel
+   lembar isian dibungkus `\ifajar`, 34 langkah yang menyuruh mengisinya
+   diganti menjadi membandingkan dengan tabel contohnya, dan 60 rujukan
+   lainnya memakai makro `\tabisi` yang menyebut "Tabel N" di edisi ajar dan
+   "catatan sendiri" di edisi referensi. Edisi referensi kini 275 halaman
+   tanpa satu pun lembar isian, edisi ajar tetap 283 halaman dengan 57 lembar
+   isian dan 14 Tujuan Pembelajaran.
 2. Bab 1 masih bergaya pengantar mata kuliah, termasuk peta pertemuan. Di
    edisi referensi, bab itu perlu dibingkai ulang sebagai pengantar bidang
    ilmu, atau dipindahkan ke edisi ajar saja.

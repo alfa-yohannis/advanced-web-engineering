@@ -48,8 +48,13 @@ ketika komponen itu dibesarkan.
         lalu bandingkan hasilnya dengan jumlah \textit{worker}, yaitu 32.
   \item Jalankan ulang dengan \texttt{JUMLAH\_KONEKSI=16} di depan
         perintahnya, lalu catat keempat barisnya.
-  \item Isi Tabel \ref{tab:c14-lat1-hasil}. Tabel \ref{tab:c14-lat1-contoh}
+\ifajar
+  \item Isi \tabisi{tab:c14-lat1-hasil}. Tabel \ref{tab:c14-lat1-contoh}
         memperlihatkan contoh yang sudah terisi.
+\else
+  \item Bandingkan hasil pengukuran sendiri dengan Tabel
+        \ref{tab:c14-lat1-contoh}.
+\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa empat dan delapan
         replika berhenti pada angka yang hampir sama dengan empat koneksi?
         Kedua, mengapa p50 empat dan delapan replika sama persis, padahal
@@ -94,6 +99,7 @@ JUMLAH_KONEKSI=16 python3 ukur-skala.py
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 1}
@@ -112,6 +118,7 @@ JUMLAH_KONEKSI=16 python3 ukur-skala.py
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 \ifajar
   \subsection*{Latihan 2: Partisi Data dan Kunci yang Pindah}
@@ -129,8 +136,13 @@ tentu baik.
   \item Ubah \texttt{JUMLAH\_NODE\_AKHIR} di \berkas{partisi.py} menjadi 8,
         jalankan ulang, lalu catat kolom kunci pindahnya.
   \item Kembalikan \texttt{JUMLAH\_NODE\_AKHIR} menjadi 5.
-  \item Isi Tabel \ref{tab:c14-lat2-hasil}. Tabel \ref{tab:c14-lat2-contoh}
+\ifajar
+  \item Isi \tabisi{tab:c14-lat2-hasil}. Tabel \ref{tab:c14-lat2-contoh}
         memperlihatkan contoh yang sudah terisi.
+\else
+  \item Bandingkan hasil pengukuran sendiri dengan Tabel
+        \ref{tab:c14-lat2-contoh}.
+\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa modulo dari empat ke
         delapan \textit{node} hanya memindahkan 50,0\% kunci, jauh lebih sedikit
         daripada dari empat ke lima? Kedua, mengapa satu titik per \textit{node} yang
@@ -173,6 +185,7 @@ python3 partisi.py
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil perhitungan Latihan 2}
@@ -189,6 +202,7 @@ python3 partisi.py
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 Angka pada latihan ini dihitung, bukan diukur dengan jam, sehingga akan sama
 persis pada komputer mana pun. Yang dilaporkan tetap pola perbandingannya,
@@ -215,8 +229,13 @@ melewati batas.
         catat totalnya, lalu kembalikan menjadi 0,9.
   \item Ubah \texttt{kelipatan\_beban} menjadi 200, jalankan ulang, catat
         pemeriksaan koneksi yang gagal, lalu kembalikan menjadi 100.
-  \item Isi Tabel \ref{tab:c14-lat3-hasil}. Tabel \ref{tab:c14-lat3-contoh}
+\ifajar
+  \item Isi \tabisi{tab:c14-lat3-hasil}. Tabel \ref{tab:c14-lat3-contoh}
         memperlihatkan contoh yang sudah terisi.
+\else
+  \item Bandingkan hasil pengukuran sendiri dengan Tabel
+        \ref{tab:c14-lat3-contoh}.
+\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa pesanan membutuhkan
         lima \textit{shard} sedangkan katalog cukup satu, padahal beban
         katalog empat kali lebih besar? Kedua, berapa \textit{node} basis data dan
@@ -260,6 +279,7 @@ python3 rencana-kapasitas.py
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil perhitungan Latihan 3}
@@ -276,6 +296,7 @@ python3 rencana-kapasitas.py
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 Biaya pada rencana ini hanyalah asumsi contoh yang tertulis di
 \berkas{rencana.json}. Yang dinilai adalah susunan dan alasannya: layanan
@@ -303,8 +324,13 @@ bagi pengguna yang pernah datang.
         \textit{cache} \texttt{katalog-v1}.
   \item Matikan \berkas{aplikasi.py}, muat ulang halamannya, lalu catat jam
         pembuatan data yang tertulis di atas daftar buku.
-  \item Isi Tabel \ref{tab:c14-lat4-hasil}. Tabel \ref{tab:c14-lat4-contoh}
+\ifajar
+  \item Isi \tabisi{tab:c14-lat4-hasil}. Tabel \ref{tab:c14-lat4-contoh}
         memperlihatkan contoh yang sudah terisi.
+\else
+  \item Bandingkan hasil pengukuran sendiri dengan Tabel
+        \ref{tab:c14-lat4-contoh}.
+\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa kunjungan pertama
         justru yang paling banyak mengirim permintaan? Kedua, kunjungan
         ketiga dan keempat sama-sama tanpa server, apa yang membuat hasilnya
@@ -343,6 +369,7 @@ python3 ukur-offline.py
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 4}
@@ -361,6 +388,7 @@ python3 ukur-offline.py
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 Jumlah permintaan pada kunjungan kedua bergantung pada versi Chrome. Chrome
 157 yang dipakai pada bab ini mengirim satu permintaan navigasi bersamaan
@@ -384,8 +412,13 @@ dimuat sebelum fungsinya dipanggil, bukan oleh fungsinya sendiri.
         \texttt{"difflib"} ke \texttt{DAFTAR\_DEPENDENSI} di
         \berkas{fungsi.py}, jalankan ulang, lalu catat baris ketiganya.
   \item Kembalikan \texttt{DAFTAR\_DEPENDENSI} seperti semula.
-  \item Isi Tabel \ref{tab:c14-lat5-hasil}. Tabel \ref{tab:c14-lat5-contoh}
+\ifajar
+  \item Isi \tabisi{tab:c14-lat5-hasil}. Tabel \ref{tab:c14-lat5-contoh}
         memperlihatkan contoh yang sudah terisi.
+\else
+  \item Bandingkan hasil pengukuran sendiri dengan Tabel
+        \ref{tab:c14-lat5-contoh}.
+\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa \textit{cold start}
         lebih dari seribu kali panggilan \textit{warm}, padahal fungsinya
         sama? Kedua, bagian mana dari \textit{cold start} layanan
@@ -426,6 +459,7 @@ python3 ukur-cold-start.py
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 5}
@@ -444,6 +478,7 @@ python3 ukur-cold-start.py
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 Baris terakhir contoh memuat kejanggalan. Tiga dependensi tambahan menaikkan
 p50 menjadi 111,941 milidetik, tetapi kolom kali lipatnya justru turun dari

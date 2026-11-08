@@ -40,8 +40,13 @@ bahwa isi token terbaca siapa pun yang memegangnya.
         pakai sesi yang sama sekali lagi. Catat ketiga hasilnya.
   \item Masuk dengan cara token, lalu dekode bagian tengah tokennya dengan
         \texttt{base64}. Catat apa saja yang terbaca di dalamnya.
-  \item Isi Tabel \ref{tab:c10-lat1-hasil}. Tabel \ref{tab:c10-lat1-contoh}
+\ifajar
+  \item Isi \tabisi{tab:c10-lat1-hasil}. Tabel \ref{tab:c10-lat1-contoh}
         memperlihatkan contoh yang sudah terisi.
+\else
+  \item Bandingkan hasil pengukuran sendiri dengan Tabel
+        \ref{tab:c10-lat1-contoh}.
+\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa token tidak dapat
         dicabut seketika? Kedua, apa yang hilang bila seluruh keterangan
         pengguna dimasukkan ke dalam token? Ketiga, kapan sesi lebih pantas
@@ -75,6 +80,7 @@ curl -s -X POST \
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 1}
@@ -93,6 +99,7 @@ curl -s -X POST \
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 \ifajar
   \subsection*{Latihan 2: Umur dan Rotasi Token}
@@ -112,8 +119,7 @@ berbeda.
   \item Lakukan \textit{refresh} dengan \textit{refresh token}, catat pasangan baru yang
         terbit, lalu pakai ulang penanda lama seperti pada Listing
         \ref{lst:c10-lat2-jalan}.
-  \item Coba penanda baru sesudah pemakaian ulang itu, lalu isi Tabel
-        \ref{tab:c10-lat2-hasil}. Tabel \ref{tab:c10-lat2-contoh}
+  \item Coba penanda baru sesudah pemakaian ulang itu, lalu isi \tabisi{tab:c10-lat2-hasil}. Tabel \ref{tab:c10-lat2-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Jawab dua pertanyaan berikut. Pertama, mengapa penanda baru ikut
         tidak berlaku? Kedua, apa yang terjadi bila rotasi dipakai tanpa penangkapan
@@ -146,6 +152,7 @@ curl -s -X POST "http://127.0.0.1:8070/refresh?refresh=PENANDA_BARU"
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 2}
@@ -168,6 +175,7 @@ curl -s -X POST "http://127.0.0.1:8070/refresh?refresh=PENANDA_BARU"
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 \ifajar
   \subsection*{Latihan 3: Matriks Hak Akses}
@@ -180,7 +188,7 @@ terbaca sekaligus dari satu tabel.
 
 \begin{enumerate}
   \item Jalankan alat ukurnya seperti pada Listing \ref{lst:c10-lat3-jalan},
-        lalu salin hasilnya ke Tabel \ref{tab:c10-lat3-hasil}. Tabel
+        lalu salin hasilnya ke \tabisi{tab:c10-lat3-hasil}. Tabel
         \ref{tab:c10-lat3-contoh} memperlihatkan contoh yang sudah terisi.
   \item Tandai sel mana yang ditentukan peran, sel mana yang ditentukan
         kepemilikan, dan sel mana yang ditentukan \textit{tenant}.
@@ -220,6 +228,7 @@ python3 ukur-akses.py
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 3}
@@ -240,6 +249,7 @@ python3 ukur-akses.py
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 \ifajar
   \subsection*{Latihan 4: Menambah Tenant dan Peran Baru}
@@ -261,7 +271,7 @@ sebenarnya tersebar di banyak tempat.
         \berkas{sources/chapter10/kebijakan.py}.
   \item Tambahkan kedua pengguna baru itu ke daftar pada
         \berkas{sources/chapter10/ukur-akses.py}, jalankan ulang, lalu
-        catat matriksnya ke Tabel \ref{tab:c10-lat4-hasil}. Tabel
+        catat matriksnya ke \tabisi{tab:c10-lat4-hasil}. Tabel
         \ref{tab:c10-lat4-contoh} memperlihatkan bentuk isian yang
         diharapkan.
   \item Catat berapa file yang harus disunting untuk kedua penambahan itu.
@@ -291,6 +301,7 @@ python3 -c "import aplikasi; print(aplikasi.buat_catatan_sandi('eko123'))"
   \end{tabularx}
 \end{table}
 
+\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 4}
@@ -307,6 +318,7 @@ python3 -c "import aplikasi; print(aplikasi.buat_catatan_sandi('eko123'))"
     \hline
   \end{tabularx}
 \end{table}
+\fi
 
 Setelah seluruh latihan selesai, aplikasinya dihentikan dengan Ctrl+C. Tidak
 ada container yang perlu dimatikan, karena bab ini memang tidak memakainya.
