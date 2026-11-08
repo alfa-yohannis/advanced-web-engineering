@@ -52,14 +52,24 @@ tampilnya 59 dan 76 karakter.
 
 ## Menjadikan buku ini buku referensi
 
-Kriterianya diambil dari Pedoman Operasional PAK 2019 beserta panduan
-penerbit kampus: buku referensi bernilai 40 angka kredit, wajib ber-ISBN,
-tebal isi paling sedikit 40 halaman cetak format UNESCO, berisi hasil
-penelitian atau pemikiran penulis, dan **bagian isinya tidak memuat perangkat
-asesmen**. Buku ajar bernilai 20 angka kredit, isinya turunan rencana
-pembelajaran, dan memuat tujuan instruksional, rangkuman, serta latihan.
-Satu terbitan dinilai sekali, jadi satu buku tidak dapat diklaim sebagai
-keduanya. Rencananya: satu sumber naskah, dua edisi, dan yang ber-ISBN
+Dasar aturannya perlu dipastikan lebih dahulu. PO PAK 2019 sudah diganti
+Kepmendiktisaintek Nomor 63/M/KEP/2025, dan ringkasan dari penerbit menyebut
+syarat tebal buku referensi maupun monograf naik menjadi 125 halaman, dengan
+monograf kini bernilai sama, yaitu 40 angka kredit. Salinan resminya berupa
+pindaian yang tidak dapat dibaca mesin, jadi angka itu belum terverifikasi
+dari sumber primer dan perlu ditanyakan ke tim PAK kampus.
+
+Definisi buku referensi pada PO PAK bersifat positif: ber-ISBN, satu bidang
+ilmu sesuai kompetensi penulis, serta memenuhi syarat karya ilmiah utuh, yaitu
+rumusan masalah bernilai kebaruan, metodologi pemecahan masalah, dukungan
+data atau teori mutakhir, kesimpulan, dan daftar pustaka. Tidak ada kalimat
+yang melarang soal latihan. Yang berisiko adalah penggolongannya: bab yang
+dibuka tujuan pembelajaran lalu ditutup latihan beserta lembar isian terbaca
+sebagai buku ajar, dan buku ajar bernilai 20 angka kredit, bukan 40.
+
+Prosedur pengukuran justru memperkuat syarat metodologi, selama dibaca
+sebagai metode, bukan sebagai pekerjaan rumah. Karena satu terbitan dinilai
+sekali, rencananya tetap: satu sumber naskah, dua edisi, dan yang ber-ISBN
 adalah edisi referensi.
 
 ### Sudah dikerjakan
@@ -79,8 +89,8 @@ adalah edisi referensi.
 ### Masih harus dikerjakan
 
 1. Lembar isian kosong (57 tabel berjudul "Lembar isian") masih tercetak di
-   edisi referensi. Bungkus dengan `\ifajar`, karena tabel kosong terbaca
-   sebagai perangkat asesmen.
+   edisi referensi. Bungkus dengan `\ifajar`, karena tabel kosong itulah
+   penanda paling kuat yang membuat buku terbaca sebagai buku ajar.
 2. Bab 1 masih bergaya pengantar mata kuliah, termasuk peta pertemuan. Di
    edisi referensi, bab itu perlu dibingkai ulang sebagai pengantar bidang
    ilmu, atau dipindahkan ke edisi ajar saja.
