@@ -1,0 +1,308 @@
+\ifajar
+  \section{Latihan}
+\else
+  \section{Bab 8: Arsitektur Web Modern}
+\fi
+
+Seluruh file yang dipakai pada latihan ini tersedia di
+\berkas{sources/chapter08/}, dihitung relatif terhadap akar repositori.
+Latihan ini hanya membutuhkan Python 3, tanpa Docker dan tanpa Node.js,
+karena yang dibandingkan adalah tempat HTML di-\textit{render}.
+
+Seluruh pengukuran diarahkan ke aplikasi yang berjalan di komputer sendiri,
+dengan beban setara satu pengunjung membuka halaman. Hasil tiap mahasiswa
+akan berbeda pada bagian waktu, dan yang dilaporkan adalah pola
+perbandingannya beserta penjelasannya.
+
+Penyiapannya dilakukan sekali, seperti pada Listing \ref{lst:c8-siapkan}.
+
+\begin{lstlisting}[language=bash, caption={Membangun halaman statis lalu menyalakan server, memakai \berkas{sources/chapter08/bangun-statis.py}}, label={lst:c8-siapkan}]
+cd sources/chapter08
+python3 bangun-statis.py
+python3 aplikasi.py &
+
+# Keluarannya:
+# Dibangun     : katalog-ssg.html
+# Ukuran       : 511 byte
+# Lama render  : 0.5 ms
+# Melayani di http://127.0.0.1:8040/ssr  (Ctrl+C untuk berhenti)
+\end{lstlisting}
+
+\ifajar
+  \subsection*{Latihan 1: Membandingkan Lima Varian}
+\else
+  \subsection*{Prosedur 1: Membandingkan Lima Varian}
+\fi
+
+Latihan ini membuktikan bahwa perbedaan kelima varian dapat dihitung, bukan
+hanya diperdebatkan.
+
+\begin{enumerate}
+  \item Jalankan alat ukurnya seperti pada Listing \ref{lst:c8-lat1-jalan},
+        lalu isi Tabel \ref{tab:c8-lat1-hasil}. Tabel
+        \ref{tab:c8-lat1-contoh} memperlihatkan contoh yang sudah terisi.
+  \item Buka kelima alamat di browser, lalu bandingkan apa yang tampil
+        ketika JavaScript dimatikan lewat panel pengembang.
+  \item Lihat sumber halaman tiap varian, lalu catat varian mana yang
+        memuat judul buku di dalam HTML-nya.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa HTML varian SPA
+        paling kecil tetapi totalnya paling besar? Kedua, mengapa alat ukur
+        ini tidak dapat menangkap seluruh biaya varian SPA? Ketiga, varian
+        mana yang paling tahan terhadap skrip yang gagal dimuat?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Mengukur kelima varian, tersedia di \berkas{sources/chapter08/ukur-varian.py}}, label={lst:c8-lat1-jalan}]
+python3 ukur-varian.py
+
+# Keluarannya:
+#   Varian        HTML   Total  Isi di HTML  Minta  HTML ms  Total ms
+#   ssg            511     511           ya      1      1.9       1.9
+#   isr            511     511           ya      1     52.9      52.9
+#   ssr            511     511           ya      1     51.8      51.8
+#   islands        625    1322           ya      2      1.5       3.1
+#   spa            229    1551        tidak      3      0.9       1.7
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 1 yang sudah terisi}
+  \label{tab:c8-lat1-contoh}
+  \begin{tabularx}{\textwidth}{lrrlr}
+    \hline
+    \textbf{Varian} & \textbf{HTML} & \textbf{Total} & \textbf{Isi di HTML} & \textbf{Minta} \\
+    \hline
+    SSG & 511 B & 511 B & ya & 1 \\
+    \hline
+    SPA & 229 B & 1.551 B & tidak & 3 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 1}
+  \label{tab:c8-lat1-hasil}
+  \begin{tabularx}{\textwidth}{lrrlr}
+    \hline
+    \textbf{Varian} & \textbf{HTML} & \textbf{Total} & \textbf{Isi di HTML} & \textbf{Minta} \\
+    \hline
+    SSG & \dots & \dots & \dots & \dots \\
+    \hline
+    ISR & \dots & \dots & \dots & \dots \\
+    \hline
+    SSR & \dots & \dots & \dots & \dots \\
+    \hline
+    Islands & \dots & \dots & \dots & \dots \\
+    \hline
+    SPA & \dots & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\ifajar
+  \subsection*{Latihan 2: Membaca Perilaku ISR}
+\else
+  \subsection*{Prosedur 2: Membaca Perilaku ISR}
+\fi
+
+Latihan ini membuktikan bahwa biaya \textit{rendering} pada ISR tidak hilang,
+melainkan ditanggung satu pengunjung tiap periode.
+
+\begin{enumerate}
+  \item Minta alamat ISR tiga kali berurutan, lalu catat header
+        \texttt{X-ISR} dan waktunya, seperti pada Listing
+        \ref{lst:c8-lat2-jalan}.
+  \item Tunggu sebelas detik, lalu minta dua kali lagi dan catat kembali.
+  \item Ubah \texttt{UMUR\_ISR\_DETIK} di
+        \berkas{sources/chapter08/aplikasi.py} menjadi 60, nyalakan ulang
+        aplikasinya, lalu ulangi pengamatannya.
+  \item Isi Tabel \ref{tab:c8-lat2-hasil}. Tabel \ref{tab:c8-lat2-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab dua pertanyaan berikut. Pertama, pengunjung mana yang
+        menanggung biaya \textit{rendering}, dan apakah itu adil? Kedua, apa yang
+        berubah bila umurnya dinaikkan menjadi satu jam?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Mengamati daur ISR, tersedia di \berkas{sources/chapter08/aplikasi.py}}, label={lst:c8-lat2-jalan}]
+curl -s -D - -o /dev/null -w "%{time_total}\n" http://127.0.0.1:8040/isr \
+  | grep -iE "^(x-isr|[0-9])"
+
+# Keluarannya:
+# X-ISR: di-render ulang
+# 0.052217
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 2 yang sudah terisi, umur file sepuluh detik}
+  \label{tab:c8-lat2-contoh}
+  \begin{tabularx}{\textwidth}{rXr}
+    \hline
+    \textbf{Permintaan} & \textbf{Keterangan \texttt{X-ISR}} & \textbf{Waktu} \\
+    \hline
+    1 & \texttt{di-render ulang} & 52,2 ms \\
+    \hline
+    2 & file lama dipakai & 1,2 ms \\
+    \hline
+    4 & \texttt{di-render ulang}, sesudah jeda & 52,6 ms \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 2}
+  \label{tab:c8-lat2-hasil}
+  \begin{tabularx}{\textwidth}{rXr}
+    \hline
+    \textbf{Permintaan} & \textbf{Keterangan \texttt{X-ISR}} & \textbf{Waktu} \\
+    \hline
+    1 & \dots & \dots \\
+    \hline
+    2 & \dots & \dots \\
+    \hline
+    3 & \dots & \dots \\
+    \hline
+    4, sesudah jeda sebelas detik & \dots & \dots \\
+    \hline
+    5 & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\ifajar
+  \subsection*{Latihan 3: Memindahkan Satu Bagian Menjadi Pulau}
+\else
+  \subsection*{Prosedur 3: Memindahkan Satu Bagian Menjadi Pulau}
+\fi
+
+Latihan ini membuktikan bahwa jumlah JavaScript yang diunduh ditentukan oleh
+seberapa banyak bagian halaman yang dihidupkan.
+
+\begin{enumerate}
+  \item Baca \berkas{sources/chapter08/statis/pulau.js}, lalu catat
+        ukurannya dan apa saja yang dikerjakannya.
+  \item Bandingkan dengan \berkas{sources/chapter08/statis/spa.js}, lalu
+        catat ukurannya dan apa yang akan hilang bila skrip itu gagal
+        dimuat.
+  \item Tambahkan satu pulau kedua pada halaman islands, misalnya tombol
+        yang mengurutkan daftar menurut harga, lalu ukur ulang kedua varian.
+  \item Isi Tabel \ref{tab:c8-lat3-hasil}. Tabel \ref{tab:c8-lat3-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab dua pertanyaan berikut. Pertama, berapa byte JavaScript yang
+        bertambah untuk tiap pulau baru? Kedua, pada titik mana menambah
+        pulau menjadi tidak lagi lebih murah daripada memakai SPA?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Membandingkan ukuran skrip kedua varian, memakai \berkas{sources/chapter08/statis/}}, label={lst:c8-lat3-jalan}]
+wc -c statis/pulau.js statis/spa.js
+
+# Keluarannya:
+#  697 statis/pulau.js
+#  938 statis/spa.js
+# 1635 total
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 3 yang sudah terisi}
+  \label{tab:c8-lat3-contoh}
+  \begin{tabularx}{\textwidth}{Xrr}
+    \hline
+    \textbf{Varian} & \textbf{Byte skrip} & \textbf{Byte total} \\
+    \hline
+    Islands, satu pulau & 697 & 1.322 \\
+    \hline
+    SPA & 938 & 1.551 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 3}
+  \label{tab:c8-lat3-hasil}
+  \begin{tabularx}{\textwidth}{Xrr}
+    \hline
+    \textbf{Varian} & \textbf{Byte skrip} & \textbf{Byte total} \\
+    \hline
+    Islands, satu pulau & \dots & \dots \\
+    \hline
+    Islands, dua pulau & \dots & \dots \\
+    \hline
+    SPA & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\ifajar
+  \subsection*{Latihan 4: Menulis Catatan Keputusan}
+\else
+  \subsection*{Prosedur 4: Menulis Catatan Keputusan}
+\fi
+
+Latihan ini mengubah angka pada ketiga latihan sebelumnya menjadi satu
+keputusan yang dapat dipertanggungjawabkan.
+
+\begin{enumerate}
+  \item Pilih satu kebutuhan nyata, misalnya halaman katalog publik, halaman
+        rincian pesanan milik pengguna yang sudah masuk, atau \textit{dashboard}
+        admin.
+  \item Pilih tiga varian yang masuk akal bagi kebutuhan itu, lalu tulis
+        angka pembandingnya dari Tabel \ref{tab:c8-lat1-hasil}.
+  \item Tulis catatan keputusan berisi lima bagian seperti pada Tabel
+        \ref{tab:c8-lat4-hasil}, yaitu keputusan, pilihan yang
+        dipertimbangkan, alasan, konsekuensi, dan syarat yang
+        membatalkannya. Tabel \ref{tab:c8-lat4-contoh} memperlihatkan
+        contoh yang sudah terisi.
+  \item Jawab dua pertanyaan berikut. Pertama, angka mana yang paling
+        menentukan pilihan itu, dan mengapa? Kedua, keadaan apa yang akan
+        membuat keputusan itu perlu ditinjau ulang?
+\end{enumerate}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh catatan keputusan yang sudah terisi}
+  \label{tab:c8-lat4-contoh}
+  \begin{tabularx}{\textwidth}{lX}
+    \hline
+    \textbf{Bagian} & \textbf{Isinya} \\
+    \hline
+    Keputusan & Halaman katalog publik memakai ISR dengan umur sepuluh menit \\
+    \hline
+    Dipertimbangkan & SSR, SSG, ISR \\
+    \hline
+    Alasan & SSR menanggung 51,8 ms tiap permintaan, SSG terlalu kaku untuk isi yang berubah beberapa kali sehari \\
+    \hline
+    Konsekuensi & Satu pengunjung tiap periode menanggung 52,9 ms, isi dapat \textit{stale} sampai sepuluh menit \\
+    \hline
+    Yang membatalkan & Isi wajib \textit{fresh} seketika, atau \textit{rendering}-nya menjadi jauh lebih mahal \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian catatan keputusan Latihan 4}
+  \label{tab:c8-lat4-hasil}
+  \begin{tabularx}{\textwidth}{lX}
+    \hline
+    \textbf{Bagian} & \textbf{Isinya} \\
+    \hline
+    Kebutuhan yang dipilih & \dots \\
+    \hline
+    Keputusan & \dots \\
+    \hline
+    Dipertimbangkan & \dots \\
+    \hline
+    Alasan, beserta angkanya & \dots \\
+    \hline
+    Konsekuensi & \dots \\
+    \hline
+    Yang membatalkan & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Setelah seluruh latihan selesai, server dihentikan dengan Ctrl+C. Tidak ada
+container yang perlu dimatikan, karena bab ini memang tidak memakainya.

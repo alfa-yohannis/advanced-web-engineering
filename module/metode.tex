@@ -1,0 +1,85 @@
+\chapter*{Metode Pengukuran}
+\addcontentsline{toc}{chapter}{Metode Pengukuran}
+
+Seluruh angka di buku ini berasal dari program yang disertakan, dijalankan
+di satu komputer, dan dicatat apa adanya. Bagian ini menjelaskan cara angka
+itu diambil, agar pembaca dapat menilai batas keberlakuannya dan
+mengulanginya sendiri.
+
+\section*{Lingkungan pengukuran}
+
+Pengukuran dijalankan di satu komputer meja dengan sistem operasi Linux,
+memakai perangkat berikut. Versi yang dipakai pada tiap bab dicatat di bab
+itu bila angkanya bergantung pada versinya.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Perangkat yang dipakai menjalankan pengukuran di buku ini}
+  \label{tab:lingkungan}
+  \begin{tabularx}{\textwidth}{Xl}
+    \hline
+    \textbf{Perangkat} & \textbf{Versi} \\
+    \hline
+    Python, untuk aplikasi contoh dan alat ukur & 3.14 \\
+    \hline
+    PostgreSQL, untuk bab basis data & 18.1 \\
+    \hline
+    Docker, untuk bab \textit{deployment} & 29.9 \\
+    \hline
+    Google Chrome, untuk pengukuran sisi browser & 157 \\
+    \hline
+    Node.js beserta TypeScript, untuk pemeriksaan tipe & 20.20 dan 7.0 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Aplikasi contoh tiap bab berjalan di \texttt{127.0.0.1} pada portnya
+sendiri, dan alat ukurnya diarahkan ke alamat itu. Tidak ada pengukuran yang
+diarahkan ke sistem milik orang lain.
+
+\section*{Aturan yang dipegang}
+
+Empat aturan dipegang sepanjang buku, dan aturan itulah yang membedakan
+angka di sini dari angka yang dikira-kira.
+
+\begin{enumerate}
+  \item Diukur lebih dahulu, baru disimpulkan. Tanpa pengukuran, bagian yang
+        diperbaiki biasanya bagian yang paling mudah ditebak, bukan bagian
+        yang paling mahal.
+  \item Keluaran program dikutip sebagaimana tercetak. Bila nama di dalam
+        kode berubah dan nama itu ikut tercetak, programnya dijalankan ulang
+        dan angka di naskah diperbarui dari hasil yang baru.
+  \item Hasil yang janggal tidak dibuang. Angka yang melawan harapan tetap
+        dicetak, lalu sebabnya dijelaskan di paragraf sesudahnya.
+  \item Kode di naskah adalah salinan dari file yang dijalankan. Potongan
+        yang ditampilkan boleh lebih pendek daripada filenya, tetapi tidak
+        boleh berbeda isinya.
+\end{enumerate}
+
+\section*{Batas keberlakuan angkanya}
+
+Angka pada buku ini terikat pada satu komputer dan satu beban. Tiga hal
+berikut perlu diingat ketika angkanya dibandingkan dengan hasil sendiri.
+
+Pertama, nilai milidetik akan berbeda di komputer lain, dan beberapa kali
+lebih besar pada telepon kelas bawah. Yang dapat dipakai ulang adalah pola
+perbandingannya, misalnya bahwa satu varian tumbuh mengikuti besar halaman
+sedangkan varian lain tidak.
+
+Kedua, sebagian pengukuran memuat beban yang sengaja diperlambat atau
+kegagalan yang sengaja dibuat, agar akibatnya terlihat dalam satu sesi
+latihan. Tiap kali hal itu dilakukan, naskahnya menyebutkannya di dekat
+angkanya.
+
+Ketiga, angka jaringan diambil di \texttt{localhost}, sehingga tidak memuat
+waktu tempuh antarkota. Bab yang membahas jarak menyebutkan asumsinya
+sendiri, dan menghitung akibatnya dengan angka yang dinyatakan terbuka.
+
+\section*{Cara mengulangi pengukurannya}
+
+Seluruh program tersimpan per bab di dalam \berkas{sources/}, dan tiap
+direktori punya \berkas{README.md} berisi daftar filenya beserta perintah
+untuk menjalankannya. Skrip Python dijalankan memakai \textit{virtual
+environment} di \berkas{sources/.venv}. Prosedur lengkap tiap bab, beserta
+lembar isian untuk mencatat hasil sendiri, ada pada lampiran di belakang
+buku ini.

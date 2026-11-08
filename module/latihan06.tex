@@ -1,0 +1,459 @@
+\ifajar
+  \section{Latihan}
+\else
+  \section{Bab 6: Testing, Reliability, dan Code Quality}
+\fi
+
+Seluruh file yang dipakai pada latihan ini tersedia di
+\berkas{sources/chapter06/}, dihitung relatif terhadap akar repositori.
+Latihan membutuhkan Docker dengan Compose versi 2, Python 3, Node.js, dan
+Google Chrome yang sudah terpasang. Listing penyiapan masuk ke direktori itu
+lebih dahulu, dan seluruh perintah sesudahnya dijalankan dari sana.
+
+Seluruh kegiatan pada bab ini hanya menyentuh basis data dan aplikasi milik
+sendiri di komputer sendiri, sehingga tidak ada sistem pihak lain yang
+dibebani. Hasil tiap mahasiswa akan berbeda, karena waktunya bergantung pada
+perangkat keras dan beban lain yang sedang berjalan. Yang dilaporkan adalah
+pola perbandingannya, bukan angka persisnya.
+
+Penyiapannya dilakukan sekali, seperti pada Listing \ref{lst:c6-siapkan}.
+
+\begin{lstlisting}[language=bash, caption={Menyiapkan basis data, data uji, dan dependensi, memakai \berkas{sources/chapter06/siapkan-data.sh}}, label={lst:c6-siapkan}]
+cd sources/chapter06
+docker compose up -d
+./siapkan-data.sh
+python3 -m venv ../.venv
+../.venv/bin/pip install "psycopg[binary]" pytest hypothesis jsonschema \
+  coverage ruff
+npm install
+\end{lstlisting}
+
+\ifajar
+  \subsection*{Latihan 1: Membandingkan Tiga Lapisan Pengujian}
+\else
+  \subsection*{Prosedur 1: Membandingkan Tiga Lapisan Pengujian}
+\fi
+
+Latihan ini membuktikan bahwa ketiga lapisan berbeda harganya, dan menangkap
+cacat yang berbeda pula.
+
+\begin{enumerate}
+  \item Jalankan ketiga lapisan seperti pada Listing
+        \ref{lst:c6-lat1-jalan}, lalu catat jumlah pengujian dan waktunya ke
+        Tabel \ref{tab:c6-lat1-hasil}. Tabel \ref{tab:c6-lat1-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Hitung berapa kali lipat satu pengujian E2E dibandingkan rata-rata
+        satu unit test.
+  \item Matikan aplikasinya, lalu jalankan ulang lapisan E2E dan catat apa
+        yang terjadi. Nyalakan kembali sesudahnya.
+  \item Jawab tiga pertanyaan berikut. Pertama, cacat apa yang hanya
+        tertangkap lapisan E2E? Kedua, mengapa unit test tetap dibuat paling
+        banyak walaupun paling sempit jangkauannya? Ketiga, apa akibatnya
+        bila seluruh pengujian dipindahkan ke lapisan E2E?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Menjalankan ketiga lapisan pengujian, memakai \berkas{sources/chapter06/}}, label={lst:c6-lat1-jalan}]
+source ../.venv/bin/activate
+pytest -q test_harga.py test_properti.py test_double.py
+pytest -q test_integrasi.py test_kontrak.py
+python aplikasi.py &
+npx playwright test --config e2e/playwright.config.ts
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 1 yang sudah terisi}
+  \label{tab:c6-lat1-contoh}
+  \begin{tabularx}{\textwidth}{lrrX}
+    \hline
+    \textbf{Lapisan} & \textbf{Jumlah} & \textbf{Waktu} & \textbf{Catatan} \\
+    \hline
+    Unit & 19 & 0,99 s & Tanpa basis data dan tanpa jaringan \\
+    \hline
+    Integrasi dan kontrak & 15 & 1,27 s & Basis data di container \\
+    \hline
+    E2E & 5 & 2,90 s & Chrome sungguhan, satu \textit{worker} \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 1}
+  \label{tab:c6-lat1-hasil}
+  \begin{tabularx}{\textwidth}{lrrX}
+    \hline
+    \textbf{Lapisan} & \textbf{Jumlah} & \textbf{Waktu} & \textbf{Catatan} \\
+    \hline
+    Unit & \dots & \dots & \dots \\
+    \hline
+    Integrasi dan kontrak & \dots & \dots & \dots \\
+    \hline
+    E2E & \dots & \dots & \dots \\
+    \hline
+    E2E tanpa aplikasi menyala & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\ifajar
+  \subsection*{Latihan 2: Coverage yang Menipu}
+\else
+  \subsection*{Prosedur 2: Coverage yang Menipu}
+\fi
+
+Latihan ini membuktikan bahwa \textit{coverage} 100 persen tidak menjamin
+cacat tertangkap.
+
+\begin{enumerate}
+  \item Ukur \textit{coverage} \berkas{harga.py} untuk seluruh
+        \berkas{test\_harga.py}, lalu ukur lagi tanpa pengujian batas,
+        seperti pada Listing \ref{lst:c6-lat2-jalan}.
+  \item Ubah \texttt{>=} menjadi \texttt{>} pada \texttt{hitung\_diskon} di
+        \berkas{harga.py}. Ini disebut mutasi.
+  \item Jalankan kedua suite terhadap kode yang sudah dimutasi, lalu catat
+        mana yang lolos dan mana yang gagal ke Tabel
+        \ref{tab:c6-lat2-hasil}. Tabel \ref{tab:c6-lat2-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Kembalikan \berkas{harga.py} seperti semula, lalu pastikan seluruh
+        pengujian kembali hijau.
+  \item Jawab dua pertanyaan berikut. Pertama, mengapa \textit{coverage}
+        tetap 100 persen padahal satu pengujian dibuang? Kedua, pengujian
+        seperti apa yang perlu ditambahkan agar mutasi semacam ini selalu
+        tertangkap?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Mengukur coverage dua kali dan menjalankan mutasi, memakai \berkas{sources/chapter06/harga.py}}, label={lst:c6-lat2-jalan}]
+source ../.venv/bin/activate
+coverage run -m pytest -q test_harga.py
+coverage report --include="harga.py"
+coverage run -m pytest -q test_harga.py -k "not batas_grosir"
+coverage report --include="harga.py"
+
+# Keluarannya:
+# Name       Stmts   Miss  Cover
+# harga.py      23      0   100%
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 2 yang sudah terisi}
+  \label{tab:c6-lat2-contoh}
+  \begin{tabularx}{\textwidth}{Xllr}
+    \hline
+    \textbf{Suite} & \textbf{Coverage} & \textbf{Sesudah mutasi} & \textbf{Gagal} \\
+    \hline
+    Seluruh \berkas{test\_harga.py} & 100\% & tertangkap & 1 \\
+    \hline
+    Tanpa pengujian batas & 100\% & lolos & 0 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 2}
+  \label{tab:c6-lat2-hasil}
+  \begin{tabularx}{\textwidth}{Xllr}
+    \hline
+    \textbf{Suite} & \textbf{Coverage} & \textbf{Sesudah mutasi} & \textbf{Gagal} \\
+    \hline
+    Seluruh \berkas{test\_harga.py} & \dots & \dots & \dots \\
+    \hline
+    Tanpa pengujian batas & \dots & \dots & \dots \\
+    \hline
+    Mutasi pilihan sendiri & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\ifajar
+  \subsection*{Latihan 3: Menangkap N+1 Lewat Jumlah Query}
+\else
+  \subsection*{Prosedur 3: Menangkap N+1 Lewat Jumlah Query}
+\fi
+
+Latihan ini membuktikan bahwa dua alamat yang memberi \textit{response} sama
+persis dapat berbeda jauh biayanya, dan bahwa bedanya hanya terbaca bila
+jumlah \textit{query}-nya ikut diukur.
+
+\begin{enumerate}
+  \item Nyalakan aplikasinya, lalu panggil kedua alamat dengan
+        \texttt{curl} seperti pada Listing \ref{lst:c6-lat3-jalan}. Catat
+        header \texttt{X-Query-Count} keduanya.
+  \item Hitung berapa item yang dimiliki pesanan tersebut, lalu cocokkan
+        dengan rumus dua ditambah jumlah item.
+  \item Bandingkan isi kedua \textit{response} dengan \texttt{diff}. Catat
+        apakah ada bedanya.
+  \item Data uji Bab 3 memberi tiap pesanan tepat tiga item, sehingga jumlah
+        item yang berbeda dibuat sendiri. Tambahkan dua item ke pesanan 2,
+        ulangi ketiga langkah di atas untuk pesanan itu, lalu hapus kembali
+        kedua item tambahannya, seperti pada Listing
+        \ref{lst:c6-lat3-tambah}.
+  \item Isi Tabel \ref{tab:c6-lat3-hasil}. Tabel \ref{tab:c6-lat3-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab dua pertanyaan berikut. Pertama, mengapa pengujian yang hanya
+        membandingkan isi \textit{response} tidak menangkap cacat ini? Kedua,
+        mengapa jumlah \textit{query} lebih layak dijadikan batas di
+        \textit{Continuous Integration} daripada waktu jalannya?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Membaca jumlah query dari header, tersedia di \berkas{sources/chapter06/aplikasi.py}}, label={lst:c6-lat3-jalan}]
+source ../.venv/bin/activate
+python aplikasi.py &
+curl -s -D - -o sehat.json http://127.0.0.1:8020/api/pesanan/1 \
+  | grep -i x-query-count
+curl -s -D - -o n1.json http://127.0.0.1:8020/api/pesanan-n1/1 \
+  | grep -i x-query-count
+diff sehat.json n1.json && echo "isi response sama persis"
+
+# Keluarannya:
+# X-Query-Count: 2
+# X-Query-Count: 5
+# isi response sama persis
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption={Menambah dua item ke pesanan 2 lalu mengukurnya, memakai \berkas{sources/chapter06/aplikasi.py}}, label={lst:c6-lat3-tambah}]
+docker compose exec -T db psql -U admin -d toko -c \
+  "INSERT INTO item_pesanan (pesanan_id, buku_id, jumlah, harga_satuan)
+   SELECT 2, id, 1, harga FROM buku WHERE id IN (101, 102)"
+curl -s -D - -o sehat2.json http://127.0.0.1:8020/api/pesanan/2 \
+  | grep -i x-query-count
+curl -s -D - -o n1-2.json http://127.0.0.1:8020/api/pesanan-n1/2 \
+  | grep -i x-query-count
+diff sehat2.json n1-2.json && echo "isi response sama persis"
+docker compose exec -T db psql -U admin -d toko -c \
+  "DELETE FROM item_pesanan WHERE pesanan_id = 2 AND buku_id IN (101, 102)"
+
+# Keluarannya:
+# INSERT 0 2
+# X-Query-Count: 2
+# X-Query-Count: 7
+# isi response sama persis
+# DELETE 2
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 3 yang sudah terisi}
+  \label{tab:c6-lat3-contoh}
+  \begin{tabularx}{\textwidth}{lrrrX}
+    \hline
+    \textbf{Pesanan} & \textbf{Item} & \textbf{Query sehat} & \textbf{Query N+1} & \textbf{Isi response} \\
+    \hline
+    1 & 3 & 2 & 5 & sama persis \\
+    \hline
+    2, ditambah dua item & 5 & 2 & 7 & sama persis \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 3}
+  \label{tab:c6-lat3-hasil}
+  \begin{tabularx}{\textwidth}{lrrrX}
+    \hline
+    \textbf{Pesanan} & \textbf{Item} & \textbf{Query sehat} & \textbf{Query N+1} & \textbf{Isi response} \\
+    \hline
+    1 & \dots & \dots & \dots & \dots \\
+    \hline
+    2, ditambah dua item & \dots & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\ifajar
+  \subsection*{Latihan 4: Menegakkan Quality Gate}
+\else
+  \subsection*{Prosedur 4: Menegakkan Quality Gate}
+\fi
+
+Latihan ini memasang seluruh pengukuran di atas sebagai satu \textit{gate} yang
+\textit{verdict}-nya dapat dibaca mesin.
+
+\begin{enumerate}
+  \item Baca \berkas{sources/chapter06/mutu.json}, lalu tulis dugaan
+        pemeriksaan mana yang akan dilanggar dan mengapa.
+  \item Jalankan \textit{gate}-nya seperti pada Listing \ref{lst:c6-lat4-jalan},
+        lalu catat \textit{verdict} tiap baris beserta status keluarnya ke
+        Tabel \ref{tab:c6-lat4-hasil}. Tabel \ref{tab:c6-lat4-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Longgarkan batas \textit{query} alamat N+1 menjadi tiga puluh, lalu
+        jalankan ulang dan catat status keluarnya.
+  \item Kembalikan batasnya menjadi dua, lalu perbaiki cacatnya dengan
+        mengarahkan alamat \texttt{/api/pesanan-n1/} ke jalur sehat, yaitu
+        mengganti \texttt{n\_plus\_1=True} menjadi \texttt{n\_plus\_1=False}
+        di \berkas{sources/chapter06/aplikasi.py}. Jalankan ulang
+        \textit{gate}-nya, lalu catat pemeriksaan mana yang kini dilanggar.
+  \item Sesuaikan pengujian di \berkas{sources/chapter06/test\_kontrak.py}
+        yang masih mengharapkan jumlah \textit{query} lama: harapannya diubah
+        menjadi \texttt{QUERY\_JALUR\_SEHAT}, dan baris \texttt{jumlah\_item}
+        yang tidak terpakai lagi dihapus. Jalankan ulang \textit{gate}-nya,
+        catat status keluarnya, lalu kembalikan kedua file itu seperti semula
+        sebelum lanjut ke Latihan 5.
+  \item Jawab dua pertanyaan berikut. Pertama, apa bedanya melonggarkan batas
+        dengan memperbaiki cacatnya, dilihat dari status keluarnya? Kedua,
+        mengapa \textit{Continuous Integration} membaca status keluar dan
+        bukan tulisan di layarnya?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Menjalankan gate mutu dan membaca status keluarnya, tersedia di \berkas{sources/chapter06/gate-mutu.py}}, label={lst:c6-lat4-jalan}]
+source ../.venv/bin/activate
+python gate-mutu.py
+echo $?
+
+# Keluarannya:
+# Gagal: 1 batas mutu dilanggar.
+# 1
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 4 yang sudah terisi}
+  \label{tab:c6-lat4-contoh}
+  \begin{tabularx}{\textwidth}{Xllr}
+    \hline
+    \textbf{Pemeriksaan} & \textbf{Batas} & \textbf{Terukur} & \textbf{Verdict} \\
+    \hline
+    waktu unit & 10 s & 1,89 s & lolos \\
+    \hline
+    coverage \berkas{harga.py} & 95\% & 100\% & lolos \\
+    \hline
+    temuan \texttt{ruff} & 0 & 0 & lolos \\
+    \hline
+    query \texttt{/api/pesanan-n1/1} & 2 & 5 & LANGGAR \\
+    \hline
+    Status keluar & 0 & 1 & LANGGAR \\
+    \hline
+    \texttt{pytest} integrasi, sesudah alamat diarahkan & 0 & 1 & LANGGAR \\
+    \hline
+    Status keluar sesudah diperbaiki & 0 & 0 & lolos \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Baris keenam pada contoh terisi memperlihatkan akibat yang sering terlupa.
+Begitu alamatnya diarahkan ke jalur sehat, satu pengujian kontrak ikut gagal,
+karena pengujian itu masih mengunci jumlah \textit{query} jalur N+1 yang lama.
+Pengujian semacam itu diperbarui bersama perbaikannya, dan baru sesudahnya
+status keluarnya menjadi 0.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 4}
+  \label{tab:c6-lat4-hasil}
+  \begin{tabularx}{\textwidth}{Xllr}
+    \hline
+    \textbf{Pemeriksaan} & \textbf{Batas} & \textbf{Terukur} & \textbf{Verdict} \\
+    \hline
+    waktu unit & \dots & \dots & \dots \\
+    \hline
+    waktu integrasi & \dots & \dots & \dots \\
+    \hline
+    coverage \berkas{harga.py} & \dots & \dots & \dots \\
+    \hline
+    temuan \texttt{ruff} & \dots & \dots & \dots \\
+    \hline
+    query \texttt{/api/pesanan/1} & \dots & \dots & \dots \\
+    \hline
+    query \texttt{/api/pesanan-n1/1} & \dots & \dots & \dots \\
+    \hline
+    Status keluar sebelum dan sesudah dilonggarkan & \dots & \dots & \dots \\
+    \hline
+    Pemeriksaan yang dilanggar sesudah alamat diarahkan & \dots & \dots & \dots \\
+    \hline
+    Status keluar sesudah cacatnya diperbaiki & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\ifajar
+  \subsection*{Latihan 5: Membedah Pengujian E2E}
+\else
+  \subsection*{Prosedur 5: Membedah Pengujian E2E}
+\fi
+
+Latihan ini membuktikan bahwa lapisan E2E paling bergoyang waktunya, dan
+memperlihatkan jejak yang ditinggalkannya ketika sebuah pengujian gagal.
+
+\begin{enumerate}
+  \item Jalankan lapisan E2E tiga kali berurutan seperti pada Listing
+        \ref{lst:c6-lat5-jalan}, lalu catat waktu tiap kali jalan ke Tabel
+        \ref{tab:c6-lat5-hasil}. Tabel \ref{tab:c6-lat5-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jalankan sekali lagi dengan \texttt{-{}-repeat-each=3}, lalu catat
+        jumlah pengujian dan waktunya.
+  \item Ubah \texttt{QUERY\_JALUR\_SEHAT} di \berkas{sources/chapter06/e2e/pesanan.spec.ts}
+        menjadi 3, jalankan ulang dengan \texttt{-{}-trace on}, lalu catat
+        pesan gagalnya dan isi direktori \berkas{test-results/}.
+  \item Kembalikan angkanya menjadi 2, lalu pastikan kelima pengujian kembali
+        hijau.
+  \item Jawab dua pertanyaan berikut. Pertama, mengapa waktu lapisan E2E
+        bergoyang jauh lebih lebar daripada lapisan unit? Kedua, mengapa
+        \textit{gate} mutu menilai waktu lapisan unit dan integrasi, tetapi
+        tidak menilai waktu lapisan E2E?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Menjalankan lapisan E2E berulang kali beserta jejaknya, memakai \berkas{sources/chapter06/e2e/playwright.config.ts}}, label={lst:c6-lat5-jalan}]
+npx playwright test --config e2e/playwright.config.ts
+npx playwright test --config e2e/playwright.config.ts --repeat-each=3
+npx playwright test --config e2e/playwright.config.ts --trace on
+du -sh test-results
+
+# Keluarannya:
+# 5 passed (2.9s)
+# 15 passed (6.7s)
+# 5 passed (2.8s)
+# 369K  test-results
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 5 yang sudah terisi}
+  \label{tab:c6-lat5-contoh}
+  \begin{tabularx}{\textwidth}{Xrr}
+    \hline
+    \textbf{Cara menjalankan} & \textbf{Pengujian} & \textbf{Waktu} \\
+    \hline
+    Biasa, jalan pertama & 5 & 2,1 s \\
+    \hline
+    Biasa, jalan kedua & 5 & 2,9 s \\
+    \hline
+    Biasa, jalan ketiga & 5 & 5,6 s \\
+    \hline
+    Dengan \texttt{-{}-repeat-each=3} & 15 & 6,7 s \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Ketiga angka pada tiga baris pertama diambil apa adanya, termasuk 5,6 detik
+yang jauh lebih besar daripada dua lainnya. Sebabnya browser sungguhan ikut
+berebut prosesor dengan proses lain di komputer yang sama, dan itulah alasan
+waktu E2E tidak layak dipakai sebagai batas di \textit{Continuous
+Integration}.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 5}
+  \label{tab:c6-lat5-hasil}
+  \begin{tabularx}{\textwidth}{Xrr}
+    \hline
+    \textbf{Cara menjalankan} & \textbf{Pengujian} & \textbf{Waktu} \\
+    \hline
+    Biasa, jalan pertama & \dots & \dots \\
+    \hline
+    Biasa, jalan kedua & \dots & \dots \\
+    \hline
+    Biasa, jalan ketiga & \dots & \dots \\
+    \hline
+    Dengan \texttt{-{}-repeat-each=3} & \dots & \dots \\
+    \hline
+    Sesudah angka harapan diubah menjadi 3 & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Setelah seluruh latihan selesai, container dihentikan dengan
+\texttt{docker compose down -v}. Opsi \texttt{-v} ikut menghapus volume
+datanya, sehingga penyiapan berikutnya dimulai dari keadaan bersih.

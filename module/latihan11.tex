@@ -1,0 +1,324 @@
+\ifajar
+  \section{Latihan}
+\else
+  \section{Bab 11: Arsitektur Frontend Berskala Besar}
+\fi
+
+Seluruh file yang dipakai pada latihan ini tersedia di
+\berkas{sources/chapter11/}, dihitung relatif terhadap akar repositori.
+Latihan ini membutuhkan Python 3 dan satu browser berbasis Chromium, tanpa
+Docker dan tanpa pustaka tambahan.
+
+Seluruh permintaan diarahkan ke aplikasi yang berjalan di komputer sendiri,
+dan sifatnya mengamati, bukan membebani. Angka milidetik tiap mahasiswa akan
+berbeda, karena bergantung pada komputernya. Yang dilaporkan adalah pola
+perbandingannya, bukan angka persisnya.
+
+Penyiapannya satu perintah, seperti pada Listing \ref{lst:c11-siapkan}.
+
+\begin{lstlisting}[language=bash, caption={Menyalakan aplikasi katalog, tersedia di \berkas{sources/chapter11/aplikasi.py}}, label={lst:c11-siapkan}]
+cd sources/chapter11
+python3 aplikasi.py &
+
+# Keluarannya:
+# Melayani 200 buku di http://127.0.0.1:8080/penuh  (Ctrl+C untuk berhenti)
+\end{lstlisting}
+
+\ifajar
+  \subsection*{Latihan 1: Menghitung Komponen dan Biaya State}
+\else
+  \subsection*{Prosedur 1: Menghitung Komponen dan Biaya State}
+\fi
+
+Latihan ini membuktikan bahwa jumlah pulau tidak tumbuh mengikuti besar
+halaman, sedangkan jumlah komponen dan ukuran halaman tumbuh.
+
+\begin{enumerate}
+  \item Nyalakan aplikasi dengan jumlah buku bawaan, lalu hitung kemunculan
+        \texttt{data-komponen} dan \texttt{data-pulau} pada kedua varian,
+        seperti pada Listing \ref{lst:c11-lat1-jalan}.
+  \item Catat ukuran HTML kedua varian, lalu hitung selisihnya.
+  \item Hentikan aplikasi, nyalakan ulang dengan
+        \texttt{JUMLAH\_BUKU=1000}, lalu ulangi kedua langkah di atas.
+  \item Isi Tabel \ref{tab:c11-lat1-hasil}. Tabel \ref{tab:c11-lat1-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab dua pertanyaan berikut. Pertama, berapa persen tambahan ukuran
+        HTML pada varian penuh, dan dari mana asalnya? Kedua, mengapa jumlah
+        pulau tetap dua walaupun bukunya lima kali lebih banyak?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Menghitung komponen dan ukuran halaman, tersedia di \berkas{sources/chapter11/aplikasi.py}}, label={lst:c11-lat1-jalan}]
+curl -s http://127.0.0.1:8080/penuh | grep -c 'data-komponen='
+curl -s http://127.0.0.1:8080/selektif | grep -c 'data-pulau='
+curl -s http://127.0.0.1:8080/penuh | wc -c
+curl -s http://127.0.0.1:8080/selektif | wc -c
+
+# Keluarannya:
+# 403
+# 2
+# 71950
+# 55674
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 1 yang sudah terisi}
+  \label{tab:c11-lat1-contoh}
+  \begin{tabularx}{\textwidth}{Xllll}
+    \hline
+    \textbf{Buku} & \textbf{Komponen} & \textbf{Pulau} & \textbf{HTML penuh} & \textbf{HTML selektif} \\
+    \hline
+    200 & 403 & 2 & 71.950 & 55.674 \\
+    \hline
+    1.000 & 2.003 & 2 & 358.360 & 275.679 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 1}
+  \label{tab:c11-lat1-hasil}
+  \begin{tabularx}{\textwidth}{Xllll}
+    \hline
+    \textbf{Buku} & \textbf{Komponen} & \textbf{Pulau} & \textbf{HTML penuh} & \textbf{HTML selektif} \\
+    \hline
+    200 & \dots & \dots & \dots & \dots \\
+    \hline
+    1.000 & \dots & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\ifajar
+  \subsection*{Latihan 2: Biaya Hidrasi Dua Varian}
+\else
+  \subsection*{Prosedur 2: Biaya Hidrasi Dua Varian}
+\fi
+
+Latihan ini mengukur biaya hidrasi kedua varian pada tiga besar halaman, lalu
+memisahkan bagian yang tumbuh dari bagian yang tetap.
+
+\begin{enumerate}
+  \item Jalankan \berkas{ukur-hidrasi.py} pada jumlah buku bawaan, seperti
+        pada Listing \ref{lst:c11-lat2-jalan}.
+  \item Hentikan aplikasi, nyalakan ulang dengan
+        \texttt{JUMLAH\_BUKU=1000}, lalu ukur sekali lagi. Ulangi untuk
+        \texttt{JUMLAH\_BUKU=2000}.
+  \item Isi Tabel \ref{tab:c11-lat2-hasil}. Tabel \ref{tab:c11-lat2-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Buka kedua varian di browser, yaitu \texttt{/penuh} dan
+        \texttt{/selektif} pada port 8080, lalu bandingkan baris laporan di
+        bawah judul halamannya.
+  \item Jawab tiga pertanyaan berikut. Pertama, bagian mana yang tumbuh
+        mengikuti besar halaman, dan bagian mana yang tidak? Kedua, mengapa
+        angka varian selektif tidak urut menurut besar halaman? Ketiga, pada
+        besar halaman berapa selisihnya mulai pantas dipersoalkan, dan dengan
+        alasan apa?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Mengukur biaya hidrasi lima kali tiap varian, tersedia di \berkas{sources/chapter11/ukur-hidrasi.py}}, label={lst:c11-lat2-jalan}]
+python3 ukur-hidrasi.py
+
+# Keluarannya:
+#   Varian     Buku  Komponen  HTML byte  JS byte  Tengah ms   Rentang ms
+#   penuh       200       403      71950     3723       1.50    1.20-2.10
+#   selektif    200         2      55674     3278       0.50    0.50-0.70
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 2 yang sudah terisi}
+  \label{tab:c11-lat2-contoh}
+  \begin{tabularx}{\textwidth}{Xllll}
+    \hline
+    \textbf{Buku} & \textbf{Penuh, ms} & \textbf{Selektif, ms} & \textbf{Komponen penuh} & \textbf{Pulau} \\
+    \hline
+    200 & 1,50 & 0,50 & 403 & 2 \\
+    \hline
+    1.000 & 3,90 & 1,00 & 2.003 & 2 \\
+    \hline
+    2.000 & 7,10 & 0,80 & 4.003 & 2 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 2}
+  \label{tab:c11-lat2-hasil}
+  \begin{tabularx}{\textwidth}{Xllll}
+    \hline
+    \textbf{Buku} & \textbf{Penuh, ms} & \textbf{Selektif, ms} & \textbf{Komponen penuh} & \textbf{Pulau} \\
+    \hline
+    200 & \dots & \dots & \dots & \dots \\
+    \hline
+    1.000 & \dots & \dots & \dots & \dots \\
+    \hline
+    2.000 & \dots & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\ifajar
+  \subsection*{Latihan 3: Biaya Perpindahan pada Kerangka}
+\else
+  \subsection*{Prosedur 3: Biaya Perpindahan pada Kerangka}
+\fi
+
+Latihan ini membandingkan biaya satu perpindahan lewat fragmen dengan biaya
+memuat dokumen penuh, lalu memeriksa perilaku kerangkanya di browser.
+
+\begin{enumerate}
+  \item Jalankan \berkas{ukur-rute.py}, seperti pada Listing
+        \ref{lst:c11-lat3-jalan}, lalu catat keempat barisnya.
+  \item Buka \texttt{http://127.0.0.1:8080/kerangka/katalog} di browser,
+        tekan tautan "Buku 3", lalu perhatikan alamat di bilah alamat dan
+        bagian halaman yang berubah.
+  \item Tekan tombol kembali browser, lalu catat apakah katalognya pulih.
+  \item Tekan tombol Tambah dua kali, lalu pindah ke halaman buku dan
+        kembali lagi. Catat angka keranjangnya sesudah kembali.
+  \item Isi Tabel \ref{tab:c11-lat3-hasil}. Tabel \ref{tab:c11-lat3-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa fragmen katalog
+        hampir sebesar dokumennya? Kedua, apa yang tetap dihemat perpindahan
+        lewat fragmen walaupun selisih bytenya kecil? Ketiga, mengapa angka
+        keranjang kembali ke nol, dan di mana seharusnya \textit{state} itu
+        disimpan?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Membandingkan ukuran dokumen dan fragmen, tersedia di \berkas{sources/chapter11/ukur-rute.py}}, label={lst:c11-lat3-jalan}]
+python3 ukur-rute.py
+
+# Keluarannya:
+#   Tujuan                    Status   Dokumen   Fragmen  Fragmen %
+#   /katalog                 200/200     55943     55089      98.5%
+#   /katalog?saring=jaringan 200/200     10414      9560      91.8%
+#   /buku/3                  200/200      1071       217      20.3%
+#   /gagal                   500/500      1023       169      16.5%
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 3 yang sudah terisi}
+  \label{tab:c11-lat3-contoh}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Hal yang diamati} & \textbf{Hasil} & \textbf{Keterangan} \\
+    \hline
+    Fragmen \texttt{/buku/3} & 217 byte & dokumennya 1.071 byte \\
+    \hline
+    Fragmen \texttt{/katalog} & 55.089 byte & 98,5 persen dari dokumennya \\
+    \hline
+    Alamat sesudah menekan tautan & \texttt{/kerangka/buku/3} & tanpa muat ulang \\
+    \hline
+    Tombol kembali browser & katalog pulih & 200 baris \\
+    \hline
+    Keranjang sesudah kembali & 0 & disimpan di DOM wilayah \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 3}
+  \label{tab:c11-lat3-hasil}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Hal yang diamati} & \textbf{Hasil} & \textbf{Keterangan} \\
+    \hline
+    Fragmen \texttt{/buku/3} & \dots & \dots \\
+    \hline
+    Fragmen \texttt{/katalog} & \dots & \dots \\
+    \hline
+    Alamat sesudah menekan tautan & \dots & \dots \\
+    \hline
+    Tombol kembali browser & \dots & \dots \\
+    \hline
+    Keranjang sesudah kembali & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\ifajar
+  \subsection*{Latihan 4: Apa yang Tersisa Tanpa Skrip}
+\else
+  \subsection*{Prosedur 4: Apa yang Tersisa Tanpa Skrip}
+\fi
+
+Latihan ini membuktikan bahwa isi katalog dan penyaringnya tidak bergantung
+pada JavaScript, dan memperlihatkan batas \textit{error} menahan satu wilayah
+yang gagal.
+
+\begin{enumerate}
+  \item Jalankan \berkas{ukur-tanpa-js.py}, seperti pada Listing
+        \ref{lst:c11-lat4-jalan}, lalu catat keempat barisnya.
+  \item Buka \texttt{http://127.0.0.1:8080/kerangka/katalog?blokir\_skrip=1}
+        di browser, ketik "jaringan" di kotak penyaring, lalu tekan tombol
+        Saring. Catat jumlah baris yang tersisa dan apakah halamannya dimuat
+        ulang.
+  \item Buka alamat yang sama tanpa \texttt{blokir\_skrip}, lalu ulangi
+        penyaringan yang sama. Catat perbedaannya.
+  \item Tekan tautan "Bagian yang gagal", lalu catat apa yang tampil di
+        wilayah dan apakah navigasinya masih utuh.
+  \item Isi Tabel \ref{tab:c11-lat4-hasil}. Tabel \ref{tab:c11-lat4-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab tiga pertanyaan berikut. Pertama, bagian mana yang hilang
+        tanpa skrip, dan bagian mana yang tetap? Kedua, apa yang akan terlihat
+        di halaman ini bila katalognya di-\textit{render} di browser seperti varian SPA
+        (Single-Page Application) pada Bab 8? Ketiga, mengapa router
+        memeriksa status responsnya, bukan cuma menangkap kegagalan jaringan?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Memeriksa isi yang tetap tampil tanpa skrip, tersedia di \berkas{sources/chapter11/ukur-tanpa-js.py}}, label={lst:c11-lat4-jalan}]
+python3 ukur-tanpa-js.py
+
+# Keluarannya:
+#   Halaman                            Skrip jalan Skrip mati  Form
+#   /selektif                                  200        200   ada
+#   /selektif?saring=jaringan                   33         33   ada
+#   /kerangka/katalog                          200        200   ada
+#   /kerangka/katalog?saring=jaringan           33         33   ada
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 4 yang sudah terisi}
+  \label{tab:c11-lat4-contoh}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Hal yang diamati} & \textbf{Skrip jalan} & \textbf{Skrip mati} \\
+    \hline
+    Baris katalog & 200 & 200 \\
+    \hline
+    Baris sesudah disaring & 33 & 33 \\
+    \hline
+    Cara penyaringan & tanpa muat ulang & satu permintaan baru \\
+    \hline
+    Wilayah yang gagal & diganti pesan & halaman 500 dari server \\
+    \hline
+    Navigasi sesudah gagal & utuh, 4 tautan & utuh, 4 tautan \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 4}
+  \label{tab:c11-lat4-hasil}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Hal yang diamati} & \textbf{Skrip jalan} & \textbf{Skrip mati} \\
+    \hline
+    Baris katalog & \dots & \dots \\
+    \hline
+    Baris sesudah disaring & \dots & \dots \\
+    \hline
+    Cara penyaringan & \dots & \dots \\
+    \hline
+    Wilayah yang gagal & \dots & \dots \\
+    \hline
+    Navigasi sesudah gagal & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}

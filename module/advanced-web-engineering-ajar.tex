@@ -1,0 +1,37 @@
+% Edisi ajar: isi dan angkanya sama dengan edisi gabungan, tetapi Latihan
+% dicetak di akhir tiap bab, bukan dikumpulkan sebagai lampiran. Dibangun
+% dengan:
+%   latexmk -xelatex advanced-web-engineering-ajar.tex
+\input{preamble}
+\ajartrue
+
+\begin{document}
+
+  \include{titlepage}
+
+  \tableofcontents
+
+  \include{prakata}
+  \include{metode}
+
+  \include{chapter01}
+  \include{chapter02}
+  \include{chapter03}
+  \include{chapter04}
+  \include{chapter05}
+  \include{chapter06}
+  \include{chapter07}
+  \include{chapter08}
+  \include{chapter09}
+  \include{chapter10}
+  \include{chapter11}
+  \include{chapter12}
+  \include{chapter13}
+  \include{chapter14}
+
+  \backmatter
+  \addcontentsline{toc}{chapter}{Daftar Pustaka}
+  \bibliographystyle{plainnat}
+  \bibliography{references}
+
+\end{document}

@@ -1,0 +1,312 @@
+\ifajar
+  \section{Latihan}
+\else
+  \section{Bab 10: Identity, Authentication, dan Authorization}
+\fi
+
+Seluruh file yang dipakai pada latihan ini tersedia di
+\berkas{sources/chapter10/}, dihitung relatif terhadap akar repositori.
+Latihan ini hanya membutuhkan Python 3, tanpa Docker dan tanpa basis data.
+
+Seluruh permintaan diarahkan ke aplikasi yang berjalan di komputer sendiri.
+Kata sandi pada \berkas{sources/chapter10/pengguna.json} hanya untuk latihan,
+dan kunci tandanya dibaca dari \textit{environment} \texttt{KUNCI\_TOKEN}.
+Hasil tiap mahasiswa akan sama pada bagian status, dan berbeda pada bagian
+penanda yang memang acak.
+
+Penyiapannya satu perintah, seperti pada Listing \ref{lst:c10-siapkan}.
+
+\begin{lstlisting}[language=bash, caption={Menyalakan aplikasi identitas, tersedia di \berkas{sources/chapter10/aplikasi.py}}, label={lst:c10-siapkan}]
+cd sources/chapter10
+KUNCI_TOKEN=kunci-latihan python3 aplikasi.py &
+
+# Keluarannya:
+# Melayani di http://127.0.0.1:8070/  (Ctrl+C untuk berhenti)
+\end{lstlisting}
+
+\ifajar
+  \subsection*{Latihan 1: Sesi lawan Token}
+\else
+  \subsection*{Prosedur 1: Sesi lawan Token}
+\fi
+
+Latihan ini membuktikan bahwa pencabutan seketika hanya dimiliki sesi, dan
+bahwa isi token terbaca siapa pun yang memegangnya.
+
+\begin{enumerate}
+  \item Masuk dengan cara sesi, catat panjang penandanya dan atribut
+        cookienya, seperti pada Listing \ref{lst:c10-lat1-jalan}.
+  \item Pakai sesi itu untuk membuka daftar pesanan, lalu keluar, lalu
+        pakai sesi yang sama sekali lagi. Catat ketiga hasilnya.
+  \item Masuk dengan cara token, lalu dekode bagian tengah tokennya dengan
+        \texttt{base64}. Catat apa saja yang terbaca di dalamnya.
+  \item Isi Tabel \ref{tab:c10-lat1-hasil}. Tabel \ref{tab:c10-lat1-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa token tidak dapat
+        dicabut seketika? Kedua, apa yang hilang bila seluruh keterangan
+        pengguna dimasukkan ke dalam token? Ketiga, kapan sesi lebih pantas
+        dipakai daripada token?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Membandingkan sesi dan token, tersedia di \berkas{sources/chapter10/aplikasi.py}}, label={lst:c10-lat1-jalan}]
+curl -s -D - -X POST \
+  "http://127.0.0.1:8070/masuk?cara=sesi&nama=budi&sandi=budi123"
+curl -s -X POST \
+  "http://127.0.0.1:8070/masuk?cara=token&nama=budi&sandi=budi123"
+
+# Keluarannya:
+# Set-Cookie: sesi=4b2f8d7e...; HttpOnly; SameSite=Lax; Path=/
+# {"cara": "sesi", "panjang_penanda": 32}
+# {"cara": "token", "access_token": "eyJhbGciOi...", "panjang_access": 169}
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 1 yang sudah terisi}
+  \label{tab:c10-lat1-contoh}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Hal} & \textbf{Sesi} & \textbf{Token} \\
+    \hline
+    Panjang yang dibawa klien & 32 huruf & 169 byte \\
+    \hline
+    Sesudah keluar & ditolak & masih berlaku \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 1}
+  \label{tab:c10-lat1-hasil}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Hal} & \textbf{Sesi} & \textbf{Token} \\
+    \hline
+    Panjang yang dibawa klien & \dots & \dots \\
+    \hline
+    Sesudah keluar & \dots & \dots \\
+    \hline
+    Isi yang terbaca klien & \dots & \dots \\
+    \hline
+    Yang disimpan server & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\ifajar
+  \subsection*{Latihan 2: Umur dan Rotasi Token}
+\else
+  \subsection*{Prosedur 2: Umur dan Rotasi Token}
+\fi
+
+Latihan ini membuktikan bahwa umur pendek dan rotasi menjawab dua risiko yang
+berbeda.
+
+\begin{enumerate}
+  \item Masuk dengan cara token, lalu pakai \textit{access token}-nya
+        segera, pada detik kedua, dan pada detik keenam. Catat ketiga
+        statusnya.
+  \item Ubah satu huruf terakhir token itu, lalu pakai lagi dan catat
+        alasan penolakannya.
+  \item Lakukan \textit{refresh} dengan \textit{refresh token}, catat pasangan baru yang
+        terbit, lalu pakai ulang penanda lama seperti pada Listing
+        \ref{lst:c10-lat2-jalan}.
+  \item Coba penanda baru sesudah pemakaian ulang itu, lalu isi Tabel
+        \ref{tab:c10-lat2-hasil}. Tabel \ref{tab:c10-lat2-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab dua pertanyaan berikut. Pertama, mengapa penanda baru ikut
+        tidak berlaku? Kedua, apa yang terjadi bila rotasi dipakai tanpa penangkapan
+        pemakaian ulang?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Rotasi dan pemakaian ulang refresh token, tersedia di \berkas{sources/chapter10/aplikasi.py}}, label={lst:c10-lat2-jalan}]
+curl -s -X POST "http://127.0.0.1:8070/refresh?refresh=PENANDA_LAMA"
+curl -s -X POST "http://127.0.0.1:8070/refresh?refresh=PENANDA_LAMA"
+curl -s -X POST "http://127.0.0.1:8070/refresh?refresh=PENANDA_BARU"
+
+# Keluarannya:
+# {"access_token": "eyJhbGciOi...", "refresh_token": "50dbfff1..."}
+# {"pesan": "refresh token dipakai ulang", "dicabut": 2}
+# {"pesan": "refresh token tidak dikenal"}
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 2 yang sudah terisi}
+  \label{tab:c10-lat2-contoh}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Langkah} & \textbf{Status} & \textbf{Alasan} \\
+    \hline
+    Token sesudah 6 detik & 401 & token kedaluwarsa \\
+    \hline
+    Memakai ulang penanda lama & 401 & dipakai ulang, 2 dicabut \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 2}
+  \label{tab:c10-lat2-hasil}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Langkah} & \textbf{Status} & \textbf{Alasan} \\
+    \hline
+    Token segera sesudah terbit & \dots & \dots \\
+    \hline
+    Token sesudah 2 detik & \dots & \dots \\
+    \hline
+    Token sesudah 6 detik & \dots & \dots \\
+    \hline
+    Token yang diubah satu huruf & \dots & \dots \\
+    \hline
+    Memakai ulang penanda lama & \dots & \dots \\
+    \hline
+    Penanda baru sesudah pencabutan & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\ifajar
+  \subsection*{Latihan 3: Matriks Hak Akses}
+\else
+  \subsection*{Prosedur 3: Matriks Hak Akses}
+\fi
+
+Latihan ini membuktikan bahwa RBAC, ABAC, dan isolasi \textit{tenant}
+terbaca sekaligus dari satu tabel.
+
+\begin{enumerate}
+  \item Jalankan alat ukurnya seperti pada Listing \ref{lst:c10-lat3-jalan},
+        lalu salin hasilnya ke Tabel \ref{tab:c10-lat3-hasil}. Tabel
+        \ref{tab:c10-lat3-contoh} memperlihatkan contoh yang sudah terisi.
+  \item Tandai sel mana yang ditentukan peran, sel mana yang ditentukan
+        kepemilikan, dan sel mana yang ditentukan \textit{tenant}.
+  \item Tambahkan satu izin \texttt{baca\_laporan} pada peran staf di
+        \berkas{sources/chapter10/kebijakan.py}, jalankan ulang, lalu catat
+        sel mana yang berubah.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa permintaan lintas
+        \textit{tenant} dijawab 404 dan bukan 403? Kedua, mengapa
+        pemeriksaan \textit{tenant} ditaruh paling depan? Ketiga, apa yang
+        terjadi bila penyaringan daftar dan pemeriksaan rincian memakai
+        aturan yang berbeda?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Menjalankan matriks hak akses, tersedia di \berkas{sources/chapter10/ukur-akses.py}}, label={lst:c10-lat3-jalan}]
+python3 ukur-akses.py
+
+# Keluarannya:
+#   Pengguna    /api/pesanan  /api/pesanan/1  /api/pesanan/3    /api/laporan
+#   ani         200, 2 baris             200             404             200
+#   budi        200, 2 baris             200             404             403
+#   cita        200, 1 baris             200             404             403
+#   dedi        200, 1 baris             404             200             403
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 3 yang sudah terisi}
+  \label{tab:c10-lat3-contoh}
+  \begin{tabularx}{\textwidth}{Xllll}
+    \hline
+    \textbf{Pengguna} & \textbf{Daftar} & \textbf{/1} & \textbf{/3} & \textbf{Laporan} \\
+    \hline
+    ani, admin kampus-a & 200, 2 baris & 200 & 404 & 200 \\
+    \hline
+    dedi, staf kampus-b & 200, 1 baris & 404 & 200 & 403 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 3}
+  \label{tab:c10-lat3-hasil}
+  \begin{tabularx}{\textwidth}{Xllll}
+    \hline
+    \textbf{Pengguna} & \textbf{Daftar} & \textbf{/1} & \textbf{/3} & \textbf{Laporan} \\
+    \hline
+    ani, admin kampus-a & \dots & \dots & \dots & \dots \\
+    \hline
+    budi, staf kampus-a & \dots & \dots & \dots & \dots \\
+    \hline
+    cita, pembeli kampus-a & \dots & \dots & \dots & \dots \\
+    \hline
+    dedi, staf kampus-b & \dots & \dots & \dots & \dots \\
+    \hline
+    Sesudah staf diberi izin laporan & \dots & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\ifajar
+  \subsection*{Latihan 4: Menambah Tenant dan Peran Baru}
+\else
+  \subsection*{Prosedur 4: Menambah Tenant dan Peran Baru}
+\fi
+
+Latihan ini menguji apakah aturan hak akses benar-benar terpusat, atau
+sebenarnya tersebar di banyak tempat.
+
+\begin{enumerate}
+  \item Tambahkan satu \textit{tenant} ketiga beserta satu penggunanya dan
+        satu pesanannya ke
+        \berkas{sources/chapter10/pengguna.json}. Kata sandi pengguna baru
+        disimpan sebagai \textit{salt} dan \textit{hash}, yang dibuat dengan
+        perintah pada Listing \ref{lst:c10-lat4-sandi}.
+  \item Tambahkan peran baru, misalnya auditor yang boleh membaca laporan
+        tetapi tidak boleh membaca pesanan, ke
+        \berkas{sources/chapter10/kebijakan.py}.
+  \item Tambahkan kedua pengguna baru itu ke daftar pada
+        \berkas{sources/chapter10/ukur-akses.py}, jalankan ulang, lalu
+        catat matriksnya ke Tabel \ref{tab:c10-lat4-hasil}. Tabel
+        \ref{tab:c10-lat4-contoh} memperlihatkan bentuk isian yang
+        diharapkan.
+  \item Catat berapa file yang harus disunting untuk kedua penambahan itu.
+  \item Jawab dua pertanyaan berikut. Pertama, berapa file yang berubah, dan
+        apakah jumlah itu menandakan aturannya terpusat? Kedua, apa yang
+        perlu diubah bila aturannya berganti dari peran menjadi izin per
+        pengguna?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Membuat \textit{salt} dan \textit{hash} kata sandi pengguna baru, tersedia di \berkas{sources/chapter10/aplikasi.py}}, label={lst:c10-lat4-sandi}]
+python3 -c "import aplikasi; print(aplikasi.buat_catatan_sandi('eko123'))"
+
+# Keluarannya, berbeda tiap kali karena salt-nya acak:
+# {"salt_sandi": "aab7e943...", "hash_sandi": "97301a7f..."}
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Bentuk isian Latihan 4 yang diharapkan}
+  \label{tab:c10-lat4-contoh}
+  \begin{tabularx}{\textwidth}{Xlll}
+    \hline
+    \textbf{Pengguna baru} & \textbf{Daftar} & \textbf{Rincian} & \textbf{Laporan} \\
+    \hline
+    auditor kampus-a & 200, 0 baris & 403 & 200 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 4}
+  \label{tab:c10-lat4-hasil}
+  \begin{tabularx}{\textwidth}{Xlll}
+    \hline
+    \textbf{Pengguna baru} & \textbf{Daftar} & \textbf{Rincian} & \textbf{Laporan} \\
+    \hline
+    Pengguna \textit{tenant} ketiga & \dots & \dots & \dots \\
+    \hline
+    Peran auditor & \dots & \dots & \dots \\
+    \hline
+    Jumlah file yang disunting & \multicolumn{3}{l}{\dots} \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Setelah seluruh latihan selesai, aplikasinya dihentikan dengan Ctrl+C. Tidak
+ada container yang perlu dimatikan, karena bab ini memang tidak memakainya.

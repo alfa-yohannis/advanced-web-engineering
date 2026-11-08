@@ -1,0 +1,349 @@
+\ifajar
+  \section{Latihan}
+\else
+  \section{Bab 12: Type Safety, Kontrak API, dan Desain Layanan}
+\fi
+
+Seluruh file yang dipakai pada latihan ini tersedia di
+\berkas{sources/chapter12/}, dihitung relatif terhadap akar repositori.
+Latihan ini membutuhkan Python 3 beserta \texttt{jsonschema}, dan
+\texttt{tsc} yang sudah terpasang di Bab 6. Tidak ada Docker dan tidak ada
+pemasangan npm baru.
+
+Seluruh permintaan diarahkan ke aplikasi dan \textit{gateway} yang berjalan
+di komputer sendiri, dan sifatnya mengamati, bukan membebani. Status dan
+klasifikasi perubahan akan sama pada tiap mahasiswa, sedangkan lama
+pengukuran dan nilai \texttt{Retry-After} akan berbeda sedikit.
+
+Penyiapannya mengaktifkan venv bersama di \berkas{sources/.venv}, yang memuat
+\texttt{jsonschema}, lalu menyalakan dua layanan, seperti pada Listing
+\ref{lst:c12-siapkan}.
+
+\begin{lstlisting}[language=bash, caption={Menyalakan aplikasi dan gateway, tersedia di \berkas{sources/chapter12/}}, label={lst:c12-siapkan}]
+cd sources/chapter12
+source ../.venv/bin/activate
+python3 aplikasi.py &
+python3 gateway.py &
+
+# Keluarannya:
+# Melayani 48 buku di http://127.0.0.1:8090/v1/buku  (Ctrl+C untuk berhenti)
+# Gateway di http://127.0.0.1:8091/  (Ctrl+C untuk berhenti)
+# Ember 20 token per klien, diisi 5 token per detik
+\end{lstlisting}
+
+\ifajar
+  \subsection*{Latihan 1: Meng-generate Tipe dari Kontrak}
+\else
+  \subsection*{Prosedur 1: Meng-generate Tipe dari Kontrak}
+\fi
+
+Latihan ini membuktikan bahwa tipe klien dapat diturunkan dari kontrak, dan
+bahwa perubahan kontrak tertangkap compiler sebelum program jalan.
+
+\begin{enumerate}
+  \item Jalankan generatornya untuk kedua kontrak, seperti pada Listing
+        \ref{lst:c12-lat1-jalan}, lalu catat jumlah skema dan jumlah baris
+        hasilnya.
+  \item Periksa seluruh tipe dengan \texttt{tsc} memakai
+        \berkas{tsconfig.json}, lalu catat hasilnya.
+  \item Periksa \berkas{pakai-tipe-salah.ts} sendiri, lalu catat kode
+        kesalahan beserta nomor barisnya.
+  \item Tambahkan satu field opsional pada skema \texttt{Buku} di
+        \berkas{kontrak.json}, jalankan ulang generatornya, lalu catat
+        perubahan pada file tipenya.
+  \item Isi Tabel \ref{tab:c12-lat1-hasil}. Tabel \ref{tab:c12-lat1-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab dua pertanyaan berikut. Pertama, mengapa field yang tidak ada
+        di \texttt{required} di-\textit{generate} dengan tanda tanya? Kedua,
+        kesalahan apa yang tetap lolos dari \texttt{tsc} tetapi tertangkap
+        validasi di server?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Meng-generate tipe lalu memeriksanya, tersedia di \berkas{sources/chapter12/buat\_tipe.py}}, label={lst:c12-lat1-jalan}]
+python3 buat_tipe.py kontrak.json tipe-katalog.ts
+python3 buat_tipe.py kontrak-v2.json tipe-katalog-v2.ts
+../chapter06/node_modules/.bin/tsc --noEmit -p tsconfig.json
+
+# Keluarannya:
+# 5 skema dan 2 jalur di-generate menjadi tipe-katalog.ts
+# 5 skema dan 2 jalur di-generate menjadi tipe-katalog-v2.ts
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 1 yang sudah terisi}
+  \label{tab:c12-lat1-contoh}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Yang diperiksa} & \textbf{Hasil} & \textbf{Keterangan} \\
+    \hline
+    Jumlah skema dan jalur & 5 dan 2 & dari \berkas{kontrak.json} \\
+    \hline
+    Baris tipe hasil generate & 50 & versi 2 menjadi 51 \\
+    \hline
+    \texttt{tsc} pada seluruh tipe & lolos & tanpa kesalahan \\
+    \hline
+    \texttt{tsc} pada file salah & TS2339 & baris 15, field \texttt{harga} \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 1}
+  \label{tab:c12-lat1-hasil}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Yang diperiksa} & \textbf{Hasil} & \textbf{Keterangan} \\
+    \hline
+    Jumlah skema dan jalur & \dots & \dots \\
+    \hline
+    Baris tipe hasil generate & \dots & \dots \\
+    \hline
+    \texttt{tsc} pada seluruh tipe & \dots & \dots \\
+    \hline
+    \texttt{tsc} pada file salah & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\ifajar
+  \subsection*{Latihan 2: Validasi di Batas dan Idempotensi}
+\else
+  \subsection*{Prosedur 2: Validasi di Batas dan Idempotensi}
+\fi
+
+Latihan ini membuktikan bahwa satu pemeriksaan di pintu masuk cukup untuk
+menolak lima bentuk isi yang salah, dan bahwa pengiriman ulang tidak membuat
+pesanan kedua.
+
+\begin{enumerate}
+  \item Nyalakan ulang aplikasinya, agar nomor pesanannya dimulai dari awal.
+  \item Jalankan \berkas{uji-kontrak.py}, seperti pada Listing
+        \ref{lst:c12-lat2-jalan}, lalu catat sebelas barisnya.
+  \item Kirim satu permintaan dengan kunci idempotensi pilihan sendiri dua
+        kali, lalu catat kedua statusnya dan nomor pesanannya.
+  \item Kirim permintaan ketiga dengan kunci yang sama tetapi
+        \texttt{id\_buku} berbeda, lalu catat statusnya.
+  \item Isi Tabel \ref{tab:c12-lat2-hasil}. Tabel \ref{tab:c12-lat2-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa pengiriman kedua
+        dijawab 200, bukan 201? Kedua, mengapa field asing ditolak, bukan
+        diabaikan? Ketiga, apa yang terjadi bila kunci idempotensinya dibuat
+        dari isi permintaan, bukan dibuat klien?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Menguji validasi dan idempotensi, tersedia di \berkas{sources/chapter12/uji-kontrak.py}}, label={lst:c12-lat2-jalan}]
+python3 uji-kontrak.py
+
+# Keluarannya:
+#   Yang diuji                   Status  Hasil
+#   GET /v1/buku                    200  sesuai skema
+#   GET /v1/buku?halaman=2          200  sesuai skema
+#   GET /v1/buku?per_halaman=99     422  sesuai skema
+#   sesuai kontrak                  201  sesuai, diterima
+#   field wajib hilang              422  sesuai, isi tidak sesuai
+#   tipe salah                      422  sesuai, isi tidak sesuai
+#   melebihi batas                  422  sesuai, isi tidak sesuai
+#   field asing                     422  sesuai, isi tidak sesuai
+#   kunci baru                      201  pesanan psn-0002 dibuat
+#   kunci sama, isi sama            200  pesanan psn-0002 dikembalikan, sama
+#   kunci sama, isi beda            409  kunci idempotensi dipakai ulang
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 2 yang sudah terisi}
+  \label{tab:c12-lat2-contoh}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Yang dikirim} & \textbf{Status} & \textbf{Hasil} \\
+    \hline
+    isi sesuai kontrak & 201 & diterima \\
+    \hline
+    field wajib hilang & 422 & isi tidak sesuai \\
+    \hline
+    field asing \texttt{catatan} & 422 & isi tidak sesuai \\
+    \hline
+    kunci sama, isi sama & 200 & pesanan yang sama dikembalikan \\
+    \hline
+    kunci sama, isi beda & 409 & ditolak \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 2}
+  \label{tab:c12-lat2-hasil}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Yang dikirim} & \textbf{Status} & \textbf{Hasil} \\
+    \hline
+    isi sesuai kontrak & \dots & \dots \\
+    \hline
+    field wajib hilang & \dots & \dots \\
+    \hline
+    field asing \texttt{catatan} & \dots & \dots \\
+    \hline
+    kunci sama, isi sama & \dots & \dots \\
+    \hline
+    kunci sama, isi beda & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\ifajar
+  \subsection*{Latihan 3: Memisahkan Perubahan Aman dari yang Merusak}
+\else
+  \subsection*{Prosedur 3: Memisahkan Perubahan Aman dari yang Merusak}
+\fi
+
+Latihan ini membuktikan bahwa jenis perubahan kontrak dapat diputuskan mesin,
+dan bahwa klien lama dapat rusak walaupun server menjawab 200.
+
+\begin{enumerate}
+  \item Jalankan \berkas{uji-kompatibilitas.py}, seperti pada Listing
+        \ref{lst:c12-lat3-jalan}, lalu catat lima perubahan beserta
+        akibatnya.
+  \item Catat keempat baris pengujian pada server, terutama statusnya.
+  \item Tambahkan satu field opsional pada skema \texttt{Buku} di
+        \berkas{kontrak-v2.json}, jalankan ulang, lalu catat perubahannya di
+        tabel perbandingan.
+  \item Ganti nama satu field wajib di \berkas{kontrak-v2.json}, jalankan
+        ulang, lalu catat berapa baris "merusak klien lama" yang muncul.
+  \item Isi Tabel \ref{tab:c12-lat3-hasil}. Tabel \ref{tab:c12-lat3-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa mengganti nama satu
+        field menghasilkan dua baris perubahan? Kedua, mengapa menambah nilai
+        enum merusak klien lama? Ketiga, apa yang harus disiapkan sebelum
+        versi 1 dimatikan?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Membandingkan kontrak lalu mengujinya, tersedia di \berkas{sources/chapter12/uji-kompatibilitas.py}}, label={lst:c12-lat3-jalan}]
+python3 uji-kompatibilitas.py
+
+# Keluarannya:
+#   Perubahan kontrak v1 ke v2                     Akibat
+#   Buku.harga wajib dihapus                       merusak klien lama
+#   Buku.harga_rupiah wajib ditambah               merusak klien lama
+#   Buku.penerbit opsional ditambah                aman
+#   Pesanan.status enum menerima dibatalkan        merusak klien lama
+#   PesananBaru.jumlah batas naik ke 20            aman bagi klien lama
+#
+#   Yang diuji pada server       Status  Hasil
+#   klien v1 membaca /v1/buku       200  jalan
+#   klien v1 membaca /v2/buku       200  gagal: 'harga' is a required property
+#   klien v2 memesan 15 ke /v2      201  diterima
+#   klien v2 memesan 15 ke /v1      422  isi tidak sesuai
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 3 yang sudah terisi}
+  \label{tab:c12-lat3-contoh}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Yang diamati} & \textbf{Hasil} & \textbf{Keterangan} \\
+    \hline
+    Perubahan terdeteksi & 5 & 2 aman, 3 merusak \\
+    \hline
+    Klien v1 ke \texttt{/v2/buku} & 200 & gagal dipakai \\
+    \hline
+    Klien v2 ke \texttt{/v1/pesanan} & 422 & batas lama 10 \\
+    \hline
+    Ganti nama satu field wajib & 2 baris & dihapus dan ditambah \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengamatan Latihan 3}
+  \label{tab:c12-lat3-hasil}
+  \begin{tabularx}{\textwidth}{Xll}
+    \hline
+    \textbf{Yang diamati} & \textbf{Hasil} & \textbf{Keterangan} \\
+    \hline
+    Perubahan terdeteksi & \dots & \dots \\
+    \hline
+    Klien v1 ke \texttt{/v2/buku} & \dots & \dots \\
+    \hline
+    Klien v2 ke \texttt{/v1/pesanan} & \dots & \dots \\
+    \hline
+    Ganti nama satu field wajib & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\ifajar
+  \subsection*{Latihan 4: Batas Laju di Gateway}
+\else
+  \subsection*{Prosedur 4: Batas Laju di Gateway}
+\fi
+
+Latihan ini mengukur perilaku \textit{token bucket}: lonjakan pendek yang
+masih dilayani, penolakan sesudah embernya habis, dan pengisian ulangnya.
+
+\begin{enumerate}
+  \item Pastikan aplikasi dan \textit{gateway} menyala, lalu jalankan
+        \berkas{ukur-gateway.py} seperti pada Listing
+        \ref{lst:c12-lat4-jalan}.
+  \item Catat jumlah 200 dan 429 pada ketiga tahapnya, beserta
+        \texttt{Retry-After} yang diterima.
+  \item Hitung sendiri jumlah yang seharusnya dilayani pada tahap kedua dari
+        lama menunggu dan laju pengisiannya, lalu bandingkan dengan hasil
+        pengukuran.
+  \item Ubah \texttt{KAPASITAS\_EMBER} menjadi 5 di \berkas{gateway.py},
+        nyalakan ulang \textit{gateway}-nya, lalu ukur sekali lagi.
+  \item Isi Tabel \ref{tab:c12-lat4-hasil}. Tabel \ref{tab:c12-lat4-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa klien lain tetap
+        dilayani 20 permintaan? Kedua, apa akibatnya bila embernya dibuat
+        satu untuk seluruh sistem? Ketiga, mengapa penolakannya memakai 429
+        beserta \texttt{Retry-After}, bukan 503 tanpa keterangan?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Mengukur batas laju gateway, tersedia di \berkas{sources/chapter12/ukur-gateway.py}}, label={lst:c12-lat4-jalan}]
+python3 ukur-gateway.py
+
+# Keluarannya:
+#   Tahap                            200   429  Retry-After  Lama detik
+#   30 permintaan sekaligus           20    10         0.19        0.02
+#   setelah menunggu 2 detik          10    20         0.16        0.02
+#   klien lain, ember sendiri         20    10         0.19        0.02
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 4 yang sudah terisi}
+  \label{tab:c12-lat4-contoh}
+  \begin{tabularx}{\textwidth}{Xlll}
+    \hline
+    \textbf{Tahap} & \textbf{200} & \textbf{429} & \textbf{Hitungan sendiri} \\
+    \hline
+    30 sekaligus & 20 & 10 & kapasitas ember 20 \\
+    \hline
+    setelah 2 detik & 10 & 20 & $2 \times 5$ token \\
+    \hline
+    klien lain & 20 & 10 & ember terpisah \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 4}
+  \label{tab:c12-lat4-hasil}
+  \begin{tabularx}{\textwidth}{Xlll}
+    \hline
+    \textbf{Tahap} & \textbf{200} & \textbf{429} & \textbf{Hitungan sendiri} \\
+    \hline
+    30 sekaligus & \dots & \dots & \dots \\
+    \hline
+    setelah 2 detik & \dots & \dots & \dots \\
+    \hline
+    klien lain & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}

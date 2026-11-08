@@ -50,6 +50,61 @@ Dua baris di slide sesi 3 tampak lebih dari 78 karakter bila markup pewarna
 `(*\textcolor{red}{...}*)` dan spasi yang dibuang `gobble` ikut dihitung. Lebar
 tampilnya 59 dan 76 karakter.
 
+## Menjadikan buku ini buku referensi
+
+Kriterianya diambil dari Pedoman Operasional PAK 2019 beserta panduan
+penerbit kampus: buku referensi bernilai 40 angka kredit, wajib ber-ISBN,
+tebal isi paling sedikit 40 halaman cetak format UNESCO, berisi hasil
+penelitian atau pemikiran penulis, dan **bagian isinya tidak memuat perangkat
+asesmen**. Buku ajar bernilai 20 angka kredit, isinya turunan rencana
+pembelajaran, dan memuat tujuan instruksional, rangkuman, serta latihan.
+Satu terbitan dinilai sekali, jadi satu buku tidak dapat diklaim sebagai
+keduanya. Rencananya: satu sumber naskah, dua edisi, dan yang ber-ISBN
+adalah edisi referensi.
+
+### Sudah dikerjakan
+
+- Preamble dipisah ke `module/preamble.tex`, dipakai kedua edisi.
+- Penanda `\ifajar` dipasang. `advanced-web-engineering.tex` membangun edisi
+  referensi, dan `advanced-web-engineering-ajar.tex` membangun edisi ajar.
+- Seksi Latihan tiap bab dipindah ke `module/latihanNN.tex`. Edisi ajar
+  mencetaknya di akhir babnya, edisi referensi mengumpulkannya sebagai
+  Lampiran A "Prosedur Pengukuran".
+- Tujuan Pembelajaran hanya dicetak di edisi ajar.
+- Judul tiap prosedur mengikuti edisinya: "Latihan N" atau "Prosedur N".
+- `module/prakata.tex` dan `module/metode.tex` ditulis, berisi lingkungan
+  pengukuran, empat aturan yang dipegang, dan batas keberlakuan angkanya.
+- Keduanya terbangun bersih: edisi referensi 285 halaman, edisi ajar 283.
+
+### Masih harus dikerjakan
+
+1. Lembar isian kosong (57 tabel berjudul "Lembar isian") masih tercetak di
+   edisi referensi. Bungkus dengan `\ifajar`, karena tabel kosong terbaca
+   sebagai perangkat asesmen.
+2. Bab 1 masih bergaya pengantar mata kuliah, termasuk peta pertemuan. Di
+   edisi referensi, bab itu perlu dibingkai ulang sebagai pengantar bidang
+   ilmu, atau dipindahkan ke edisi ajar saja.
+3. Kata "latihan", "pertemuan", dan "mahasiswa" di badan bab perlu disapu
+   untuk edisi referensi.
+4. Indeks belum ada isinya. `makeidx` sudah dipasang; perlu satu sapuan
+   `\index{}` untuk istilah di `CLAUDE.md` dan singkatan di `README.md`,
+   lalu `\printindex` di belakang edisi referensi.
+5. Glosarium dan biografi penulis belum ada. Keduanya bagian akhir yang
+   disarankan panduan penerbit.
+6. Tiap bab perlu satu paragraf metode di depan hasilnya: apa yang diukur,
+   dengan alat apa, berapa ulangan.
+7. Pustaka perlu diperkuat. Dari 116 entri, baru 15 berupa jurnal dan
+   prosiding, sedangkan sisanya RFC, spesifikasi, dan dokumentasi vendor.
+   Sasaran: dua sampai tiga karya ilmiah per bab yang membahas hal yang sama.
+8. Bab penutup lintas bab belum ada, yaitu rangkuman temuan dan arah
+   penelitian lanjutan.
+9. Ukuran cetak perlu dipastikan ke penerbit. Naskah sekarang B5 (17,6 x 25
+   cm), sedangkan panduan menyebut format UNESCO 15,5 x 23 cm. Ditjen Dikti
+   menyebut rentang A5 sampai A4, jadi B5 masih di dalamnya, tetapi penerbit
+   yang menentukan.
+10. ISBN dan penerbit belum ada. Perpusnas mensyaratkan paling sedikit 49
+    halaman untuk ISBN, dan jumlah halaman buku ini sudah jauh melewatinya.
+
 ## Catatan pemeliharaan
 
 - Port 5433, 8000, dan 8080 dipakai layanan proyek lain di komputer

@@ -1,0 +1,407 @@
+\ifajar
+  \section{Latihan}
+\else
+  \section{Bab 3: Data Engineering untuk Aplikasi Web}
+\fi
+
+Seluruh file yang dipakai pada latihan ini tersedia di
+\berkas{sources/chapter03/}, dihitung relatif terhadap akar repositori.
+Latihan membutuhkan Docker dengan Compose versi 2 dan Python 3. Listing
+penyiapan masuk ke direktori itu lebih dahulu, dan seluruh perintah sesudahnya
+dijalankan dari sana. Bila membuka terminal baru, masuk kembali dengan
+\texttt{cd sources/chapter03} dari akar repositori. Basis data dijalankan
+sebagai container, sehingga tidak ada sistem milik pihak lain yang tersentuh.
+Uji beban pada bab ini pun dijalankan pada basis data sendiri.
+
+Rencana eksekusi sebelum perbaikan direkam lebih dahulu, karena begitu indeks
+terpasang rencana tersebut tidak dapat diperoleh kembali tanpa menghapus
+indeksnya.
+
+Penyiapannya dilakukan sekali, seperti pada Listing \ref{lst:c3-siapkan}.
+
+\begin{lstlisting}[language=bash, caption={Menyiapkan basis data dan data uji, dijalankan sekali di awal}, label={lst:c3-siapkan}]
+cd sources/chapter03
+docker compose up -d
+until docker compose exec -T db pg_isready -h localhost -q; do sleep 1; done
+DSN="postgresql://admin:admin123@localhost/toko"
+docker compose exec -T db psql "$DSN" < 01-skema.sql
+docker compose exec -T db psql "$DSN" < 02-data-uji.sql
+
+# Keluarannya:
+#     tabel     | count
+# --------------+--------
+#  kategori     |     20
+#  pelanggan    |  20000
+#  buku         |  50000
+#  pesanan      | 200000
+#  item_pesanan | 600000
+\end{lstlisting}
+
+Baris \texttt{until} pada Listing \ref{lst:c3-siapkan} menunggu PostgreSQL
+benar-benar menerima koneksi Transmission Control Protocol (TCP).
+Container yang baru menyala sempat
+menjalankan server sementara yang hanya mendengar lewat soket lokal, sehingga
+\texttt{psql} yang dijalankan terlalu cepat ditolak.
+
+DSN pada Listing \ref{lst:c3-siapkan} tidak mencantumkan port, sedangkan DSN
+di skrip Python memakai port 5433. Perintah \texttt{psql} pada listing itu
+berjalan di dalam container lewat \texttt{docker compose exec}. Tanpa nomor
+port, koneksinya menuju port bawaan PostgreSQL, yaitu 5432
+\cite{pgdoc-connections}. Skrip Python berjalan di luar container, sehingga
+harus memakai port 5433. Baris \texttt{5433:5432} pada
+\berkas{sources/chapter03/docker-compose.yml} meneruskan port 5433 di komputer
+ke port 5432 di dalam container. Akibatnya, DSN tanpa port tidak dapat dipakai
+dari luar container, karena port 5432 di komputer sendiri tidak tersambung ke
+container latihan.
+
+Skrip Python memakai venv bersama di \berkas{sources/.venv}. Bila belum ada,
+buat sekali seperti pada Listing \ref{lst:c3-venv}.
+
+\begin{lstlisting}[language=bash, caption={Menyiapkan venv untuk seluruh skrip Python}, label={lst:c3-venv}]
+python3 -m venv ../.venv
+../.venv/bin/pip install "psycopg[binary,pool]" sqlalchemy
+\end{lstlisting}
+
+\ifajar
+  \subsection*{Latihan 1: Menetapkan Baseline Query}
+\else
+  \subsection*{Prosedur 1: Menetapkan Baseline Query}
+\fi
+
+Latihan ini menetapkan angka awal. Yang diukur adalah waktu eksekusi dan bentuk
+rencananya, sebelum satu indeks pun ditambahkan.
+
+\begin{enumerate}
+  \item Jalankan penyiapan pada Listing \ref{lst:c3-siapkan}, lalu pastikan jumlah
+        barisnya sesuai.
+  \item Jalankan \berkas{sources/chapter03/03-query-baseline.sql} seperti pada
+        Listing \ref{lst:c3-lat1-baseline}, lalu simpan seluruh keluarannya ke
+        file. Rencana ini tidak dapat diperoleh
+        kembali setelah indeks terpasang, kecuali indeksnya dihapus lagi.
+  \item Dari keluaran itu, catat untuk tiap \textit{query} jumlah baris yang
+        dikembalikan, yaitu \texttt{rows} pada bagian \texttt{actual} di baris
+        pertama rencananya, lalu \textit{node} pemindaian teratas, nilai
+        \texttt{Rows Removed by Filter}, dan \texttt{Execution Time}. Semuanya
+        berasal dari \texttt{EXPLAIN ANALYZE} di dalam file tersebut, karena
+        \texttt{ukur-query.py} hanya melaporkan p50, p95, dan pemindaian.
+  \item Ukur sebarannya memakai perintah pada Listing \ref{lst:c3-lat1-jalan}
+        untuk \texttt{query/q1.sql} sampai \texttt{query/q4.sql}, lalu catat p50
+        dan p95. Jalankan pertama sengaja dibuang oleh skrip,
+        karena menanggung pengisian \textit{cache}.
+  \item Isi Tabel \ref{tab:c3-lat1-hasil}. Tabel \ref{tab:c3-lat1-contoh}
+        memperlihatkan contoh yang sudah terisi.
+  \item Jawab tiga pertanyaan berikut. Pertama, \textit{query} mana yang membuang baris
+        terbanyak dibanding baris yang dikembalikannya? Kedua, \textit{query} mana yang
+        punya \textit{node} Sort, dan mengapa \textit{node} itu muncul? Ketiga, mengapa p95
+        selalu lebih besar daripada p50, padahal \textit{query} dan datanya sama persis?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Merekam rencana baseline keempat query, memakai \berkas{sources/chapter03/03-query-baseline.sql}}, label={lst:c3-lat1-baseline}]
+DSN="postgresql://admin:admin123@localhost/toko"
+docker compose exec -T db psql "$DSN" < 03-query-baseline.sql > baseline.txt
+grep -A3 "^===" baseline.txt | grep -E "^===|rows="
+grep -E "^===|Rows Removed by Filter|Execution Time" baseline.txt
+\end{lstlisting}
+
+Keluaran untuk Q1 sama dengan Listing \ref{lst:plan-sebelum}. Perintah
+\texttt{grep} pertama menampilkan baris pertama rencana tiap \textit{query}, tempat jumlah
+baris yang dikembalikan dibaca. Perintah kedua menampilkan
+\texttt{Rows Removed by Filter}, yang mengisi kolom Dibuang penyaring.
+
+\begin{lstlisting}[language=bash, caption={Mengukur sebaran waktu eksekusi satu query, tersedia di \berkas{sources/chapter03/ukur-query.py}}, label={lst:c3-lat1-jalan}]
+source ../.venv/bin/activate
+python ukur-query.py query/q1.sql 20
+
+# Keluarannya:
+# File         : query/q1.sql
+# Ulangan      : 20, jalankan pertama dibuang
+# p50          :    5.602 ms
+# p95          :    5.905 ms
+# Pemindaian   : Seq Scan pesanan
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 1 yang sudah terisi, dalam milidetik. Kolom Pemindaian diringkas dari keluaran \texttt{ukur-query.py}}
+  \label{tab:c3-lat1-contoh}
+  \begin{tabularx}{\textwidth}{lXrrl}
+    \hline
+    \textbf{\textit{Query}} & \textbf{Dibuang penyaring} & \textbf{p50} & \textbf{p95} & \textbf{Pemindaian} \\
+    \hline
+    Q1 & 66.663 per \textit{worker} & 5,602 & 5,905 & Seq Scan pesanan \\
+    \hline
+    Q2 & 62.194 per \textit{worker} & 88,459 & 92,818 & Seq Scan tiga tabel \\
+    \hline
+    Q3 & 49.989 & 30,839 & 31,959 & Seq Scan buku \\
+    \hline
+    Q4 & 55.567 per \textit{worker} & 6,617 & 7,212 & Seq Scan pesanan \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 1, dalam milidetik}
+  \label{tab:c3-lat1-hasil}
+  \begin{tabularx}{\textwidth}{lXrrl}
+    \hline
+    \textbf{\textit{Query}} & \textbf{Dibuang penyaring} & \textbf{p50} & \textbf{p95} & \textbf{Pemindaian} \\
+    \hline
+    Q1 & \dots & \dots & \dots & \dots \\
+    \hline
+    Q2 & \dots & \dots & \dots & \dots \\
+    \hline
+    Q3 & \dots & \dots & \dots & \dots \\
+    \hline
+    Q4 & \dots & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\ifajar
+  \subsection*{Latihan 2: Memilih Indeks dan Membaca Perubahannya}
+\else
+  \subsection*{Prosedur 2: Memilih Indeks dan Membaca Perubahannya}
+\fi
+
+Latihan ini membuktikan bahwa indeks bukan perbaikan yang berlaku umum,
+melainkan jawaban atas satu bentuk \textit{query} tertentu.
+
+\begin{enumerate}
+  \item Sebelum menjalankan \berkas{sources/chapter03/04-indeks.sql}, tulis
+        dugaan untuk tiap \textit{query}: apakah indeks akan terpakai, dan berapa
+        perkiraan perbaikannya. Dugaan ditulis lebih dahulu agar tidak
+        menyesuaikan diri dengan hasilnya.
+  \item Jalankan \berkas{sources/chapter03/04-indeks.sql} seperti pada Listing
+        \ref{lst:c3-lat2-indeks}, lalu catat ukuran tiap indeks dari keluaran
+        perintah terakhirnya.
+  \item Ulangi pengukuran Latihan 1 seluruhnya, dengan cara dan ulangan yang
+        sama persis. Rencana sesudah indeks disimpan ke \texttt{sesudah.txt},
+        bukan \texttt{baseline.txt}, agar rencana sebelum indeks tidak
+        tertimpa.
+  \item Isi Tabel \ref{tab:c3-lat2-hasil}, lalu bandingkan dengan dugaan pada
+        langkah pertama. Tabel \ref{tab:c3-lat2-contoh} memperlihatkan contoh yang
+        sudah terisi.
+  \item Jawab dua pertanyaan berikut. Pertama, mengapa Q4 tidak membaik
+        walaupun kolom \texttt{status} sering dipakai sebagai penyaring? Kedua,
+        mengapa Q2 hanya membaik sedikit padahal indeksnya terpakai?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Memasang indeks lalu merekam ulang rencana, memakai \berkas{sources/chapter03/04-indeks.sql}}, label={lst:c3-lat2-indeks}]
+DSN="postgresql://admin:admin123@localhost/toko"
+docker compose exec -T db psql "$DSN" < 04-indeks.sql
+docker compose exec -T db psql "$DSN" < 03-query-baseline.sql > sesudah.txt
+grep -E "^===|Scan on|Execution Time" sesudah.txt
+
+# Keluarannya (dipotong pada empat indeks baru):
+#  idx_pesanan_pelanggan_waktu | 6184 kB |                0
+#  idx_item_pesanan_buku       | 5040 kB |                0
+#  idx_pesanan_waktu_aktif     | 3672 kB |                0
+#  idx_buku_judul_trgm         | 2232 kB |                0
+\end{lstlisting}
+
+Untuk mengulang Latihan 1 dari keadaan tanpa indeks, jalankan
+\texttt{docker compose down -v}, lalu ulangi penyiapan pada Listing
+\ref{lst:c3-siapkan}.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 2 yang sudah terisi, p50 dalam milidetik}
+  \label{tab:c3-lat2-contoh}
+  \begin{tabularx}{\textwidth}{lrrrX}
+    \hline
+    \textbf{\textit{Query}} & \textbf{Sebelum} & \textbf{Sesudah} & \textbf{Rasio} & \textbf{Perubahan rencana} \\
+    \hline
+    Q1 & 5,602 & 0,016 & 350$\times$ & Seq $\rightarrow$ Bitmap Index \\
+    \hline
+    Q2 & 88,459 & 80,433 & 1,1$\times$ & Sebagian saja \\
+    \hline
+    Q3 & 30,839 & 0,714 & 43$\times$ & Seq $\rightarrow$ GIN trigram \\
+    \hline
+    Q4 & 6,617 & 7,201 & 0,9$\times$ & Tetap Seq Scan \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Contoh pada Tabel \ref{tab:c3-lat2-contoh} sengaja diambil apa adanya, termasuk
+baris Q4 yang rasionya di bawah satu. Selisih sekecil itu masih dalam batas
+\textit{noise}, dan yang perlu disimpulkan bukan bahwa indeks memperlambatnya, melainkan
+bahwa indeksnya memang tidak dipakai sama sekali. Angka pada tabel tersebut juga
+bergantung pada perangkat keras dan versi PostgreSQL yang dipakai, sehingga
+hasil tiap mahasiswa akan berbeda. Yang dilaporkan adalah pola perbandingannya
+beserta penjelasannya, bukan angka persisnya.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 2}
+  \label{tab:c3-lat2-hasil}
+  \begin{tabularx}{\textwidth}{lrrrX}
+    \hline
+    \textbf{\textit{Query}} & \textbf{Sebelum} & \textbf{Sesudah} & \textbf{Rasio} & \textbf{Perubahan rencana} \\
+    \hline
+    Q1 & \dots & \dots & \dots & \dots \\
+    \hline
+    Q2 & \dots & \dots & \dots & \dots \\
+    \hline
+    Q3 & \dots & \dots & \dots & \dots \\
+    \hline
+    Q4 & \dots & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\ifajar
+  \subsection*{Latihan 3: Menghilangkan Masalah N+1}
+\else
+  \subsection*{Prosedur 3: Menghilangkan Masalah N+1}
+\fi
+
+Latihan ini memperlihatkan bahwa jumlah perjalanan ke basis data adalah metrik
+tersendiri, terpisah dari lama tiap \textit{query}-nya.
+
+\begin{enumerate}
+  \item Jalankan perintah pada Listing \ref{lst:c3-lat3-jalan} untuk 5 dan 25
+        pesanan, yaitu \texttt{python n-plus-1.py 5} dan
+        \texttt{python n-plus-1.py 25}. Pelanggan tersibuk pada data uji punya
+        25 pesanan, sehingga angka yang lebih besar tetap mengambil 25.
+  \item Catat jumlah \textit{query} dan waktunya untuk tiap ukuran, lalu isi Tabel
+        \ref{tab:c3-lat3-hasil}. Tabel \ref{tab:c3-lat3-contoh} memperlihatkan contoh
+        yang sudah terisi.
+  \item Perhatikan baris terakhir keluarannya, yang membuktikan kedua cara
+        mengembalikan data yang sama persis. Perbaikan yang mengubah hasil bukan
+        perbaikan.
+  \item Hitung ulang kedua angka waktu tersebut untuk penempatan produksi
+        dengan RTT 1 milidetik antara aplikasi dan basis data, yaitu dengan
+        menambahkan satu milidetik untuk tiap \textit{query}. Bandingkan hasilnya.
+  \item Jawab dua pertanyaan berikut. Pertama, berapa kali lipat selisihnya pada
+        pengukuran lokal, dan berapa kali lipat setelah RTT diperhitungkan?
+        Kedua, mengapa jumlah \textit{query} cara kedua tetap dua, berapa pun jumlah
+        pesanannya?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Membandingkan N+1 dengan query yang jumlahnya tetap, tersedia di \berkas{sources/chapter03/n-plus-1.py}}, label={lst:c3-lat3-jalan}]
+source ../.venv/bin/activate
+python n-plus-1.py 25
+
+# Keluarannya:
+# Pelanggan 12059 punya 25 pesanan, diambil 25.
+#
+#   Cara                          Query       Item       Waktu
+#   N+1                        26 query    75 item     7.28 ms
+#   Dua query tetap             2 query    75 item     1.07 ms
+#
+# Hasil kedua cara identik: True
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 3 yang sudah terisi}
+  \label{tab:c3-lat3-contoh}
+  \begin{tabularx}{\textwidth}{Xcccc}
+    \hline
+    \textbf{Jumlah pesanan} & \textbf{\textit{Query} N+1} & \textbf{Waktu N+1} & \textbf{\textit{Query} tetap} & \textbf{Waktu tetap} \\
+    \hline
+    25 & 26 & 7,28 ms & 2 & 1,07 ms \\
+    \hline
+    25, ditambah RTT 1 ms & 26 & 33,28 ms & 2 & 3,07 ms \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 3}
+  \label{tab:c3-lat3-hasil}
+  \begin{tabularx}{\textwidth}{Xcccc}
+    \hline
+    \textbf{Jumlah pesanan} & \textbf{\textit{Query} N+1} & \textbf{Waktu N+1} & \textbf{\textit{Query} tetap} & \textbf{Waktu tetap} \\
+    \hline
+    5 & \dots & \dots & \dots & \dots \\
+    \hline
+    25 & \dots & \dots & \dots & \dots \\
+    \hline
+    25, ditambah RTT 1 ms & \dots & \dots & \dots & \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\ifajar
+  \subsection*{Latihan 4: Membuktikan Lost Update}
+\else
+  \subsection*{Prosedur 4: Membuktikan Lost Update}
+\fi
+
+Latihan ini membuktikan bahwa kode yang benar untuk satu pengguna dapat salah
+untuk banyak pengguna, lalu membandingkan biaya tiap pengamannya.
+
+\begin{enumerate}
+  \item Jalankan perintah pada Listing \ref{lst:c3-lat4-jalan} dengan 8 \textit{worker}
+        dan 50 pengurangan.
+  \item Catat kolom Hilang dan Percobaan untuk keempat cara, lalu isi Tabel
+        \ref{tab:c3-lat4-hasil}.
+        Tabel \ref{tab:c3-lat4-contoh} memperlihatkan contoh yang sudah terisi.
+  \item Ulangi dengan 2 \textit{worker}, yaitu
+        \texttt{python transaksi-konkuren.py 2 50}, lalu dengan 16
+        \textit{worker}. Perhatikan bagaimana
+        jumlah pembaruan yang hilang dan jumlah percobaan cara
+        \texttt{optimistis} berubah mengikuti jumlah \textit{worker}.
+  \item Jawab tiga pertanyaan berikut. Pertama, mengapa cara \texttt{naif} tidak
+        pernah gagal, padahal datanya salah? Kedua, pada jumlah \textit{worker} berapa
+        cara \texttt{optimistis} mulai lebih mahal daripada
+        \texttt{pesimistis}, dan apa penyebabnya? Ketiga, mengapa cara
+        \texttt{atomik} tidak membutuhkan \textit{retry} sama sekali?
+\end{enumerate}
+
+\begin{lstlisting}[language=bash, caption={Memperagakan lost update dan tiga pengamannya, tersedia di \berkas{sources/chapter03/transaksi-konkuren.py}}, label={lst:c3-lat4-jalan}]
+source ../.venv/bin/activate
+python transaksi-konkuren.py 8 50
+
+# Keluarannya:
+#   Cara        Diharapkan     Hasil   Hilang   Percobaan
+#   naif               600       950      350         400
+#   atomik             600       600        0         400
+#   pesimistis         600       600        0         400
+#   optimistis         600       600        0        1782
+\end{lstlisting}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Contoh hasil Latihan 4 yang sudah terisi, 8 \textit{worker}}
+  \label{tab:c3-lat4-contoh}
+  \begin{tabularx}{\textwidth}{lXccc}
+    \hline
+    \textbf{Cara} & \textbf{Pengamannya} & \textbf{Hasil} & \textbf{Hilang} & \textbf{Percobaan} \\
+    \hline
+    \texttt{naif} & Tidak ada & 950 & 350 & 400 \\
+    \hline
+    \texttt{atomik} & \texttt{stok = stok - 1} & 600 & 0 & 400 \\
+    \hline
+    \texttt{pesimistis} & \texttt{SELECT FOR UPDATE} & 600 & 0 & 400 \\
+    \hline
+    \texttt{optimistis} & \texttt{WHERE versi = ...} & 600 & 0 & 1.782 \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+\begin{table}[!htb]
+  \centering
+  \caption{Lembar isian hasil pengukuran Latihan 4, tiap sel diisi hilang / percobaan}
+  \label{tab:c3-lat4-hasil}
+  \begin{tabularx}{\textwidth}{lXXX}
+    \hline
+    \textbf{Cara} & \textbf{2 \textit{worker}} & \textbf{8 \textit{worker}} & \textbf{16 \textit{worker}} \\
+    \hline
+    \texttt{naif} & \dots{} / \dots & \dots{} / \dots & \dots{} / \dots \\
+    \hline
+    \texttt{atomik} & \dots{} / \dots & \dots{} / \dots & \dots{} / \dots \\
+    \hline
+    \texttt{pesimistis} & \dots{} / \dots & \dots{} / \dots & \dots{} / \dots \\
+    \hline
+    \texttt{optimistis} & \dots{} / \dots & \dots{} / \dots & \dots{} / \dots \\
+    \hline
+  \end{tabularx}
+\end{table}
+
+Setelah seluruh latihan selesai, container dihentikan dengan
+\texttt{docker compose down -v}. Opsi \texttt{-v} ikut menghapus volume
+datanya, sehingga penyiapan berikutnya dimulai dari keadaan bersih.
