@@ -52,14 +52,28 @@ tampilnya 59 dan 76 karakter.
 
 ## Menjadikan buku ini buku referensi
 
-Dasar aturannya perlu dipastikan lebih dahulu. Pedoman Operasional
-Penilaian Angka Kredit (PO PAK) 2019 sudah diganti
-Kepmendiktisaintek Nomor 63/M/KEP/2025, dan ringkasan dari penerbit menyebut
-syarat tebal buku referensi maupun monograf naik menjadi 125 halaman, dengan
-monograf kini bernilai sama, yaitu 40 angka kredit. Salinan resminya berupa
-pindaian yang tidak dapat dibaca mesin, jadi angka itu belum terverifikasi
-dari sumber primer dan perlu ditanyakan ke tim Penetapan Angka
-Kredit (PAK) kampus.
+Dasar aturannya sudah diperiksa ke sumber primernya. Pedoman Operasional
+Penilaian Angka Kredit (PO PAK) 2019 diganti Kepmendiktisaintek Nomor
+63/M/KEP/2025. Salinannya berupa pindaian, jadi dibaca lewat OCR, dan tabel
+angka kreditnya berbunyi begini:
+
+| Kegiatan | Angka kredit | Batas pengakuan | Letak |
+| --- | --- | --- | --- |
+| Buku referensi | 40 | 1 buku/tahun | lampiran hlm. 32 |
+| Monograf | 20 | 1 buku/tahun | lampiran hlm. 32 |
+| Book chapter internasional | 15 | 1 buku/tahun | lampiran hlm. 32 |
+| Book chapter nasional | 10 | 1 buku/tahun | lampiran hlm. 32 |
+| Buku ajar | 20 | 1 buku/tahun | lampiran hlm. 30 |
+| Diktat, modul, petunjuk praktikum | 5 | 1 produk/semester | lampiran hlm. 30 |
+
+Dua kabar yang beredar di panduan penerbit ternyata tidak ada di keputusan
+itu: monograf tetap 20, bukan 40, dan tidak ada angka 125 halaman di seluruh
+41 halaman salinannya. Keputusan itu memuat jenis kegiatan, bukti, angka
+kredit, dan batas pengakuan, tanpa definisi maupun syarat tebal buku. Syarat
+substansinya, yaitu ISBN, tebal paling sedikit 40 halaman cetak format
+UNESCO, dan keharusan berasal dari hasil penelitian atau pemikiran penulis,
+masih mengacu PO PAK 2019 beserta penjelasan butirnya, dan itu yang perlu
+dipastikan ke tim Penetapan Angka Kredit (PAK) kampus.
 
 Definisi buku referensi pada PO PAK bersifat positif: ber-ISBN, satu bidang
 ilmu sesuai kompetensi penulis, serta memenuhi syarat karya ilmiah utuh, yaitu
