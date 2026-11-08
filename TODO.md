@@ -52,12 +52,14 @@ tampilnya 59 dan 76 karakter.
 
 ## Menjadikan buku ini buku referensi
 
-Dasar aturannya perlu dipastikan lebih dahulu. PO PAK 2019 sudah diganti
+Dasar aturannya perlu dipastikan lebih dahulu. Pedoman Operasional
+Penilaian Angka Kredit (PO PAK) 2019 sudah diganti
 Kepmendiktisaintek Nomor 63/M/KEP/2025, dan ringkasan dari penerbit menyebut
 syarat tebal buku referensi maupun monograf naik menjadi 125 halaman, dengan
 monograf kini bernilai sama, yaitu 40 angka kredit. Salinan resminya berupa
 pindaian yang tidak dapat dibaca mesin, jadi angka itu belum terverifikasi
-dari sumber primer dan perlu ditanyakan ke tim PAK kampus.
+dari sumber primer dan perlu ditanyakan ke tim Penetapan Angka
+Kredit (PAK) kampus.
 
 Definisi buku referensi pada PO PAK bersifat positif: ber-ISBN, satu bidang
 ilmu sesuai kompetensi penulis, serta memenuhi syarat karya ilmiah utuh, yaitu
