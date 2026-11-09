@@ -1189,7 +1189,7 @@ python gate-budget.py
 cd sources/chapter05
 docker compose up -d
 ./siapkan-data.sh
-python3 -m venv ../.venv
+test -d ../.venv || python3 -m venv ../.venv
 ../.venv/bin/pip install "psycopg[binary,pool]" sqlalchemy
 npx -p typescript tsc --target es2022 --module es2022 --strict \
   --lib es2022,dom --outDir statis web-vitals.ts katalog.ts
@@ -1249,7 +1249,7 @@ source ../.venv/bin/activate
 python gate-budget.py
 echo $?
 
-# Keluarannya:
+# Keluarannya (dipotong):
 # Gagal: 6 budget terlampaui.
 # 1
 \end{lstlisting}

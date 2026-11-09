@@ -551,7 +551,7 @@ python periksa-keamanan.py
 cd sources/chapter07
 docker compose up -d
 ./siapkan-data.sh
-python3 -m venv ../.venv
+test -d ../.venv || python3 -m venv ../.venv
 ../.venv/bin/pip install "psycopg[binary]" ruff pip-audit
 \end{lstlisting}
   \vspace{4pt}
@@ -584,7 +584,7 @@ python3 -m venv ../.venv
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
 SECRET_SESI=rahasia-latihan python aplikasi.py &
-(cd statis && python -m http.server 8031 &)
+(cd statis && python -m http.server 8031 --bind 127.0.0.1 &)
 curl -sI http://127.0.0.1:8030/ | grep -iE "^(content-security|x-content)"
 curl -sI http://127.0.0.1:8031/index.html | grep -iE "^(content-security)"
 

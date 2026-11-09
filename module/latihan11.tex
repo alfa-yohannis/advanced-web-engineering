@@ -1,8 +1,17 @@
-\ifajar
-  \section{Latihan}
-\else
-  \section{Bab 11: Arsitektur Frontend Berskala Besar}
-\fi
+\section{Bab 11: Arsitektur Frontend Berskala Besar}
+
+\subsection*{Tujuan Pembelajaran}
+\begin{itemize}
+  \item Membedakan \textit{server state} dari \textit{client state} pada satu
+        halaman, lalu menyebut akibatnya pada ukuran halaman dan pada
+        perilakunya saat berpindah.
+  \item Mengukur biaya hidrasi penuh dan hidrasi selektif pada halaman yang
+        sama, lalu menunjukkan bagian mana yang tumbuh mengikuti besar
+        halaman.
+  \item Merancang \textit{application shell} beserta \textit{routing}, batas
+        \textit{error}, dan \textit{progressive enhancement}-nya, lalu
+        membuktikan isinya tetap tampil ketika skripnya tidak jalan.
+\end{itemize}
 
 Seluruh file yang dipakai pada latihan ini tersedia di
 \berkas{sources/chapter11/}, dihitung relatif terhadap akar repositori.
@@ -24,11 +33,7 @@ python3 aplikasi.py &
 # Melayani 200 buku di http://127.0.0.1:8080/penuh  (Ctrl+C untuk berhenti)
 \end{lstlisting}
 
-\ifajar
-  \subsection*{Latihan 1: Menghitung Komponen dan Biaya State}
-\else
-  \subsection*{Prosedur 1: Menghitung Komponen dan Biaya State}
-\fi
+\subsection*{Latihan 1: Menghitung Komponen dan Biaya State}
 
 Latihan ini membuktikan bahwa jumlah pulau tidak tumbuh mengikuti besar
 halaman, sedangkan jumlah komponen dan ukuran halaman tumbuh.
@@ -40,13 +45,8 @@ halaman, sedangkan jumlah komponen dan ukuran halaman tumbuh.
   \item Catat ukuran HTML kedua varian, lalu hitung selisihnya.
   \item Hentikan aplikasi, nyalakan ulang dengan
         \texttt{JUMLAH\_BUKU=1000}, lalu ulangi kedua langkah di atas.
-\ifajar
-  \item Isi \tabisi{tab:c11-lat1-hasil}. Tabel \ref{tab:c11-lat1-contoh}
+  \item Isi Tabel \ref{tab:c11-lat1-hasil}. Tabel \ref{tab:c11-lat1-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c11-lat1-contoh}.
-\fi
   \item Jawab dua pertanyaan berikut. Pertama, berapa persen tambahan ukuran
         HTML pada varian penuh, dan dari mana asalnya? Kedua, mengapa jumlah
         pulau tetap dua walaupun bukunya lima kali lebih banyak?
@@ -80,7 +80,6 @@ curl -s http://127.0.0.1:8080/selektif | wc -c
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 1}
@@ -95,13 +94,8 @@ curl -s http://127.0.0.1:8080/selektif | wc -c
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 2: Biaya Hidrasi Dua Varian}
-\else
-  \subsection*{Prosedur 2: Biaya Hidrasi Dua Varian}
-\fi
+\subsection*{Latihan 2: Biaya Hidrasi Dua Varian}
 
 Latihan ini mengukur biaya hidrasi kedua varian pada tiga besar halaman, lalu
 memisahkan bagian yang tumbuh dari bagian yang tetap.
@@ -112,13 +106,8 @@ memisahkan bagian yang tumbuh dari bagian yang tetap.
   \item Hentikan aplikasi, nyalakan ulang dengan
         \texttt{JUMLAH\_BUKU=1000}, lalu ukur sekali lagi. Ulangi untuk
         \texttt{JUMLAH\_BUKU=2000}.
-\ifajar
-  \item Isi \tabisi{tab:c11-lat2-hasil}. Tabel \ref{tab:c11-lat2-contoh}
+  \item Isi Tabel \ref{tab:c11-lat2-hasil}. Tabel \ref{tab:c11-lat2-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c11-lat2-contoh}.
-\fi
   \item Buka kedua varian di browser, yaitu \texttt{/penuh} dan
         \texttt{/selektif} pada port 8080, lalu bandingkan baris laporan di
         bawah judul halamannya.
@@ -155,7 +144,6 @@ python3 ukur-hidrasi.py
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 2}
@@ -172,13 +160,8 @@ python3 ukur-hidrasi.py
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 3: Biaya Perpindahan pada Kerangka}
-\else
-  \subsection*{Prosedur 3: Biaya Perpindahan pada Kerangka}
-\fi
+\subsection*{Latihan 3: Biaya Perpindahan pada Kerangka}
 
 Latihan ini membandingkan biaya satu perpindahan lewat fragmen dengan biaya
 memuat dokumen penuh, lalu memeriksa perilaku kerangkanya di browser.
@@ -192,13 +175,8 @@ memuat dokumen penuh, lalu memeriksa perilaku kerangkanya di browser.
   \item Tekan tombol kembali browser, lalu catat apakah katalognya pulih.
   \item Tekan tombol Tambah dua kali, lalu pindah ke halaman buku dan
         kembali lagi. Catat angka keranjangnya sesudah kembali.
-\ifajar
-  \item Isi \tabisi{tab:c11-lat3-hasil}. Tabel \ref{tab:c11-lat3-contoh}
+  \item Isi Tabel \ref{tab:c11-lat3-hasil}. Tabel \ref{tab:c11-lat3-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c11-lat3-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa fragmen katalog
         hampir sebesar dokumennya? Kedua, apa yang tetap dihemat perpindahan
         lewat fragmen walaupun selisih bytenya kecil? Ketiga, mengapa angka
@@ -238,7 +216,6 @@ python3 ukur-rute.py
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 3}
@@ -259,13 +236,8 @@ python3 ukur-rute.py
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 4: Apa yang Tersisa Tanpa Skrip}
-\else
-  \subsection*{Prosedur 4: Apa yang Tersisa Tanpa Skrip}
-\fi
+\subsection*{Latihan 4: Apa yang Tersisa Tanpa Skrip}
 
 Latihan ini membuktikan bahwa isi katalog dan penyaringnya tidak bergantung
 pada JavaScript, dan memperlihatkan batas \textit{error} menahan satu wilayah
@@ -282,13 +254,8 @@ yang gagal.
         penyaringan yang sama. Catat perbedaannya.
   \item Tekan tautan "Bagian yang gagal", lalu catat apa yang tampil di
         wilayah dan apakah navigasinya masih utuh.
-\ifajar
-  \item Isi \tabisi{tab:c11-lat4-hasil}. Tabel \ref{tab:c11-lat4-contoh}
+  \item Isi Tabel \ref{tab:c11-lat4-hasil}. Tabel \ref{tab:c11-lat4-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c11-lat4-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, bagian mana yang hilang
         tanpa skrip, dan bagian mana yang tetap? Kedua, apa yang akan terlihat
         di halaman ini bila katalognya di-\textit{render} di browser seperti varian SPA
@@ -328,7 +295,6 @@ python3 ukur-tanpa-js.py
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 4}
@@ -349,4 +315,3 @@ python3 ukur-tanpa-js.py
     \hline
   \end{tabularx}
 \end{table}
-\fi

@@ -1,8 +1,18 @@
-\ifajar
-  \section{Latihan}
-\else
-  \section{Bab 7: Keamanan Aplikasi Web}
-\fi
+\section{Bab 7: Keamanan Aplikasi Web}
+
+\subsection*{Tujuan Pembelajaran}
+\begin{itemize}
+  \item Menyusun model ancaman satu aplikasi web, yaitu menyebut batas
+        kepercayaannya, data yang bernilai di dalamnya, dan jalan masuk yang
+        tersedia bagi penyerang.
+  \item Memasang pertahanan bawaan pada sisi server, yaitu header keamanan,
+        atribut cookie, daftar origin, \textit{query} berparameter, dan
+        \textit{escaping} keluaran, lalu membuktikan terpasangnya dari
+        \textit{response} yang dikirim aplikasi.
+  \item Mengukur keamanan sebagai angka, yaitu jumlah syarat yang terpenuhi
+        dan jumlah kerentanan dependensi, lalu menegakkannya sebagai
+        \textit{gate} yang memblokir \textit{merge}.
+\end{itemize}
 
 Seluruh file yang dipakai pada latihan ini tersedia di
 \berkas{sources/chapter07/}, dihitung relatif terhadap akar repositori.
@@ -22,15 +32,11 @@ Penyiapannya dilakukan sekali, seperti pada Listing \ref{lst:c7-siapkan}.
 cd sources/chapter07
 docker compose up -d
 ./siapkan-data.sh
-python3 -m venv ../.venv
+test -d ../.venv || python3 -m venv ../.venv
 ../.venv/bin/pip install "psycopg[binary]" ruff pip-audit
 \end{lstlisting}
 
-\ifajar
-  \subsection*{Latihan 1: Membaca Header Keamanan}
-\else
-  \subsection*{Prosedur 1: Membaca Header Keamanan}
-\fi
+\subsection*{Latihan 1: Membaca Header Keamanan}
 
 Latihan ini membuktikan bahwa header keamanan adalah pilihan yang harus
 dibuat, bukan sesuatu yang datang sendiri.
@@ -38,7 +44,7 @@ dibuat, bukan sesuatu yang datang sendiri.
 \begin{enumerate}
   \item Nyalakan aplikasinya, lalu nyalakan juga server statis bawaan Python
         sebagai pembanding, seperti pada Listing \ref{lst:c7-lat1-jalan}.
-  \item Baca header kedua server dengan \texttt{curl}, lalu isi \tabisi{tab:c7-lat1-hasil}. Tabel \ref{tab:c7-lat1-contoh}
+  \item Baca header kedua server dengan \texttt{curl}, lalu isi Tabel \ref{tab:c7-lat1-hasil}. Tabel \ref{tab:c7-lat1-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Tambahkan satu header baru ke \berkas{sources/chapter07/kebijakan.json},
         misalnya \texttt{X-Frame-Options} bernilai \texttt{DENY}, lalu
@@ -52,7 +58,7 @@ dibuat, bukan sesuatu yang datang sendiri.
 \begin{lstlisting}[language=bash, caption={Membaca header dua server, tersedia di \berkas{sources/chapter07/aplikasi.py}}, label={lst:c7-lat1-jalan}]
 source ../.venv/bin/activate
 SECRET_SESI=rahasia-latihan python aplikasi.py &
-(cd statis && python -m http.server 8031 &)
+(cd statis && python -m http.server 8031 --bind 127.0.0.1 &)
 curl -sI http://127.0.0.1:8030/ \
   | grep -iE "^(content-security|x-content|referrer|permissions)"
 curl -sI http://127.0.0.1:8031/index.html \
@@ -80,7 +86,6 @@ curl -sI http://127.0.0.1:8031/index.html \
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 1}
@@ -101,13 +106,8 @@ curl -sI http://127.0.0.1:8031/index.html \
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 2: Cookie dan Aturan Lintas Origin}
-\else
-  \subsection*{Prosedur 2: Cookie dan Aturan Lintas Origin}
-\fi
+\subsection*{Latihan 2: Cookie dan Aturan Lintas Origin}
 
 Latihan ini membuktikan bahwa izin lintas origin ditentukan daftar, bukan
 kebetulan, dan bahwa atribut cookie terbaca langsung dari \textit{response}.
@@ -117,7 +117,7 @@ kebetulan, dan bahwa atribut cookie terbaca langsung dari \textit{response}.
         atributnya.
   \item Minta alamat yang sama tiga kali dengan header \texttt{Origin} yang
         berbeda, seperti pada Listing \ref{lst:c7-lat2-jalan}, lalu catat
-        header izin yang kembali ke \tabisi{tab:c7-lat2-hasil}. Tabel
+        header izin yang kembali ke Tabel \ref{tab:c7-lat2-hasil}. Tabel
         \ref{tab:c7-lat2-contoh} memperlihatkan contoh yang sudah terisi.
   \item Tambahkan satu origin baru ke daftar di
         \berkas{sources/chapter07/kebijakan.json}, nyalakan ulang
@@ -156,7 +156,6 @@ curl -sI -H "Origin: https://situs-lain.example" \
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 2}
@@ -177,13 +176,8 @@ curl -sI -H "Origin: https://situs-lain.example" \
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 3: Teks Pengguna sebagai Data}
-\else
-  \subsection*{Prosedur 3: Teks Pengguna sebagai Data}
-\fi
+\subsection*{Latihan 3: Teks Pengguna sebagai Data}
 
 Latihan ini membuktikan bahwa teks bertanda baca tidak membuat basis data
 maupun browser berpindah tugas.
@@ -195,13 +189,8 @@ maupun browser berpindah tugas.
         lalu catat jumlah baris dan status permintaannya.
   \item Buka halaman sapaan dengan nama yang berisi tanda kurung siku, lalu
         catat apa yang tertulis pada sumber halamannya.
-\ifajar
-  \item Isi \tabisi{tab:c7-lat3-hasil}. Tabel \ref{tab:c7-lat3-contoh}
+  \item Isi Tabel \ref{tab:c7-lat3-hasil}. Tabel \ref{tab:c7-lat3-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c7-lat3-contoh}.
-\fi
   \item Jawab dua pertanyaan berikut. Pertama, mengapa pencarian kedua
         menghasilkan nol baris, dan apa yang akan terjadi bila teks itu
         disambung langsung ke SQL? Kedua, apa bedanya menolak teks tertentu
@@ -237,7 +226,6 @@ curl -s --get --data-urlencode 'nama=<b>Mahasiswa</b>' \
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 3}
@@ -254,13 +242,8 @@ curl -s --get --data-urlencode 'nama=<b>Mahasiswa</b>' \
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 4: Menegakkan Gate Keamanan}
-\else
-  \subsection*{Prosedur 4: Menegakkan Gate Keamanan}
-\fi
+\subsection*{Latihan 4: Menegakkan Gate Keamanan}
 
 Latihan ini memasang seluruh syarat di atas sebagai satu \textit{gate}, lalu
 membandingkan \textit{verdict}-nya pada dua sasaran.
@@ -271,7 +254,7 @@ membandingkan \textit{verdict}-nya pada dua sasaran.
         pembanding.
   \item Jalankan \textit{gate}-nya terhadap keduanya seperti pada Listing
         \ref{lst:c7-lat4-jalan}, lalu catat jumlah syarat, jumlah yang lolos,
-        dan status keluarnya ke \tabisi{tab:c7-lat4-hasil}. Tabel
+        dan status keluarnya ke Tabel \ref{tab:c7-lat4-hasil}. Tabel
         \ref{tab:c7-lat4-contoh} memperlihatkan contoh yang sudah terisi.
   \item Jalankan pemeriksaan dependensi dan analisis statis, lalu catat
         jumlah temuannya.
@@ -336,7 +319,6 @@ echo $?
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 4}
@@ -355,7 +337,6 @@ echo $?
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
 Setelah seluruh latihan selesai, container dihentikan dengan
 \texttt{docker compose down -v}. Opsi \texttt{-v} ikut menghapus volume

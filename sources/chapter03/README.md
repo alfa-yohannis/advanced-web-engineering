@@ -41,7 +41,7 @@ Skrip memakai venv bersama di `sources/.venv`. Bila belum ada, buat sekali saja
 dari direktori bab ini:
 
 ```bash
-python3 -m venv ../.venv
+test -d ../.venv || python3 -m venv ../.venv
 ../.venv/bin/pip install "psycopg[binary,pool]" sqlalchemy
 ```
 

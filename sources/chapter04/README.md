@@ -36,9 +36,8 @@ Skrip memakai venv bersama di `sources/.venv`. Bab ini menambahkan pustaka
 `redis` pada daftar Bab 3:
 
 ```bash
-cd sources
-python3 -m venv .venv
-.venv/bin/pip install "psycopg[binary,pool]" sqlalchemy redis
+test -d ../.venv || python3 -m venv ../.venv
+../.venv/bin/pip install "psycopg[binary,pool]" sqlalchemy redis
 ```
 
 ## Menjalankan

@@ -1,21 +1,6 @@
 \chapter{Sistem Real-Time dan Asinkron}
 \label{ch:realtime}
 
-\ifajar
-\section*{Tujuan Pembelajaran}
-\begin{itemize}
-  \item Mengukur keterlambatan dan biaya \textit{polling}, SSE (Server-Sent
-        Events), serta WebSocket pada peristiwa yang sama, lalu memilih satu
-        di antaranya beserta alasannya.
-  \item Merancang alur asinkron memakai antrean, \textit{worker}, dan
-        \textit{webhook}, lalu menunjukkan jeda \textit{retry}-nya pada hasil
-        pengukuran.
-  \item Membedakan pengiriman \textit{at-least-once} dari pengiriman sekali
-        saja, lalu membuktikan \textit{consumer} yang idempoten menahan
-        duplikatnya.
-\end{itemize}
-\fi
-
 \section{Pendahuluan}
 
 Dua kebutuhan sering disatukan padahal berbeda. Kebutuhan pertama, pengguna
@@ -470,7 +455,3 @@ Pesan utama bab ini adalah tempat jaminan itu ditegakkan. Antrean hanya dapat
 menjamin pekerjaan tidak hilang. Jaminan bahwa akibatnya tidak terjadi dua
 kali hanya dapat ditegakkan \textit{consumer}, dengan id pekerjaan yang tetap
 dan satu pemeriksaan yang dilakukan sebelum pekerjaannya dikerjakan.
-
-\ifajar
-  \input{latihan13}
-\fi

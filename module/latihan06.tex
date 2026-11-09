@@ -1,8 +1,17 @@
-\ifajar
-  \section{Latihan}
-\else
-  \section{Bab 6: Testing, Reliability, dan Code Quality}
-\fi
+\section{Bab 6: Testing, Reliability, dan Code Quality}
+
+\subsection*{Tujuan Pembelajaran}
+\begin{itemize}
+  \item Membedakan unit test, integration test, dan End-to-End (E2E) test
+        berdasarkan biaya waktunya dan jenis cacat yang tertangkap
+        masing-masing.
+  \item Merancang \textit{test double} dan pengujian kontrak untuk memisahkan
+        bagian yang diuji dari layanan lain, lalu membuktikan pilihannya lewat
+        pengujian yang berjalan tanpa layanan itu menyala.
+  \item Mengukur mutu kode lewat \textit{coverage}, analisis statis, dan
+        jumlah \textit{query} per alamat, lalu menegakkannya sebagai
+        \textit{quality gate} yang memblokir \textit{merge}.
+\end{itemize}
 
 Seluruh file yang dipakai pada latihan ini tersedia di
 \berkas{sources/chapter06/}, dihitung relatif terhadap akar repositori.
@@ -22,17 +31,13 @@ Penyiapannya dilakukan sekali, seperti pada Listing \ref{lst:c6-siapkan}.
 cd sources/chapter06
 docker compose up -d
 ./siapkan-data.sh
-python3 -m venv ../.venv
+test -d ../.venv || python3 -m venv ../.venv
 ../.venv/bin/pip install "psycopg[binary]" pytest hypothesis jsonschema \
   coverage ruff
 npm install
 \end{lstlisting}
 
-\ifajar
-  \subsection*{Latihan 1: Membandingkan Tiga Lapisan Pengujian}
-\else
-  \subsection*{Prosedur 1: Membandingkan Tiga Lapisan Pengujian}
-\fi
+\subsection*{Latihan 1: Membandingkan Tiga Lapisan Pengujian}
 
 Latihan ini membuktikan bahwa ketiga lapisan berbeda harganya, dan menangkap
 cacat yang berbeda pula.
@@ -40,7 +45,7 @@ cacat yang berbeda pula.
 \begin{enumerate}
   \item Jalankan ketiga lapisan seperti pada Listing
         \ref{lst:c6-lat1-jalan}, lalu catat jumlah pengujian dan waktunya ke
-        \tabisi{tab:c6-lat1-hasil}. Tabel \ref{tab:c6-lat1-contoh}
+        Tabel \ref{tab:c6-lat1-hasil}. Tabel \ref{tab:c6-lat1-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Hitung berapa kali lipat satu pengujian E2E dibandingkan rata-rata
         satu unit test.
@@ -77,7 +82,6 @@ npx playwright test --config e2e/playwright.config.ts
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 1}
@@ -96,13 +100,8 @@ npx playwright test --config e2e/playwright.config.ts
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 2: Coverage yang Menipu}
-\else
-  \subsection*{Prosedur 2: Coverage yang Menipu}
-\fi
+\subsection*{Latihan 2: Coverage yang Menipu}
 
 Latihan ini membuktikan bahwa \textit{coverage} 100 persen tidak menjamin
 cacat tertangkap.
@@ -114,7 +113,7 @@ cacat tertangkap.
   \item Ubah \texttt{>=} menjadi \texttt{>} pada \texttt{hitung\_diskon} di
         \berkas{harga.py}. Ini disebut mutasi.
   \item Jalankan kedua suite terhadap kode yang sudah dimutasi, lalu catat
-        mana yang lolos dan mana yang gagal ke \tabisi{tab:c6-lat2-hasil}. Tabel \ref{tab:c6-lat2-contoh}
+        mana yang lolos dan mana yang gagal ke Tabel \ref{tab:c6-lat2-hasil}. Tabel \ref{tab:c6-lat2-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Kembalikan \berkas{harga.py} seperti semula, lalu pastikan seluruh
         pengujian kembali hijau.
@@ -151,7 +150,6 @@ coverage report --include="harga.py"
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 2}
@@ -168,13 +166,8 @@ coverage report --include="harga.py"
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 3: Menangkap N+1 Lewat Jumlah Query}
-\else
-  \subsection*{Prosedur 3: Menangkap N+1 Lewat Jumlah Query}
-\fi
+\subsection*{Latihan 3: Menangkap N+1 Lewat Jumlah Query}
 
 Latihan ini membuktikan bahwa dua alamat yang memberi \textit{response} sama
 persis dapat berbeda jauh biayanya, dan bahwa bedanya hanya terbaca bila
@@ -193,13 +186,8 @@ jumlah \textit{query}-nya ikut diukur.
         ulangi ketiga langkah di atas untuk pesanan itu, lalu hapus kembali
         kedua item tambahannya, seperti pada Listing
         \ref{lst:c6-lat3-tambah}.
-\ifajar
-  \item Isi \tabisi{tab:c6-lat3-hasil}. Tabel \ref{tab:c6-lat3-contoh}
+  \item Isi Tabel \ref{tab:c6-lat3-hasil}. Tabel \ref{tab:c6-lat3-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c6-lat3-contoh}.
-\fi
   \item Jawab dua pertanyaan berikut. Pertama, mengapa pengujian yang hanya
         membandingkan isi \textit{response} tidak menangkap cacat ini? Kedua,
         mengapa jumlah \textit{query} lebih layak dijadikan batas di
@@ -256,7 +244,6 @@ docker compose exec -T db psql -U admin -d toko -c \
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 3}
@@ -271,13 +258,8 @@ docker compose exec -T db psql -U admin -d toko -c \
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 4: Menegakkan Quality Gate}
-\else
-  \subsection*{Prosedur 4: Menegakkan Quality Gate}
-\fi
+\subsection*{Latihan 4: Menegakkan Quality Gate}
 
 Latihan ini memasang seluruh pengukuran di atas sebagai satu \textit{gate} yang
 \textit{verdict}-nya dapat dibaca mesin.
@@ -287,7 +269,7 @@ Latihan ini memasang seluruh pengukuran di atas sebagai satu \textit{gate} yang
         pemeriksaan mana yang akan dilanggar dan mengapa.
   \item Jalankan \textit{gate}-nya seperti pada Listing \ref{lst:c6-lat4-jalan},
         lalu catat \textit{verdict} tiap baris beserta status keluarnya ke
-        \tabisi{tab:c6-lat4-hasil}. Tabel \ref{tab:c6-lat4-contoh}
+        Tabel \ref{tab:c6-lat4-hasil}. Tabel \ref{tab:c6-lat4-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Longgarkan batas \textit{query} alamat N+1 menjadi tiga puluh, lalu
         jalankan ulang dan catat status keluarnya.
@@ -349,7 +331,6 @@ karena pengujian itu masih mengunci jumlah \textit{query} jalur N+1 yang lama.
 Pengujian semacam itu diperbarui bersama perbaikannya, dan baru sesudahnya
 status keluarnya menjadi 0.
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 4}
@@ -378,20 +359,15 @@ status keluarnya menjadi 0.
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 5: Membedah Pengujian E2E}
-\else
-  \subsection*{Prosedur 5: Membedah Pengujian E2E}
-\fi
+\subsection*{Latihan 5: Membedah Pengujian E2E}
 
 Latihan ini membuktikan bahwa lapisan E2E paling bergoyang waktunya, dan
 memperlihatkan jejak yang ditinggalkannya ketika sebuah pengujian gagal.
 
 \begin{enumerate}
   \item Jalankan lapisan E2E tiga kali berurutan seperti pada Listing
-        \ref{lst:c6-lat5-jalan}, lalu catat waktu tiap kali jalan ke \tabisi{tab:c6-lat5-hasil}. Tabel \ref{tab:c6-lat5-contoh}
+        \ref{lst:c6-lat5-jalan}, lalu catat waktu tiap kali jalan ke Tabel \ref{tab:c6-lat5-hasil}. Tabel \ref{tab:c6-lat5-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Jalankan sekali lagi dengan \texttt{-{}-repeat-each=3}, lalu catat
         jumlah pengujian dan waktunya.
@@ -444,7 +420,6 @@ berebut prosesor dengan proses lain di komputer yang sama, dan itulah alasan
 waktu E2E tidak layak dipakai sebagai batas di \textit{Continuous
 Integration}.
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 5}
@@ -465,7 +440,6 @@ Integration}.
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
 Setelah seluruh latihan selesai, container dihentikan dengan
 \texttt{docker compose down -v}. Opsi \texttt{-v} ikut menghapus volume

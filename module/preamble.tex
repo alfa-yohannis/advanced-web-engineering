@@ -260,15 +260,6 @@ BoldItalicFont = TitilliumWeb-BoldItalic.ttf
 
 \newcommand{\authors}[1]{{\chapterauthor{#1}\addtocontents{toc}{#1\par}}}
 
-% Penanda edisi. Edisi gabungan dan edisi referensi memakai berkas bab yang
-% sama, dan hanya berbeda pada tempat Latihan dicetak.
-\newif\ifajar
-\ajartrue
-
-% Rujukan ke lembar isian. Lembar isian hanya ada di edisi ajar, sehingga
-% edisi referensi menyebut catatan pembacanya sendiri.
-\newcommand{\tabisi}[1]{\ifajar Tabel \ref{#1}\else catatan sendiri\fi}
-
-% Indeks dipakai edisi referensi, dan tidak mengganggu edisi lain.
+% Indeks untuk bagian akhir buku. Isinya belum ada; lihat TODO.md.
 \usepackage{makeidx}
 \makeindex

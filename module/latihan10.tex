@@ -1,8 +1,17 @@
-\ifajar
-  \section{Latihan}
-\else
-  \section{Bab 10: Identity, Authentication, dan Authorization}
-\fi
+\section{Bab 10: Identity, Authentication, dan Authorization}
+
+\subsection*{Tujuan Pembelajaran}
+\begin{itemize}
+  \item Membedakan sesi yang disimpan server dari token bertanda tangan,
+        lalu menyebut akibatnya pada pencabutan dan pada keadaan yang harus
+        disimpan server.
+  \item Merancang pasangan \textit{access token} dan \textit{refresh token}
+        beserta rotasinya, lalu membuktikan pemakaian ulang penanda lama
+        tertangkap.
+  \item Menegakkan hak akses dengan Role-Based Access Control (RBAC) dan Attribute-Based Access Control (ABAC) sekaligus, lalu mengukur
+        keputusannya sebagai matriks pengguna lawan alamat, termasuk isolasi
+        antar-\textit{tenant}.
+\end{itemize}
 
 Seluruh file yang dipakai pada latihan ini tersedia di
 \berkas{sources/chapter10/}, dihitung relatif terhadap akar repositori.
@@ -24,11 +33,7 @@ KUNCI_TOKEN=kunci-latihan python3 aplikasi.py &
 # Melayani di http://127.0.0.1:8070/  (Ctrl+C untuk berhenti)
 \end{lstlisting}
 
-\ifajar
-  \subsection*{Latihan 1: Sesi lawan Token}
-\else
-  \subsection*{Prosedur 1: Sesi lawan Token}
-\fi
+\subsection*{Latihan 1: Sesi lawan Token}
 
 Latihan ini membuktikan bahwa pencabutan seketika hanya dimiliki sesi, dan
 bahwa isi token terbaca siapa pun yang memegangnya.
@@ -40,13 +45,8 @@ bahwa isi token terbaca siapa pun yang memegangnya.
         pakai sesi yang sama sekali lagi. Catat ketiga hasilnya.
   \item Masuk dengan cara token, lalu dekode bagian tengah tokennya dengan
         \texttt{base64}. Catat apa saja yang terbaca di dalamnya.
-\ifajar
-  \item Isi \tabisi{tab:c10-lat1-hasil}. Tabel \ref{tab:c10-lat1-contoh}
+  \item Isi Tabel \ref{tab:c10-lat1-hasil}. Tabel \ref{tab:c10-lat1-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c10-lat1-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa token tidak dapat
         dicabut seketika? Kedua, apa yang hilang bila seluruh keterangan
         pengguna dimasukkan ke dalam token? Ketiga, kapan sesi lebih pantas
@@ -80,7 +80,6 @@ curl -s -X POST \
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 1}
@@ -99,13 +98,8 @@ curl -s -X POST \
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 2: Umur dan Rotasi Token}
-\else
-  \subsection*{Prosedur 2: Umur dan Rotasi Token}
-\fi
+\subsection*{Latihan 2: Umur dan Rotasi Token}
 
 Latihan ini membuktikan bahwa umur pendek dan rotasi menjawab dua risiko yang
 berbeda.
@@ -119,7 +113,7 @@ berbeda.
   \item Lakukan \textit{refresh} dengan \textit{refresh token}, catat pasangan baru yang
         terbit, lalu pakai ulang penanda lama seperti pada Listing
         \ref{lst:c10-lat2-jalan}.
-  \item Coba penanda baru sesudah pemakaian ulang itu, lalu isi \tabisi{tab:c10-lat2-hasil}. Tabel \ref{tab:c10-lat2-contoh}
+  \item Coba penanda baru sesudah pemakaian ulang itu, lalu isi Tabel \ref{tab:c10-lat2-hasil}. Tabel \ref{tab:c10-lat2-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Jawab dua pertanyaan berikut. Pertama, mengapa penanda baru ikut
         tidak berlaku? Kedua, apa yang terjadi bila rotasi dipakai tanpa penangkapan
@@ -152,7 +146,6 @@ curl -s -X POST "http://127.0.0.1:8070/refresh?refresh=PENANDA_BARU"
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 2}
@@ -175,20 +168,15 @@ curl -s -X POST "http://127.0.0.1:8070/refresh?refresh=PENANDA_BARU"
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 3: Matriks Hak Akses}
-\else
-  \subsection*{Prosedur 3: Matriks Hak Akses}
-\fi
+\subsection*{Latihan 3: Matriks Hak Akses}
 
 Latihan ini membuktikan bahwa RBAC, ABAC, dan isolasi \textit{tenant}
 terbaca sekaligus dari satu tabel.
 
 \begin{enumerate}
   \item Jalankan alat ukurnya seperti pada Listing \ref{lst:c10-lat3-jalan},
-        lalu salin hasilnya ke \tabisi{tab:c10-lat3-hasil}. Tabel
+        lalu salin hasilnya ke Tabel \ref{tab:c10-lat3-hasil}. Tabel
         \ref{tab:c10-lat3-contoh} memperlihatkan contoh yang sudah terisi.
   \item Tandai sel mana yang ditentukan peran, sel mana yang ditentukan
         kepemilikan, dan sel mana yang ditentukan \textit{tenant}.
@@ -228,7 +216,6 @@ python3 ukur-akses.py
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 3}
@@ -249,13 +236,8 @@ python3 ukur-akses.py
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 4: Menambah Tenant dan Peran Baru}
-\else
-  \subsection*{Prosedur 4: Menambah Tenant dan Peran Baru}
-\fi
+\subsection*{Latihan 4: Menambah Tenant dan Peran Baru}
 
 Latihan ini menguji apakah aturan hak akses benar-benar terpusat, atau
 sebenarnya tersebar di banyak tempat.
@@ -271,7 +253,7 @@ sebenarnya tersebar di banyak tempat.
         \berkas{sources/chapter10/kebijakan.py}.
   \item Tambahkan kedua pengguna baru itu ke daftar pada
         \berkas{sources/chapter10/ukur-akses.py}, jalankan ulang, lalu
-        catat matriksnya ke \tabisi{tab:c10-lat4-hasil}. Tabel
+        catat matriksnya ke Tabel \ref{tab:c10-lat4-hasil}. Tabel
         \ref{tab:c10-lat4-contoh} memperlihatkan bentuk isian yang
         diharapkan.
   \item Catat berapa file yang harus disunting untuk kedua penambahan itu.
@@ -301,7 +283,6 @@ python3 -c "import aplikasi; print(aplikasi.buat_catatan_sandi('eko123'))"
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 4}
@@ -318,7 +299,6 @@ python3 -c "import aplikasi; print(aplikasi.buat_catatan_sandi('eko123'))"
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
 Setelah seluruh latihan selesai, aplikasinya dihentikan dengan Ctrl+C. Tidak
 ada container yang perlu dimatikan, karena bab ini memang tidak memakainya.

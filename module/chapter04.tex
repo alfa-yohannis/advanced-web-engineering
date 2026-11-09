@@ -1,21 +1,6 @@
 \chapter{Caching, Consistency, dan Resilience}
 \label{ch:caching}
 
-\ifajar
-\section*{Tujuan Pembelajaran}
-\begin{itemize}
-  \item Menjelaskan cara browser, Content Delivery Network (CDN), dan
-        \textit{cache} aplikasi memutuskan apakah sebuah \textit{response} boleh dipakai
-        ulang, berdasarkan header \texttt{Cache-Control}, \texttt{ETag}, dan
-        masa berlakunya.
-  \item Mengukur untung rugi pola \textit{cache-aside}, termasuk data \textit{stale} dan
-        lonjakan \textit{query} yang muncul ketika sebuah kunci kedaluwarsa.
-  \item Merancang batas waktu, \textit{retry}, dan \textit{circuit breaker} untuk
-        panggilan ke layanan lain, lalu membuktikan pengaruhnya ketika layanan
-        itu melambat.
-\end{itemize}
-\fi
-
 \section{Pendahuluan}
 
 Bab 3 ditutup dengan \textit{query} buku terlaris 30 hari yang tetap memakan puluhan
@@ -1163,7 +1148,3 @@ Pustaka pun perlu diperiksa, karena \textit{retry} bawaannya dapat mengubah
 batas 50 milidetik menjadi 3,71 sampai 5,23 detik. Seperti pada Bab 2 dan Bab 3,
 TTL, batas waktu, dan jumlah \textit{retry} dipilih berdasarkan angka
 pengukuran.
-
-\ifajar
-  \input{latihan04}
-\fi

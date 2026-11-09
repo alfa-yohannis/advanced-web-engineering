@@ -22,7 +22,7 @@ tidak berebut port dengan bab lain.
 cd sources/chapter07
 docker compose up -d
 ./siapkan-data.sh
-python3 -m venv ../.venv
+test -d ../.venv || python3 -m venv ../.venv
 ../.venv/bin/pip install "psycopg[binary]" ruff pip-audit
 ```
 
@@ -39,7 +39,7 @@ ruff check .
 Pembandingnya, yaitu server statis bawaan Python tanpa penyetelan apa pun:
 
 ```bash
-(cd statis && python -m http.server 8031 &)
+(cd statis && python -m http.server 8031 --bind 127.0.0.1 &)
 python periksa-keamanan.py kebijakan-pembanding.json
 ```
 

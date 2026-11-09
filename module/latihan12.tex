@@ -1,8 +1,16 @@
-\ifajar
-  \section{Latihan}
-\else
-  \section{Bab 12: Type Safety, Kontrak API, dan Desain Layanan}
-\fi
+\section{Bab 12: Type Safety, Kontrak API, dan Desain Layanan}
+
+\subsection*{Tujuan Pembelajaran}
+\begin{itemize}
+  \item Memformalkan satu API (Application Programming Interface) sebagai
+        kontrak OpenAPI, lalu meng-\textit{generate} tipe kliennya dari
+        kontrak tersebut.
+  \item Membedakan validasi \textit{runtime} dari pemeriksaan
+        \textit{compile-time}, lalu menunjukkan kesalahan yang hanya
+        tertangkap masing-masing.
+  \item Memisahkan perubahan kontrak yang aman dari yang merusak klien lama,
+        lalu membuktikannya pada server yang berjalan.
+\end{itemize}
 
 Seluruh file yang dipakai pada latihan ini tersedia di
 \berkas{sources/chapter12/}, dihitung relatif terhadap akar repositori.
@@ -31,11 +39,7 @@ python3 gateway.py &
 # Ember 20 token per klien, diisi 5 token per detik
 \end{lstlisting}
 
-\ifajar
-  \subsection*{Latihan 1: Meng-generate Tipe dari Kontrak}
-\else
-  \subsection*{Prosedur 1: Meng-generate Tipe dari Kontrak}
-\fi
+\subsection*{Latihan 1: Meng-generate Tipe dari Kontrak}
 
 Latihan ini membuktikan bahwa tipe klien dapat diturunkan dari kontrak, dan
 bahwa perubahan kontrak tertangkap compiler sebelum program jalan.
@@ -51,13 +55,8 @@ bahwa perubahan kontrak tertangkap compiler sebelum program jalan.
   \item Tambahkan satu field opsional pada skema \texttt{Buku} di
         \berkas{kontrak.json}, jalankan ulang generatornya, lalu catat
         perubahan pada file tipenya.
-\ifajar
-  \item Isi \tabisi{tab:c12-lat1-hasil}. Tabel \ref{tab:c12-lat1-contoh}
+  \item Isi Tabel \ref{tab:c12-lat1-hasil}. Tabel \ref{tab:c12-lat1-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c12-lat1-contoh}.
-\fi
   \item Jawab dua pertanyaan berikut. Pertama, mengapa field yang tidak ada
         di \texttt{required} di-\textit{generate} dengan tanda tanya? Kedua,
         kesalahan apa yang tetap lolos dari \texttt{tsc} tetapi tertangkap
@@ -93,7 +92,6 @@ python3 buat_tipe.py kontrak-v2.json tipe-katalog-v2.ts
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 1}
@@ -112,13 +110,8 @@ python3 buat_tipe.py kontrak-v2.json tipe-katalog-v2.ts
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 2: Validasi di Batas dan Idempotensi}
-\else
-  \subsection*{Prosedur 2: Validasi di Batas dan Idempotensi}
-\fi
+\subsection*{Latihan 2: Validasi di Batas dan Idempotensi}
 
 Latihan ini membuktikan bahwa satu pemeriksaan di pintu masuk cukup untuk
 menolak lima bentuk isi yang salah, dan bahwa pengiriman ulang tidak membuat
@@ -132,13 +125,8 @@ pesanan kedua.
         kali, lalu catat kedua statusnya dan nomor pesanannya.
   \item Kirim permintaan ketiga dengan kunci yang sama tetapi
         \texttt{id\_buku} berbeda, lalu catat statusnya.
-\ifajar
-  \item Isi \tabisi{tab:c12-lat2-hasil}. Tabel \ref{tab:c12-lat2-contoh}
+  \item Isi Tabel \ref{tab:c12-lat2-hasil}. Tabel \ref{tab:c12-lat2-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c12-lat2-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa pengiriman kedua
         dijawab 200, bukan 201? Kedua, mengapa field asing ditolak, bukan
         diabaikan? Ketiga, apa yang terjadi bila kunci idempotensinya dibuat
@@ -184,7 +172,6 @@ python3 uji-kontrak.py
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 2}
@@ -205,13 +192,8 @@ python3 uji-kontrak.py
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 3: Memisahkan Perubahan Aman dari yang Merusak}
-\else
-  \subsection*{Prosedur 3: Memisahkan Perubahan Aman dari yang Merusak}
-\fi
+\subsection*{Latihan 3: Memisahkan Perubahan Aman dari yang Merusak}
 
 Latihan ini membuktikan bahwa jenis perubahan kontrak dapat diputuskan mesin,
 dan bahwa klien lama dapat rusak walaupun server menjawab 200.
@@ -226,13 +208,8 @@ dan bahwa klien lama dapat rusak walaupun server menjawab 200.
         tabel perbandingan.
   \item Ganti nama satu field wajib di \berkas{kontrak-v2.json}, jalankan
         ulang, lalu catat berapa baris "merusak klien lama" yang muncul.
-\ifajar
-  \item Isi \tabisi{tab:c12-lat3-hasil}. Tabel \ref{tab:c12-lat3-contoh}
+  \item Isi Tabel \ref{tab:c12-lat3-hasil}. Tabel \ref{tab:c12-lat3-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c12-lat3-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa mengganti nama satu
         field menghasilkan dua baris perubahan? Kedua, mengapa menambah nilai
         enum merusak klien lama? Ketiga, apa yang harus disiapkan sebelum
@@ -276,7 +253,6 @@ python3 uji-kompatibilitas.py
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 3}
@@ -295,13 +271,8 @@ python3 uji-kompatibilitas.py
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 4: Batas Laju di Gateway}
-\else
-  \subsection*{Prosedur 4: Batas Laju di Gateway}
-\fi
+\subsection*{Latihan 4: Batas Laju di Gateway}
 
 Latihan ini mengukur perilaku \textit{token bucket}: lonjakan pendek yang
 masih dilayani, penolakan sesudah embernya habis, dan pengisian ulangnya.
@@ -317,13 +288,8 @@ masih dilayani, penolakan sesudah embernya habis, dan pengisian ulangnya.
         pengukuran.
   \item Ubah \texttt{KAPASITAS\_EMBER} menjadi 5 di \berkas{gateway.py},
         nyalakan ulang \textit{gateway}-nya, lalu ukur sekali lagi.
-\ifajar
-  \item Isi \tabisi{tab:c12-lat4-hasil}. Tabel \ref{tab:c12-lat4-contoh}
+  \item Isi Tabel \ref{tab:c12-lat4-hasil}. Tabel \ref{tab:c12-lat4-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c12-lat4-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa klien lain tetap
         dilayani 20 permintaan? Kedua, apa akibatnya bila embernya dibuat
         satu untuk seluruh sistem? Ketiga, mengapa penolakannya memakai 429
@@ -357,7 +323,6 @@ python3 ukur-gateway.py
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 4}
@@ -374,4 +339,3 @@ python3 ukur-gateway.py
     \hline
   \end{tabularx}
 \end{table}
-\fi

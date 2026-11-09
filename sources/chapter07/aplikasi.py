@@ -14,6 +14,8 @@ Pemakaian (dari sources/chapter07, setelah docker compose up -d):
     SECRET_SESI=rahasia-latihan python aplikasi.py [kebijakan.json]
 """
 
+import hashlib
+import hmac
 import html
 import json
 import os
@@ -66,6 +68,20 @@ def ambil_secret_sesi():
   dimatikan.
   """
   return os.environ.get("SECRET_SESI") or secrets.token_hex(PANJANG_SESI_BYTE)
+
+
+def buat_nilai_sesi(secret_sesi):
+  """Membuat nilai cookie sesi: nomor sesi acak beserta tanda tangannya.
+
+  Secret hanya dipakai untuk menandatangani dan tidak pernah ikut dikirim.
+  Bila secret itu sendiri yang dijadikan isi cookie, setiap pengunjung
+  memegangnya, dan kekuatannya habis. Dengan tanda tangan HMAC, server tetap
+  dapat memeriksa keaslian nomor sesi tanpa membocorkan secret.
+  """
+  nomor_sesi = secrets.token_hex(PANJANG_SESI_BYTE)
+  tanda_tangan = hmac.new(secret_sesi.encode(), nomor_sesi.encode(),
+                          hashlib.sha256).hexdigest()
+  return f"{nomor_sesi}.{tanda_tangan}"
 
 
 def cari_buku(judul_dicari):
@@ -181,7 +197,8 @@ class PenanganToko(BaseHTTPRequestHandler):
     sehingga Secure sengaja tidak dipasang agar cookie tetap terlihat saat
     diperiksa.
     """
-    cookie = (f"sesi={self.server.secret_sesi}; HttpOnly; SameSite=Lax; "
+    nilai_sesi = buat_nilai_sesi(self.server.secret_sesi)
+    cookie = (f"sesi={nilai_sesi}; HttpOnly; SameSite=Lax; "
               "Path=/; Max-Age=3600")
     isi = json.dumps({"nama": "Mahasiswa", "peran": "pembeli"}).encode()
     self.kirim_response(200, isi, JENIS_ISI_JSON,

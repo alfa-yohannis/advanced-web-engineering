@@ -1,53 +1,33 @@
-\ifajar
-  \chapter{Overview Mata Kuliah dan Alur Rekayasa}
-\else
-  \chapter{Cakupan Bidang dan Alur Rekayasanya}
-\fi
+\chapter{Cakupan Bidang dan Alur Rekayasanya}
 \label{ch:overview}
-
-\ifajar
-\section*{Tujuan Pembelajaran}
-\begin{itemize}
-  \item Menjelaskan beda mata kuliah ini dengan pemrograman web pengantar,
-        yaitu pergeseran dari aplikasi yang berjalan menjadi aplikasi yang
-        diukur, beserta peta empat belas pertemuannya.
-  \item Memeriksa kesiapan lingkungan kerja untuk keempat belas bab dengan
-        satu \textit{smoke test}, lalu menjelaskan sebab tiap pemeriksaan yang
-        gagal.
-  \item Merancang alur kerja tim berupa monorepo, cabang berumur pendek,
-        \textit{code review}, dan Continuous Integration (CI) yang menolak
-        perubahan cacat, berdasarkan hasil pengukuran.
-\end{itemize}
-\fi
 
 \section{Pendahuluan}
 
-Mata kuliah pemrograman web pengantar bertanya apakah aplikasinya berjalan.
-Mata kuliah ini bertanya seberapa baik aplikasi itu berjalan: seberapa cepat,
-seberapa tahan ketika sebagian sistemnya gagal, seberapa aman, dan bagaimana
+Pemrograman web pengantar bertanya apakah aplikasinya berjalan. Rekayasa web
+lanjut bertanya seberapa baik aplikasi itu berjalan: seberapa cepat, seberapa
+tahan ketika sebagian sistemnya gagal, seberapa aman, dan bagaimana
 membuktikan semuanya. Jawabannya selalu berupa angka yang diukur sendiri,
 bukan kesan.
 
-\ifajar
-Bab ini adalah orientasi. Isinya peta keempat belas pertemuan, perkakas yang
-dipakai beserta alasannya, dan alur kerja rekayasa yang berlaku sepanjang
-semester. Bab ini juga menyiapkan tiga hal yang dipakai bab-bab berikutnya:
-lingkungan kerja yang sudah diperiksa, alur Git dengan cabang berumur pendek,
-dan kerangka Application Programming Interface (API) kecil yang dijaga CI.
-\else
+Buku ini adalah buku referensi rekayasa web lanjut. Tiap bab membahas satu
+persoalan rekayasa, mengukurnya dengan program yang disertakan, lalu menarik
+kesimpulan dari angkanya. Buku ini dapat juga digunakan sebagai buku ajar
+untuk satu semester. Keempat belas babnya mengisi empat belas pertemuan, dan
+Lampiran \ref{ch:latihan} menyediakan tujuan pembelajaran, latihan, dan
+lembar isian untuk tiap bab.
+
 Bab ini menyiapkan tiga hal yang dipakai bab-bab berikutnya: perkakas beserta
 alasan pemilihannya, alur kerja rekayasa dengan cabang Git berumur pendek, dan
 kerangka Application Programming Interface (API) kecil yang dijaga
 \textit{Continuous Integration} (CI). Ketiganya yang membuat tiap angka di
 bab berikutnya dapat diukur ulang.
-\fi
 
 Referensi utamanya adalah Winters dkk.\ untuk alur rekayasa pada tim yang
 besar \cite{winters2020swe}, Chacon dan Straub untuk Git
 \cite{chacon2014progit}, Humble dan Farley untuk CI \cite{humble2010cd}, dan
 Fowler untuk pola \textit{repository} \cite{fowler2002poeaa}.
 
-\section{Cakupan dan Posisi Mata Kuliah}
+\section{Cakupan dan Posisi Bidang}
 
 Kata "lanjut" di sini tidak berarti fitur yang lebih rumit. Yang
 berubah adalah pertanyaannya. Fitur yang sama, misalnya katalog toko buku,
@@ -69,7 +49,7 @@ Tabel \ref{tab:posisi01} merangkum pergeseran itu.
   \label{tab:posisi01}
   \begin{tabularx}{\textwidth}{lXX}
     \hline
-    \textbf{Aspek} & \textbf{Pengantar} & \textbf{Mata kuliah ini} \\
+    \textbf{Aspek} & \textbf{Pengantar} & \textbf{Lanjut} \\
     \hline
     pertanyaan utama & apakah fiturnya berjalan & seberapa baik berjalan, dan buktinya \\
     \hline
@@ -103,20 +83,21 @@ Dua contoh dari bab-bab berikutnya memperlihatkan jenis jawaban yang dicari:
         pengukuran, empat replika tambahan itu terlihat seperti perbaikan.
 \end{enumerate}
 
-Karena itu tiap bab ditutup dengan Latihan yang menghasilkan angka. Angka
-tiap mahasiswa akan berbeda, sedangkan yang dinilai adalah pola
-perbandingannya dan penjelasan atas kejanggalannya.
+Karena itu tiap bab disertai latihan yang menghasilkan angka, dan seluruh
+latihannya dikumpulkan di Lampiran \ref{ch:latihan}. Angka tiap pembaca akan
+berbeda, sehingga yang dilaporkan adalah pola perbandingannya dan penjelasan
+atas kejanggalannya, bukan angka persisnya.
 
-\ifajar
+\section{Peta Empat Belas Bab}
 
-\section{Peta Empat Belas Pertemuan}
-
-Keempat belas pertemuan dibagi menjadi empat bagian. Bagian pertama
+Keempat belas bab dibagi menjadi empat bagian. Bagian pertama
 menyiapkan alat ukur. Bagian kedua menyusun lapisan data, \textit{cache}, dan
 performa. Bagian ketiga berjalan berselang-seling di antara tiga jalur:
 pengujian dan operasi, keamanan, dan arsitektur \textit{frontend}. Bagian
 keempat menutup dengan sistem asinkron dan penskalaan. Gambar
-\ref{fig:peta01} memperlihatkan urutannya.
+\ref{fig:peta01} memperlihatkan urutannya. Bila buku ini dipakai sebagai
+buku ajar, satu bab mengisi satu pertemuan, sehingga gambar yang sama
+menjadi peta keempat belas pertemuan dalam satu semester.
 
 \begin{figure}[!htb]
   \centering
@@ -126,10 +107,10 @@ keempat menutup dengan sistem asinkron dan penskalaan. Gambar
                   text width=2.25cm, align=center, font=\scriptsize\bfseries},
     panah/.style={-{Stealth[length=2mm]}, thick}
   ]
-    \node[kotak, fill=blue!8] (bagian1) at (0,0) {Fondasi dan pengukuran\\{\tiny\mdseries pertemuan 1--2}};
-    \node[kotak, fill=blue!8] (bagian2) at (3.1,0) {Data, \textit{cache}, dan performa\\{\tiny\mdseries pertemuan 3--5}};
-    \node[kotak, fill=orange!12] (bagian3) at (6.2,0) {Tiga jalur berselang\\{\tiny\mdseries pertemuan 6--12}};
-    \node[kotak, fill=green!10] (bagian4) at (9.3,0) {Asinkron dan skala\\{\tiny\mdseries pertemuan 13--14}};
+    \node[kotak, fill=blue!8] (bagian1) at (0,0) {Fondasi dan pengukuran\\{\tiny\mdseries Bab 1--2}};
+    \node[kotak, fill=blue!8] (bagian2) at (3.1,0) {Data, \textit{cache}, dan performa\\{\tiny\mdseries Bab 3--5}};
+    \node[kotak, fill=orange!12] (bagian3) at (6.2,0) {Tiga jalur berselang\\{\tiny\mdseries Bab 6--12}};
+    \node[kotak, fill=green!10] (bagian4) at (9.3,0) {Asinkron dan skala\\{\tiny\mdseries Bab 13--14}};
 
     \draw[panah] (bagian1) -- (bagian2);
     \draw[panah] (bagian2) -- (bagian3);
@@ -137,41 +118,41 @@ keempat menutup dengan sistem asinkron dan penskalaan. Gambar
     \node[font=\tiny, gray] at (3.1,-1.1) {topik 1 siap};
     \node[font=\tiny, gray, align=center] at (6.2,-1.2) {pengujian, keamanan,\\\textit{frontend} bergantian};
   \end{tikzpicture}
-  \caption{Empat bagian dari keempat belas pertemuan}
+  \caption{Empat bagian dari keempat belas bab}
   \label{fig:peta01}
 \end{figure}
 
-Seluruh pertemuan memakai satu aplikasi yang sama, yaitu toko buku kampus.
+Seluruh bab memakai satu aplikasi yang sama, yaitu toko buku kampus.
 Mulai Bab 3, basis datanya berisi 20 kategori, 50.000 buku, 20.000 pelanggan,
 200.000 pesanan, dan 600.000 baris pesanan, sehingga \textit{query} yang
 lambat benar-benar terasa lambat. Bab-bab sesudahnya menambahkan
 \textit{cache}, pengujian, keamanan, identitas pengguna, kontrak API, fitur
 \textit{real-time}, dan rencana penskalaannya.
 
-Urutan pertemuan disusun untuk menopang enam topik penelitian. Materi yang
-paling dibutuhkan diletakkan paling awal, sehingga sebagian topik sudah dapat
-dimulai sebelum semester selesai. Tabel \ref{tab:topik01} memuat keenam topik
-beserta pertemuan yang menopangnya.
+Urutan bab disusun untuk menopang enam topik penelitian. Materi yang paling
+dibutuhkan diletakkan paling awal, sehingga sebagian topik sudah dapat
+dimulai sebelum seluruh bab selesai. Tabel \ref{tab:topik01} memuat keenam
+topik beserta bab yang menopangnya.
 
 \begin{table}[!htb]
   \centering
-  \caption{Enam topik penelitian dan pertemuan yang menopangnya}
+  \caption{Enam topik penelitian dan bab yang menopangnya}
   \label{tab:topik01}
   \begin{tabularx}{\textwidth}{lXll}
     \hline
-    \textbf{Topik} & \textbf{Masalah yang diteliti} & \textbf{Pertemuan} & \textbf{Siap sesudah} \\
+    \textbf{Topik} & \textbf{Masalah yang diteliti} & \textbf{Bab} & \textbf{Siap sesudah} \\
     \hline
-    T1 & invalidasi \textit{cache} hibrida & 3, 4, 5 & pertemuan 5 \\
+    T1 & invalidasi \textit{cache} hibrida & 3, 4, 5 & Bab 5 \\
     \hline
-    T2 & pencabutan token di \textit{gateway} & 7, 10, 12 & pertemuan 12 \\
+    T2 & pencabutan token di \textit{gateway} & 7, 10, 12 & Bab 12 \\
     \hline
-    T3 & transport \textit{real-time} adaptif & 5, 13 & pertemuan 13 \\
+    T3 & transport \textit{real-time} adaptif & 5, 13 & Bab 13 \\
     \hline
-    T4 & \textit{semantic cache} untuk Large Language Model (LLM) & 4, 5, 14 & pertemuan 14 \\
+    T4 & \textit{semantic cache} untuk Large Language Model (LLM) & 4, 5, 14 & Bab 14 \\
     \hline
-    T5 & hidrasi selektif & 5, 8, 11 & pertemuan 11 \\
+    T5 & hidrasi selektif & 5, 8, 11 & Bab 11 \\
     \hline
-    T6 & \textit{gate} kinerja di CI & 3, 6, 9 & pertemuan 9 \\
+    T6 & \textit{gate} kinerja di CI & 3, 6, 9 & Bab 9 \\
     \hline
   \end{tabularx}
 \end{table}
@@ -180,8 +161,6 @@ Keenam topik memakai pola argumen yang sama: satu masalah, satu solusi yang
 menimbulkan efek samping, lalu satu komponen yang ditambahkan untuk menekan
 efek samping itu. Rincian tiap topik ada di \texttt{README.md} akar
 repositori.
-
-\fi
 
 \section{Tech Stack dan Alasan Pemilihannya}
 
@@ -250,7 +229,7 @@ def port_terpakai(port):
 \end{lstlisting}
 
 Tabel \ref{tab:lingkungan01} memuat hasilnya pada laptop yang dipakai menulis
-modul ini.
+buku ini.
 
 \begin{table}[!htb]
   \centering
@@ -667,21 +646,14 @@ lamanya pun perlu diukur.
 
 \section{Ringkasan}
 
-\ifajar
-Mata kuliah ini menilai aplikasi web dari sifat yang tidak terlihat di layar:
-cepatnya, ketahanannya, keamanannya, dan kemudahannya diubah. Jawabannya
-selalu angka yang diukur sendiri, misalnya 199,8 lawan 1,8 milidetik untuk
-peristiwa yang sama pada Bab 13. Keempat belas pertemuannya dibagi menjadi
-empat bagian, dan urutannya disusun untuk menopang enam topik penelitian.
-\else
 Buku ini menilai aplikasi web dari sifat yang tidak terlihat di layar:
 cepatnya, ketahanannya, keamanannya, dan kemudahannya diubah. Jawabannya
 selalu angka yang diukur sendiri, misalnya 199,8 lawan 1,8 milidetik untuk
-peristiwa yang sama pada Bab 13.
-\fi
+peristiwa yang sama pada Bab 13. Keempat belas babnya dibagi menjadi empat
+bagian, dan urutannya disusun untuk menopang enam topik penelitian.
 
 Lingkungan kerja diperiksa sebelum praktikum pertama dengan satu
-\textit{smoke test}. Pada laptop penulisan modul ini, seluruh perkakas lolos,
+\textit{smoke test}. Pada laptop penulisan buku ini, seluruh perkakas lolos,
 tetapi tiga dari 37 port sudah dipakai proyek lain, yaitu port milik Bab 3,
 Bab 4, dan Bab 11. Kegagalan seperti itu jauh lebih murah ditemukan pada
 pertemuan pertama daripada di tengah praktikum bab yang membutuhkannya.
@@ -705,7 +677,3 @@ dijaga mesin. Lingkungan diperiksa \textit{smoke test}, cabang digabung
 selagi kecil, dan perubahan cacat ditolak CI sebelum sempat dibaca orang,
 sehingga tiga belas bab berikutnya dapat dipakai untuk mengukur, bukan untuk
 membereskan.
-
-\ifajar
-  \input{latihan01}
-\fi

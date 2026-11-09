@@ -1,8 +1,16 @@
-\ifajar
-  \section{Latihan}
-\else
-  \section{Bab 8: Arsitektur Web Modern}
-\fi
+\section{Bab 8: Arsitektur Web Modern}
+
+\subsection*{Tujuan Pembelajaran}
+\begin{itemize}
+  \item Membedakan tempat HyperText Markup Language (HTML) di-\textit{render} pada Single-Page Application (SPA), Server-Side Rendering (SSR), Static Site Generation (SSG), Incremental Static Regeneration (ISR), dan
+        \textit{islands}, lalu menyebut akibatnya pada jumlah permintaan dan
+        waktu sampai isi tampil.
+  \item Mengukur kelima varian tersebut pada halaman yang sama, lalu membaca
+        selisihnya dari byte yang tiba dan jumlah permintaan yang dibutuhkan.
+  \item Memilih satu arsitektur untuk kebutuhan tertentu, lalu
+        mempertanggungjawabkannya sebagai catatan keputusan berisi pilihan
+        yang dipertimbangkan, yang diambil, dan konsekuensinya.
+\end{itemize}
 
 Seluruh file yang dipakai pada latihan ini tersedia di
 \berkas{sources/chapter08/}, dihitung relatif terhadap akar repositori.
@@ -28,18 +36,14 @@ python3 aplikasi.py &
 # Melayani di http://127.0.0.1:8040/ssr  (Ctrl+C untuk berhenti)
 \end{lstlisting}
 
-\ifajar
-  \subsection*{Latihan 1: Membandingkan Lima Varian}
-\else
-  \subsection*{Prosedur 1: Membandingkan Lima Varian}
-\fi
+\subsection*{Latihan 1: Membandingkan Lima Varian}
 
 Latihan ini membuktikan bahwa perbedaan kelima varian dapat dihitung, bukan
 hanya diperdebatkan.
 
 \begin{enumerate}
   \item Jalankan alat ukurnya seperti pada Listing \ref{lst:c8-lat1-jalan},
-        lalu isi \tabisi{tab:c8-lat1-hasil}. Tabel
+        lalu isi Tabel \ref{tab:c8-lat1-hasil}. Tabel
         \ref{tab:c8-lat1-contoh} memperlihatkan contoh yang sudah terisi.
   \item Buka kelima alamat di browser, lalu bandingkan apa yang tampil
         ketika JavaScript dimatikan lewat panel pengembang.
@@ -78,7 +82,6 @@ python3 ukur-varian.py
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 1}
@@ -99,13 +102,8 @@ python3 ukur-varian.py
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 2: Membaca Perilaku ISR}
-\else
-  \subsection*{Prosedur 2: Membaca Perilaku ISR}
-\fi
+\subsection*{Latihan 2: Membaca Perilaku ISR}
 
 Latihan ini membuktikan bahwa biaya \textit{rendering} pada ISR tidak hilang,
 melainkan ditanggung satu pengunjung tiap periode.
@@ -118,13 +116,8 @@ melainkan ditanggung satu pengunjung tiap periode.
   \item Ubah \texttt{UMUR\_ISR\_DETIK} di
         \berkas{sources/chapter08/aplikasi.py} menjadi 60, nyalakan ulang
         aplikasinya, lalu ulangi pengamatannya.
-\ifajar
-  \item Isi \tabisi{tab:c8-lat2-hasil}. Tabel \ref{tab:c8-lat2-contoh}
+  \item Isi Tabel \ref{tab:c8-lat2-hasil}. Tabel \ref{tab:c8-lat2-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c8-lat2-contoh}.
-\fi
   \item Jawab dua pertanyaan berikut. Pertama, pengunjung mana yang
         menanggung biaya \textit{rendering}, dan apakah itu adil? Kedua, apa yang
         berubah bila umurnya dinaikkan menjadi satu jam?
@@ -156,7 +149,6 @@ curl -s -D - -o /dev/null -w "%{time_total}\n" http://127.0.0.1:8040/isr \
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 2}
@@ -177,13 +169,8 @@ curl -s -D - -o /dev/null -w "%{time_total}\n" http://127.0.0.1:8040/isr \
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 3: Memindahkan Satu Bagian Menjadi Pulau}
-\else
-  \subsection*{Prosedur 3: Memindahkan Satu Bagian Menjadi Pulau}
-\fi
+\subsection*{Latihan 3: Memindahkan Satu Bagian Menjadi Pulau}
 
 Latihan ini membuktikan bahwa jumlah JavaScript yang diunduh ditentukan oleh
 seberapa banyak bagian halaman yang dihidupkan.
@@ -196,13 +183,8 @@ seberapa banyak bagian halaman yang dihidupkan.
         dimuat.
   \item Tambahkan satu pulau kedua pada halaman islands, misalnya tombol
         yang mengurutkan daftar menurut harga, lalu ukur ulang kedua varian.
-\ifajar
-  \item Isi \tabisi{tab:c8-lat3-hasil}. Tabel \ref{tab:c8-lat3-contoh}
+  \item Isi Tabel \ref{tab:c8-lat3-hasil}. Tabel \ref{tab:c8-lat3-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c8-lat3-contoh}.
-\fi
   \item Jawab dua pertanyaan berikut. Pertama, berapa byte JavaScript yang
         bertambah untuk tiap pulau baru? Kedua, pada titik mana menambah
         pulau menjadi tidak lagi lebih murah daripada memakai SPA?
@@ -232,7 +214,6 @@ wc -c statis/pulau.js statis/spa.js
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 3}
@@ -249,13 +230,8 @@ wc -c statis/pulau.js statis/spa.js
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 4: Menulis Catatan Keputusan}
-\else
-  \subsection*{Prosedur 4: Menulis Catatan Keputusan}
-\fi
+\subsection*{Latihan 4: Menulis Catatan Keputusan}
 
 Latihan ini mengubah angka pada ketiga latihan sebelumnya menjadi satu
 keputusan yang dapat dipertanggungjawabkan.
@@ -265,8 +241,9 @@ keputusan yang dapat dipertanggungjawabkan.
         rincian pesanan milik pengguna yang sudah masuk, atau \textit{dashboard}
         admin.
   \item Pilih tiga varian yang masuk akal bagi kebutuhan itu, lalu tulis
-        angka pembandingnya dari \tabisi{tab:c8-lat1-hasil}.
-  \item Tulis catatan keputusan berisi lima bagian seperti pada \ifajar Tabel \ref{tab:c8-lat4-hasil}\else Tabel \ref{tab:c8-lat4-contoh}\fi, yaitu keputusan, pilihan yang
+        angka pembandingnya dari Tabel \ref{tab:c8-lat1-hasil}.
+  \item Tulis catatan keputusan berisi lima bagian seperti pada Tabel
+        \ref{tab:c8-lat4-hasil}, yaitu keputusan, pilihan yang
         dipertimbangkan, alasan, konsekuensi, dan syarat yang
         membatalkannya. Tabel \ref{tab:c8-lat4-contoh} memperlihatkan
         contoh yang sudah terisi.
@@ -296,7 +273,6 @@ keputusan yang dapat dipertanggungjawabkan.
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian catatan keputusan Latihan 4}
@@ -319,7 +295,6 @@ keputusan yang dapat dipertanggungjawabkan.
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
 Setelah seluruh latihan selesai, server dihentikan dengan Ctrl+C. Tidak ada
 container yang perlu dimatikan, karena bab ini memang tidak memakainya.

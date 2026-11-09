@@ -1,10 +1,74 @@
 \chapter*{Metode Pengukuran}
 \addcontentsline{toc}{chapter}{Metode Pengukuran}
+\markboth{\MakeUppercase{Metode Pengukuran}}{\MakeUppercase{Metode Pengukuran}}
 
 Seluruh angka di buku ini berasal dari program yang disertakan, dijalankan
-di satu komputer, dan dicatat apa adanya. Bagian ini menjelaskan cara angka
-itu diambil, agar pembaca dapat menilai batas keberlakuannya dan
-mengulanginya sendiri.
+di satu komputer, dan dicatat apa adanya. Bagian ini menjelaskan arti
+berbasis pengukuran, lalu cara angka itu diambil, agar pembaca dapat menilai
+batas keberlakuannya dan mengulanginya sendiri.
+
+\section*{Arti berbasis pengukuran}
+
+Judul buku ini, \textit{Measurement-Based Web Engineering}, berarti rekayasa
+web berbasis pengukuran. Setiap keputusan rekayasa di sini diambil dari angka
+yang diukur sendiri, bukan dari kesan, kebiasaan, atau klaim dokumentasi.
+Polanya selalu sama, seperti pada Gambar \ref{fig:pola-ukur}. Pertanyaannya
+dirumuskan lebih dahulu, lalu keadaan awal diukur sebagai \textit{baseline}.
+Sesudah itu satu hal diubah, dan pengukuran diulang dengan beban yang sama.
+Kesimpulan ditarik dari selisih kedua angka itu.
+
+\begin{figure}[!htb]
+  \centering
+  \begin{tikzpicture}[
+    font=\scriptsize,
+    tahap/.style={draw, rounded corners, minimum height=1.1cm,
+                  text width=1.9cm, align=center},
+    panah/.style={-{Stealth[length=2mm]}, thick}
+  ]
+    \node[tahap, fill=blue!8] (tanya) at (0,0) {Rumuskan pertanyaan};
+    \node[tahap, fill=blue!8] (awal) at (2.6,0) {Ukur keadaan awal\\{\tiny\mdseries \textit{baseline}}};
+    \node[tahap, fill=orange!12] (ubah) at (5.2,0) {Ubah satu hal};
+    \node[tahap, fill=blue!8] (ulang) at (7.8,0) {Ukur ulang\\{\tiny\mdseries beban yang sama}};
+    \node[tahap, fill=green!10] (simpul) at (10.4,0) {Simpulkan dari selisihnya};
+
+    \draw[panah] (tanya) -- (awal);
+    \draw[panah] (awal) -- (ubah);
+    \draw[panah] (ubah) -- (ulang);
+    \draw[panah] (ulang) -- (simpul);
+    \draw[panah, dashed] (simpul.south) -- ++(0,-0.5) -| (ubah.south)
+      node[pos=0.25, below, font=\tiny, gray] {bila selisihnya belum cukup};
+  \end{tikzpicture}
+  \caption{Pola kerja berbasis pengukuran yang dipakai di setiap bab}
+  \label{fig:pola-ukur}
+\end{figure}
+
+Analoginya seperti menimbang badan selama program diet. Rasa lebih ringan
+belum tentu berarti berat badan turun. Yang memastikannya adalah timbangan
+yang sama, dipakai pada jam yang sama, sebelum dan sesudah programnya
+berjalan.
+
+Tiga contoh dari bab-bab berikutnya memperlihatkan apa yang didapat dari cara
+ini:
+\begin{enumerate}
+  \item Bab 1 mengukur umur cabang Git. Cabang yang digabung sesudah satu
+        atau tiga hari tidak menimbulkan konflik, sedangkan cabang yang hidup
+        dua minggu menimbulkan 11 blok konflik. Kebiasaan tim yang biasanya
+        hanya dinasihatkan berubah menjadi angka.
+  \item Bab 3 menghitung \textit{query} untuk 75 item yang sama. Pola N+1
+        menjalankan 26 \textit{query} dalam 7,28 milidetik, sedangkan cara
+        kedua cukup 2 \textit{query} dalam 1,07 milidetik. Kedua kode
+        sama-sama terlihat wajar, dan selisihnya baru tampak ketika jumlah
+        \textit{query}-nya dihitung.
+  \item Bab 4 memasang \textit{cache} di depan basis data. Nilai p50 turun
+        dari 70,44 menjadi 0,31 milidetik. Namun ketika Redis dibekukan, p50
+        naik menjadi 184,72 milidetik, lebih lambat daripada tanpa
+        \textit{cache} sama sekali. Tanpa mengukur keadaan gagalnya,
+        \textit{cache} hanya terlihat sebagai perbaikan.
+\end{enumerate}
+
+Contoh ketiga memperlihatkan alasan pengukuran tidak berhenti pada keadaan
+normal. Keadaan gagal pun diukur, karena keputusan rekayasa yang baik
+ditentukan juga oleh perilaku sistem ketika sebagian komponennya bermasalah.
 
 \section*{Lingkungan pengukuran}
 
@@ -81,5 +145,5 @@ Seluruh program tersimpan per bab di dalam \berkas{sources/}, dan tiap
 direktori punya \berkas{README.md} berisi daftar filenya beserta perintah
 untuk menjalankannya. Skrip Python dijalankan memakai \textit{virtual
 environment} di \berkas{sources/.venv}. Prosedur lengkap tiap bab, beserta
-lembar isian untuk mencatat hasil sendiri, ada pada lampiran di belakang
-buku ini.
+lembar isian untuk mencatat hasil sendiri, ada pada Lampiran
+\ref{ch:latihan}.

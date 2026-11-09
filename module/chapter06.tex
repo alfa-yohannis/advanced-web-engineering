@@ -1,21 +1,6 @@
 \chapter{Testing, Reliability, dan Code Quality}
 \label{ch:testing}
 
-\ifajar
-\section*{Tujuan Pembelajaran}
-\begin{itemize}
-  \item Membedakan unit test, integration test, dan End-to-End (E2E) test
-        berdasarkan biaya waktunya dan jenis cacat yang tertangkap
-        masing-masing.
-  \item Merancang \textit{test double} dan pengujian kontrak untuk memisahkan
-        bagian yang diuji dari layanan lain, lalu membuktikan pilihannya lewat
-        pengujian yang berjalan tanpa layanan itu menyala.
-  \item Mengukur mutu kode lewat \textit{coverage}, analisis statis, dan
-        jumlah \textit{query} per alamat, lalu menegakkannya sebagai
-        \textit{quality gate} yang memblokir \textit{merge}.
-\end{itemize}
-\fi
-
 \section{Pendahuluan}
 
 Bab 5 menutup pertanyaan tentang cepat atau lambat dengan angka. Yang belum
@@ -480,7 +465,3 @@ analisis statis, dan jumlah \textit{query} per alamat, lalu keluar dengan
 status 1 begitu satu batas dilanggar. Pada aplikasi bab ini, satu-satunya
 yang dilanggar adalah jumlah \textit{query} alamat N+1, yaitu cacat yang
 tidak terlihat sama sekali dari \textit{response}-nya.
-
-\ifajar
-  \input{latihan06}
-\fi

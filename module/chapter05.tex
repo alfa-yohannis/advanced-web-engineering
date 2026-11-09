@@ -1,21 +1,6 @@
 \chapter{Performance Engineering}
 \label{ch:performance}
 
-\ifajar
-\section*{Tujuan Pembelajaran}
-\begin{itemize}
-  \item Menetapkan \textit{budget} performa berupa angka, yaitu p95 tiap alamat,
-        \textit{response size}, dan ambang Core Web Vitals, lalu menegakkannya sebagai
-        \textit{gate} otomatis.
-  \item Mengukur aplikasi di bawah beban memakai \textit{load generator},
-        lalu membaca titik jenuh dari hubungan antara konkurensi,
-        \textit{throughput}, dan \textit{latency}.
-  \item Menemukan bagian termahal lewat \textit{profiling}, lalu membedakan
-        perbaikan yang menyentuh sebabnya dari perbaikan yang hanya menyentuh
-        \textit{symptom}-nya.
-\end{itemize}
-\fi
-
 \section{Pendahuluan}
 
 Bab 2 menetapkan \textit{baseline} berupa angka, dan Bab 3 serta Bab 4
@@ -890,7 +875,3 @@ tetap berharga. \textit{Streaming} menurunkan waktu sampai byte pertama dari
 ratusan milidetik menjadi kurang dari satu milidetik tanpa mengubah waktu
 total. Yang membedakan perbaikan sungguhan dari perbaikan semu bukan
 besarnya angka, melainkan adanya bukti pengukuran sebelum dan sesudahnya.
-
-\ifajar
-  \input{latihan05}
-\fi

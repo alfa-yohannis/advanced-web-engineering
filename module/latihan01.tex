@@ -1,8 +1,17 @@
-\ifajar
-  \section{Latihan}
-\else
-  \section{Bab 1: Cakupan Bidang dan Alur Rekayasanya}
-\fi
+\section{Bab 1: Cakupan Bidang dan Alur Rekayasanya}
+
+\subsection*{Tujuan Pembelajaran}
+\begin{itemize}
+  \item Menjelaskan beda mata kuliah ini dengan pemrograman web pengantar,
+        yaitu pergeseran dari aplikasi yang berjalan menjadi aplikasi yang
+        diukur, beserta peta empat belas pertemuannya.
+  \item Memeriksa kesiapan lingkungan kerja untuk keempat belas bab dengan
+        satu \textit{smoke test}, lalu menjelaskan sebab tiap pemeriksaan yang
+        gagal.
+  \item Merancang alur kerja tim berupa monorepo, cabang berumur pendek,
+        \textit{code review}, dan Continuous Integration (CI) yang menolak
+        perubahan cacat, berdasarkan hasil pengukuran.
+\end{itemize}
 
 Seluruh file yang dipakai pada latihan ini tersedia di
 \berkas{sources/chapter01/}, dihitung relatif terhadap akar repositori.
@@ -14,11 +23,7 @@ memesan tiap port sebentar lalu melepasnya, tanpa mengirim data ke mana pun,
 dan percobaan Git berjalan di direktori sementara. Angka detik tiap mahasiswa
 akan berbeda, sedangkan pola perbandingannya akan sama.
 
-\ifajar
-  \subsection*{Latihan 1: Smoke Test Lingkungan}
-\else
-  \subsection*{Prosedur 1: Smoke Test Lingkungan}
-\fi
+\subsection*{Latihan 1: Smoke Test Lingkungan}
 
 Latihan ini memastikan seluruh perkakas keempat belas bab sudah siap, dan
 memperlihatkan bahwa kegagalan yang ditemukan sekarang jauh lebih murah
@@ -26,19 +31,17 @@ daripada yang ditemukan di tengah praktikum.
 
 \begin{enumerate}
   \item Buat venv bersama bila belum ada, lalu pasang pustaka basis data,
-        seperti pada Listing \ref{lst:c01-lat1-jalan}.
+        seperti pada Listing \ref{lst:c01-lat1-jalan}. Perintah
+        \texttt{test -d} melewati pembuatan venv bila
+        \berkas{sources/.venv} sudah ada, agar venv lama tidak ditimpa
+        Python versi lain.
   \item Jalankan \berkas{periksa-lingkungan.py}, lalu catat seluruh barisnya.
   \item Perbaiki tiap pemeriksaan yang gagal: pasang perkakas yang kurang,
         nyalakan Docker, atau hentikan proses yang memakai port bab lain.
   \item Jalankan ulang sampai hasilnya hijau, lalu catat apa saja yang
         diperbaiki.
-\ifajar
-  \item Isi \tabisi{tab:c01-lat1-hasil}. Tabel \ref{tab:c01-lat1-contoh}
+  \item Isi Tabel \ref{tab:c01-lat1-hasil}. Tabel \ref{tab:c01-lat1-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c01-lat1-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa pemeriksaan Docker
         menanyai server, bukan hanya mencari perintah \texttt{docker}?
         Kedua, bab mana yang tertahan bila port 8080 sudah terpakai, dan
@@ -49,7 +52,7 @@ daripada yang ditemukan di tengah praktikum.
 
 \begin{lstlisting}[language=bash, caption={Menyiapkan venv lalu menjalankan \textit{smoke test}, tersedia di \berkas{sources/chapter01/periksa-lingkungan.py}}, label={lst:c01-lat1-jalan}]
 cd sources/chapter01
-python3 -m venv ../.venv
+test -d ../.venv || python3 -m venv ../.venv
 ../.venv/bin/pip install "psycopg[binary,pool]"
 # Dua perintah di atas cukup sekali, bila sources/.venv belum ada.
 python3 periksa-lingkungan.py
@@ -91,7 +94,6 @@ python3 periksa-lingkungan.py
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pemeriksaan Latihan 1}
@@ -110,18 +112,13 @@ python3 periksa-lingkungan.py
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
 Contoh di atas merah karena ketiga port dipakai proyek lain di laptop yang
 sama, bukan karena perkakasnya kurang. Hasil di laptop lain hampir pasti
 berbeda. Yang dilaporkan adalah pemeriksaan mana yang gagal dan apa yang
 dilakukan sampai hasilnya hijau.
 
-\ifajar
-  \subsection*{Latihan 2: Umur Cabang dan Konflik}
-\else
-  \subsection*{Prosedur 2: Umur Cabang dan Konflik}
-\fi
+\subsection*{Latihan 2: Umur Cabang dan Konflik}
 
 Latihan ini membuktikan bahwa konflik tumbuh lebih cepat daripada umur
 cabangnya, sehingga cabang pantas digabung selagi pendek.
@@ -132,13 +129,8 @@ cabangnya, sehingga cabang pantas digabung selagi pendek.
   \item Ubah \texttt{BARIS\_PER\_HARI} di \berkas{simulasi-cabang.py} menjadi
         6, jalankan ulang, lalu catat kolom blok konfliknya.
   \item Kembalikan \texttt{BARIS\_PER\_HARI} menjadi 3.
-\ifajar
-  \item Isi \tabisi{tab:c01-lat2-hasil}. Tabel \ref{tab:c01-lat2-contoh}
+  \item Isi Tabel \ref{tab:c01-lat2-hasil}. Tabel \ref{tab:c01-lat2-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c01-lat2-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa blok konflik pada 14
         hari jauh lebih banyak daripada baris yang diubah kedua pengembang?
         Kedua, apa yang terjadi pada konflik ketika tiap pengembang bekerja
@@ -180,7 +172,6 @@ python3 simulasi-cabang.py
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 2}
@@ -199,18 +190,13 @@ python3 simulasi-cabang.py
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
 Benih acaknya tetap, sehingga angka latihan ini sama persis pada komputer
 mana pun dengan Git versi yang sama. Versi Git yang berbeda dapat menghitung
 batas blok konflik sedikit berbeda, sedangkan polanya tetap: konflik tumbuh
 jauh lebih cepat daripada umur cabangnya.
 
-\ifajar
-  \subsection*{Latihan 3: Kerangka API dan CI yang Hijau}
-\else
-  \subsection*{Prosedur 3: Kerangka API dan CI yang Hijau}
-\fi
+\subsection*{Latihan 3: Kerangka API dan CI yang Hijau}
 
 Latihan ini menyalakan kerangka API yang dipakai bab-bab berikutnya, lalu
 membuktikan bahwa CI menahan perubahan yang melanggar aturan bisnis.
@@ -228,13 +214,8 @@ membuktikan bahwa CI menahan perubahan yang melanggar aturan bisnis.
   \item Buat repositori tim, salin direktori ini ke dalamnya, salin
         \berkas{ci.yml} ke \berkas{.github/workflows/}, sesuaikan
         \texttt{paths}-nya, lalu commit.
-\ifajar
-  \item Isi \tabisi{tab:c01-lat3-hasil}. Tabel \ref{tab:c01-lat3-contoh}
+  \item Isi Tabel \ref{tab:c01-lat3-hasil}. Tabel \ref{tab:c01-lat3-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c01-lat3-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa uji API tidak
         dijalankan pada jalan yang merah, padahal salah satu ujinya juga
         akan gagal? Kedua, lapisan mana yang berubah bila SQLite diganti
@@ -254,13 +235,13 @@ python3 ci-lokal.py
 #   Hasil: hijau, seluruh langkah lolos
 
 python3 aplikasi.py &
-curl -s -X POST http://127.0.0.1:8050/buku \
+curl -s -w ' %{http_code}\n' -X POST http://127.0.0.1:8050/buku \
   -H 'Content-Type: application/json' \
   -d '{"judul": "Basis Data Terapan", "harga": 85000, "stok": 4}'
-curl -s -X POST http://127.0.0.1:8050/buku \
+curl -s -w ' %{http_code}\n' -X POST http://127.0.0.1:8050/buku \
   -H 'Content-Type: application/json' \
   -d '{"judul": "Struktur Data", "harga": 0, "stok": 2}'
-curl -s http://127.0.0.1:8050/buku/9
+curl -s -w ' %{http_code}\n' http://127.0.0.1:8050/buku/9
 
 # Keluarannya, dengan status HTTP di ujung tiap baris:
 # {"nomor": 1, "judul": "Basis Data Terapan", "harga": 85000, "stok": 4} 201
@@ -285,7 +266,6 @@ curl -s http://127.0.0.1:8050/buku/9
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 3}
@@ -302,7 +282,6 @@ curl -s http://127.0.0.1:8050/buku/9
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
 Kolom kode dirusak pada baris terakhir menunjukkan akibat yang ditahan CI.
 Pada kode yang dirusak, permintaan buku seharga nol dijawab 201, artinya buku

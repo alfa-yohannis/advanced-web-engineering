@@ -1314,9 +1314,8 @@ docker compose up -d
 \begin{frame}[fragile]{{\Large Venv dan Aturan Main}}
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
-cd sources
-python3 -m venv .venv
-.venv/bin/pip install "psycopg[binary,pool]" sqlalchemy redis
+test -d ../.venv || python3 -m venv ../.venv
+../.venv/bin/pip install "psycopg[binary,pool]" sqlalchemy redis
 \end{lstlisting}
 
   \vspace{4pt}
@@ -1471,7 +1470,6 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
 \begin{frame}[fragile]{{\Large Mengukur Waktu Sampai Byte Pertama}}
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
-cd sources/chapter04
 source ../.venv/bin/activate
 docker compose exec -T cache redis-cli DEL terlaris:30hari
 python ukur-ttfb.py http://localhost:8000/api/terlaris 50
@@ -1558,7 +1556,6 @@ python ukur-ttfb.py http://localhost:8000/api/terlaris-cache 50
 \begin{frame}[fragile]{{\Large Menjalankan Peragaan}}
   \vspace{4pt}
 \begin{lstlisting}[language=bash]
-cd sources/chapter04
 source ../.venv/bin/activate
 python stampede.py
 
@@ -1646,7 +1643,6 @@ python stampede.py
 \begin{frame}[fragile]{{\Large Mengukur Lama Data Stale}}
   \vspace{4pt}
 \begin{lstlisting}[language=bash]
-cd sources/chapter04
 source ../.venv/bin/activate
 python invalidasi.py
 
@@ -1736,7 +1732,6 @@ python invalidasi.py
 \begin{frame}[fragile]{{\Large Menjalankan Perbandingan}}
   \vspace{4pt}
 \begin{lstlisting}[language=bash]
-cd sources/chapter04
 source ../.venv/bin/activate
 python layanan-lambat.py        # terminal kedua, biarkan menyala
 python resilience.py            # terminal lain

@@ -1,8 +1,17 @@
-\ifajar
-  \section{Latihan}
-\else
-  \section{Bab 5: Performance Engineering}
-\fi
+\section{Bab 5: Performance Engineering}
+
+\subsection*{Tujuan Pembelajaran}
+\begin{itemize}
+  \item Menetapkan \textit{budget} performa berupa angka, yaitu p95 tiap alamat,
+        \textit{response size}, dan ambang Core Web Vitals, lalu menegakkannya sebagai
+        \textit{gate} otomatis.
+  \item Mengukur aplikasi di bawah beban memakai \textit{load generator},
+        lalu membaca titik jenuh dari hubungan antara konkurensi,
+        \textit{throughput}, dan \textit{latency}.
+  \item Menemukan bagian termahal lewat \textit{profiling}, lalu membedakan
+        perbaikan yang menyentuh sebabnya dari perbaikan yang hanya menyentuh
+        \textit{symptom}-nya.
+\end{itemize}
 
 Seluruh file yang dipakai pada latihan ini tersedia di
 \berkas{sources/chapter05/}, dihitung relatif terhadap akar repositori.
@@ -26,7 +35,7 @@ Penyiapannya dilakukan sekali, seperti pada Listing \ref{lst:c5-siapkan}.
 cd sources/chapter05
 docker compose up -d
 ./siapkan-data.sh
-python3 -m venv ../.venv
+test -d ../.venv || python3 -m venv ../.venv
 ../.venv/bin/pip install "psycopg[binary,pool]" sqlalchemy
 npx -p typescript tsc --target es2022 --module es2022 --strict \
   --lib es2022,dom --outDir statis web-vitals.ts katalog.ts
@@ -43,11 +52,7 @@ python aplikasi.py
 # Melayani di http://127.0.0.1:8010/  (Ctrl+C untuk berhenti)
 \end{lstlisting}
 
-\ifajar
-  \subsection*{Latihan 1: Menegakkan Budget Performa}
-\else
-  \subsection*{Prosedur 1: Menegakkan Budget Performa}
-\fi
+\subsection*{Latihan 1: Menegakkan Budget Performa}
 
 Latihan ini membuktikan bahwa \textit{budget} hanya berguna bila ada yang
 menegakkannya, dan bahwa \textit{verdict}-nya dapat dibaca mesin.
@@ -57,7 +62,7 @@ menegakkannya, dan bahwa \textit{verdict}-nya dapat dibaca mesin.
         untuk tiap alamat: lolos atau tidak, dan mengapa. Dugaan ditulis
         lebih dahulu agar tidak menyesuaikan diri dengan hasilnya.
   \item Jalankan \textit{gate}-nya seperti pada Listing \ref{lst:c5-lat1-jalan},
-        lalu catat \textit{verdict} tiap baris ke \tabisi{tab:c5-lat1-hasil}. Tabel
+        lalu catat \textit{verdict} tiap baris ke Tabel \ref{tab:c5-lat1-hasil}. Tabel
         \ref{tab:c5-lat1-contoh} memperlihatkan contoh yang sudah terisi.
   \item Catat status keluar prosesnya dengan \texttt{echo \$?} tepat sesudah
         \textit{gate} selesai. Angka itulah yang dibaca \textit{Continuous
@@ -77,7 +82,7 @@ source ../.venv/bin/activate
 python gate-budget.py
 echo $?
 
-# Keluarannya:
+# Keluarannya (dipotong):
 # Gagal: 6 budget terlampaui.
 # 1
 \end{lstlisting}
@@ -105,7 +110,6 @@ echo $?
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 1}
@@ -128,13 +132,8 @@ echo $?
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 2: Menemukan Bagian Termahal}
-\else
-  \subsection*{Prosedur 2: Menemukan Bagian Termahal}
-\fi
+\subsection*{Latihan 2: Menemukan Bagian Termahal}
 
 Latihan ini membuktikan bahwa dua alamat yang sama-sama lambat dapat
 membutuhkan perbaikan yang sama sekali berbeda.
@@ -143,7 +142,7 @@ membutuhkan perbaikan yang sama sekali berbeda.
   \item Jalankan profil kedua alamat seperti pada Listing
         \ref{lst:c5-lat2-jalan}.
   \item Untuk tiap alamat, catat tiga fungsi teratas menurut waktu kumulatif
-        beserta bagiannya terhadap waktu total, lalu isi \tabisi{tab:c5-lat2-hasil}. Tabel \ref{tab:c5-lat2-contoh}
+        beserta bagiannya terhadap waktu total, lalu isi Tabel \ref{tab:c5-lat2-hasil}. Tabel \ref{tab:c5-lat2-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Untuk tiap alamat, tulis satu kalimat perbaikan yang menyentuh
         sebabnya, bukan \textit{symptom}-nya.
@@ -179,7 +178,6 @@ python profil-endpoint.py terlaris 20
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 2}
@@ -198,13 +196,8 @@ python profil-endpoint.py terlaris 20
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 3: Menemukan Titik Jenuh}
-\else
-  \subsection*{Prosedur 3: Menemukan Titik Jenuh}
-\fi
+\subsection*{Latihan 3: Menemukan Titik Jenuh}
 
 Latihan ini mencari kapasitas satu alamat, yaitu jumlah permintaan per detik
 yang masih dapat dilayani sebelum \textit{latency}-nya meledak.
@@ -214,7 +207,7 @@ yang masih dapat dilayani sebelum \textit{latency}-nya meledak.
         satu \textit{worker},
         agar \textit{cache} basis data hangat sebelum pengukuran dimulai.
   \item Jalankan beban untuk 1, 2, 4, 8, 16, dan 32 \textit{worker} seperti
-        pada Listing \ref{lst:c5-lat3-jalan}, lalu isi \tabisi{tab:c5-lat3-hasil}. Tabel \ref{tab:c5-lat3-contoh}
+        pada Listing \ref{lst:c5-lat3-jalan}, lalu isi Tabel \ref{tab:c5-lat3-hasil}. Tabel \ref{tab:c5-lat3-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Tandai baris tempat \textit{throughput} berhenti bertambah. Itulah
         titik jenuhnya.
@@ -253,7 +246,6 @@ python beban.py /api/terlaris 32 15
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 3}
@@ -276,13 +268,8 @@ python beban.py /api/terlaris 32 15
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 4: Mengumpulkan Core Web Vitals Lapangan}
-\else
-  \subsection*{Prosedur 4: Mengumpulkan Core Web Vitals Lapangan}
-\fi
+\subsection*{Latihan 4: Mengumpulkan Core Web Vitals Lapangan}
 
 Latihan ini melengkapi angka lab dengan angka lapangan, yaitu Core Web Vitals
 dari kunjungan yang sungguhan.
@@ -294,7 +281,7 @@ dari kunjungan yang sungguhan.
         atau pindah ke tab lain. Laporan dikirim saat halaman ditinggalkan,
         bukan saat selesai dimuat.
   \item Periksa isi \berkas{sources/chapter05/vitals.jsonl} seperti pada
-        Listing \ref{lst:c5-lat4-jalan}, lalu catat ketiga metriknya ke \tabisi{tab:c5-lat4-hasil}. Tabel \ref{tab:c5-lat4-contoh}
+        Listing \ref{lst:c5-lat4-jalan}, lalu catat ketiga metriknya ke Tabel \ref{tab:c5-lat4-hasil}. Tabel \ref{tab:c5-lat4-contoh}
         memperlihatkan bentuk isian yang diharapkan.
   \item Ulangi kunjungan sebanyak lima kali, lalu jalankan ulang \textit{gate}
         \textit{budget} dan catat perubahan \textit{verdict} ketiga baris Core Web Vitals.
@@ -326,7 +313,6 @@ python gate-budget.py
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 4}
@@ -349,7 +335,6 @@ python gate-budget.py
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
 Setelah seluruh latihan selesai, container dihentikan dengan
 \texttt{docker compose down -v}. Opsi \texttt{-v} ikut menghapus volume

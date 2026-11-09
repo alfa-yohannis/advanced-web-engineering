@@ -7,12 +7,15 @@ berikutnya tidak dimulai dari menebak-nebak.
 
 Bab 1 sampai Bab 14 sudah punya naskah, slide, file sumber, dan angka yang
 diukur sungguhan. Seluruh empat belas bab sudah masuk buku, dan bukunya
-terbangun di 279 halaman.
+terbangun di 291 halaman.
 
 Seluruh perintah di README sumber dan di listing latihan Bab 1 sampai Bab 14
-sudah dijalankan pada 7 dan 8 November 2026, dan seluruhnya berjalan.
-Perkecualiannya hanya `sources/chapter02/skrip-beban.js`, karena `k6` belum
-terpasang di komputer pengukuran.
+dijalankan ulang pada 9 November 2026 di port bawaan tiap bab, termasuk Bab 3,
+`aplikasi.py` Bab 4, dan Bab 11 yang sebelumnya terhalang port proyek lain.
+Seluruhnya berjalan. `sources/chapter02/skrip-beban.js` dijalankan lewat image
+Docker `grafana/k6`, karena `k6` tidak terpasang, dan sasarannya kini API
+Bab 1 di port 8050. Kedua skrip Bab 15 juga berjalan pada ketiga repositori
+RAG-nya.
 
 Istilah di naskah, slide, README sumber, dan nama di kode sudah mengikuti
 daftar istilah di `CLAUDE.md`. Seluruh slide memberi baris kosong sesudah tabel dan gambar, dan
@@ -84,44 +87,51 @@ dibuka tujuan pembelajaran lalu ditutup latihan beserta lembar isian terbaca
 sebagai buku ajar, dan buku ajar bernilai 20 angka kredit, bukan 40.
 
 Prosedur pengukuran justru memperkuat syarat metodologi, selama dibaca
-sebagai metode, bukan sebagai pekerjaan rumah. Karena satu terbitan dinilai
-sekali, rencananya tetap: satu sumber naskah, dua edisi, dan yang ber-ISBN
-adalah edisi referensi.
+sebagai metode, bukan sebagai pekerjaan rumah.
+
+Rencana dua edisi dibatalkan pada 9 November 2026. Naskahnya kini satu buku
+referensi yang dapat juga digunakan sebagai buku ajar, dan pernyataan itu
+ditulis di Prakata serta di Pendahuluan Bab 1. Badan bab tetap bergaya
+referensi: tanpa tujuan pembelajaran di awal bab dan tanpa latihan di akhir
+bab. Keduanya, beserta 57 lembar isian, dikumpulkan di Lampiran A, Latihan
+dan Prosedur Pengukuran. Risikonya tetap tercatat: lembar isian dan tujuan
+pembelajaran di lampiran masih dapat dibaca penilai sebagai ciri buku ajar.
 
 ### Sudah dikerjakan
 
-- Preamble dipisah ke `module/preamble.tex`, dipakai kedua edisi.
-- Penanda `\ifajar` dipasang. `advanced-web-engineering.tex` membangun edisi
-  referensi, dan `advanced-web-engineering-ajar.tex` membangun edisi ajar.
-- Seksi Latihan tiap bab dipindah ke `module/latihanNN.tex`. Edisi ajar
-  mencetaknya di akhir babnya, edisi referensi mengumpulkannya sebagai
-  Lampiran A "Prosedur Pengukuran".
-- Tujuan Pembelajaran hanya dicetak di edisi ajar.
-- Judul tiap prosedur mengikuti edisinya: "Latihan N" atau "Prosedur N".
+- Preamble dipisah ke `module/preamble.tex`.
+- Seksi Latihan tiap bab dipindah ke `module/latihanNN.tex`, dan seluruhnya
+  dicetak sebagai Lampiran A. Tiap bagian lampiran dibuka Tujuan
+  Pembelajaran babnya, lalu latihan berjudul "Latihan N" beserta lembar
+  isiannya.
 - `module/prakata.tex` dan `module/metode.tex` ditulis, berisi lingkungan
   pengukuran, empat aturan yang dipegang, dan batas keberlakuan angkanya.
-- Keduanya terbangun bersih: edisi referensi 285 halaman, edisi ajar 283.
+- Bab 1 berjudul "Cakupan Bidang dan Alur Rekayasanya". Pendahuluannya
+  menyatakan buku ini buku referensi yang dapat juga digunakan sebagai buku
+  ajar, dan seksi Peta Empat Belas Bab memetakan bab, bukan pertemuan,
+  dengan satu kalimat bahwa satu bab mengisi satu pertemuan bila dipakai di
+  kelas.
+- Penanda `\ifajar`, makro `\tabisi`, dan
+  `advanced-web-engineering-ajar.tex` sudah dibuang. Bukunya terbangun di
+  289 halaman tanpa rujukan yang menggantung.
 
 ### Masih harus dikerjakan
 
-1. ~~Lembar isian kosong di edisi referensi.~~ Sudah dikerjakan. 57 tabel
-   lembar isian dibungkus `\ifajar`, 34 langkah yang menyuruh mengisinya
-   diganti menjadi membandingkan dengan tabel contohnya, dan 60 rujukan
-   lainnya memakai makro `\tabisi` yang menyebut "Tabel N" di edisi ajar dan
-   "catatan sendiri" di edisi referensi. Edisi referensi kini 275 halaman
-   tanpa satu pun lembar isian, edisi ajar tetap 283 halaman dengan 57 lembar
-   isian dan 14 Tujuan Pembelajaran.
-2. ~~Bab 1 bergaya pengantar mata kuliah.~~ Sudah dikerjakan. Di edisi
-   referensi judulnya menjadi "Cakupan Bidang dan Alur Rekayasanya", seksi
-   Peta Empat Belas Pertemuan beserta tabel topik penelitiannya tidak
-   dicetak, dan paragraf orientasi serta ringkasannya diganti bentuk yang
-   tidak menyebut pertemuan. Kata khas kelas seperti praktikum dan mata
-   kuliah ini diganti kata yang berlaku di kedua edisi.
-3. Kata "latihan", "pertemuan", dan "mahasiswa" di badan bab perlu disapu
-   untuk edisi referensi.
+1. Kata "pertemuan", "praktikum", dan "mahasiswa" masih muncul di badan bab,
+   misalnya di Ringkasan Bab 1. Karena buku ini juga dipakai sebagai buku
+   ajar, kata itu tidak salah, tetapi badan bab yang dibaca sebagai referensi
+   lebih tepat memakai "pembaca" dan "pengukuran".
+2. ~~Halaman judul masih bertuliskan "Course Module -- IF140303".~~ Sudah
+   dikerjakan. Judulnya *Measurement-Based Web Engineering*, baris Course
+   Module dibuang, dan arti berbasis pengukuran dijelaskan di Metode
+   Pengukuran beserta tiga contohnya.
+3. Jenis komputer pengukuran tidak seragam. `metode.tex` dan Bab 11 menyebut
+   komputer meja, sedangkan Bab 1, Bab 14, dan Latihan 14 menyebut laptop
+   Intel Core i9-11900H. Komputer yang menjalankan seluruh sumber pada
+   9 November 2026 adalah laptop HP ENVY 15 dengan prosesor itu.
 4. Indeks belum ada isinya. `makeidx` sudah dipasang; perlu satu sapuan
    `\index{}` untuk istilah di `CLAUDE.md` dan singkatan di `README.md`,
-   lalu `\printindex` di belakang edisi referensi.
+   lalu `\printindex` di belakang buku.
 5. Glosarium dan biografi penulis belum ada. Keduanya bagian akhir yang
    disarankan panduan penerbit.
 6. Tiap bab perlu satu paragraf metode di depan hasilnya: apa yang diukur,
@@ -140,9 +150,25 @@ adalah edisi referensi.
 
 ## Catatan pemeliharaan
 
-- Port 5433, 8000, dan 8080 dipakai layanan proyek lain di komputer
-  pengukuran. Bab 3, `aplikasi.py` Bab 4, dan Bab 11 hanya dapat dinyalakan di
-  port bawaannya bila layanan itu dimatikan lebih dahulu.
+- Port 5433, 8000, dan 8080 dipakai NikahYuk: container `nikahyuk-db-1`,
+  service systemd user `nikahyuk-api`, dan `nikahyuk-website`. Bab 3,
+  `aplikasi.py` Bab 4, dan Bab 11 hanya dapat dinyalakan di port bawaannya bila
+  NikahYuk dimatikan dulu dengan
+  `systemctl --user stop nikahyuk-api nikahyuk-website` lalu
+  `docker stop nikahyuk-db-1`. Nyalakan lagi sesudahnya dengan
+  `docker start nikahyuk-db-1` lalu
+  `systemctl --user start nikahyuk-api nikahyuk-website`, karena
+  `nikahyuk-api` adalah API uji yang dibuka lewat tunnel Cloudflare.
+- Python sistem di komputer pengukuran sudah 3.15.2, sedangkan
+  `sources/.venv` dibuat dengan 3.14. Menjalankan `python3 -m venv` di atas
+  venv yang sudah ada menulis ulang `pyvenv.cfg` dan pip untuk 3.15, dan
+  pemasangan berikutnya tidak terlihat oleh Python venv. Karena itu seluruh
+  listing, README, dan slide kini memakai
+  `test -d ../.venv || python3 -m venv ../.venv`.
+- Volume `chapter03_data-awe` milik `awe-db` dibuat 4 September dengan user
+  `awe`, sebelum compose diganti ke `admin`. Pada 9 November role `admin`
+  ditambahkan dan data Bab 3 dimuat ulang dari `01-skema.sql` dan
+  `02-data-uji.sql`, sehingga `awe-db` kini dapat dipakai seperti tertulis.
 - Container `awe4-db`, `awe4-redis`, `awe5-db`, `awe6-db`, `awe7-db`,
   `awe9-biru`, dan `awe9-hijau` dalam keadaan *stop*. Volume basis data Bab 4
   sampai Bab 7 dan image `awe9-layanan` masih ada. Hapus dengan
@@ -150,8 +176,28 @@ adalah edisi referensi.
   dipakai. Bab 8, Bab 11, dan Bab 14 sengaja tidak memakai container sama
   sekali.
 - Container `awe3-cek-db` di port 5439 beserta volume `ch03-cek_data-awe3cek`
-  dibuat untuk memeriksa Bab 3 tanpa menyentuh `awe-db`. Keduanya dalam
-  keadaan *stop* dan boleh dihapus bila tidak dipakai.
+  dibuat untuk memeriksa Bab 3 tanpa menyentuh `awe-db`. Sejak `awe-db` dapat
+  dipakai lagi, keduanya tidak diperlukan dan boleh dihapus.
+- Dua angka contoh layak diukur ulang di komputer yang sedang sepi. Pada
+  9 November p95 `/api/terlaris` Bab 5 sekitar 262 milidetik, di bawah budget
+  400 milidetik, sehingga `gate-budget.py` mencetak "Gagal: 5", bukan 6
+  seperti `lst:gate-jalan`, `lst:c5-lat1-jalan`, dan `tab:c5-lat1-contoh`.
+  Angka Bab 5 untuk *query* itu dua sampai tiga kali lebih lambat daripada
+  angka Bab 4 untuk *query* yang sama. Kolom "p50, 1" di
+  `tab:c4-lat3-contoh` juga sekitar dua kali waktu satu *query* di bab itu.
+- `rekam-har.py` Bab 2 meminta Chrome memilih port debug sendiri dan membaca
+  `DevToolsActivePort` dari profilnya, karena port tetap 9222 bentrok dengan
+  Chrome lain di komputer yang sama. Profil sementaranya kini dihapus sesudah
+  rekaman.
+- Pilihan `javascript_hidup=False` di `sources/chapter11/pengukur.py` tidak
+  berjalan pada Chrome 157: `--dump-dom` dengan `scriptEnabled=false`
+  mencetak 0 byte. Belum ada yang memanggilnya, karena `ukur-tanpa-js.py`
+  memakai rute `blokir_skrip=1`.
+- Repositori RAG Bab 15 diklon dari `github.com/alfa-yohannis/exim`, `djp`,
+  dan `akreditasi` ke `sources/chapter15/rag/`, yang tidak dilacak git.
+  Skripnya dijalankan sesudah `source ../.venv/bin/activate`, karena
+  pemanggilan `../.venv/bin/python` lewat jalur relatif membuat Python 3.14
+  mencetak peringatan `sys.prefix`.
 - Label keluaran `ukur-query.py` Bab 3, `worker.py` Bab 13, dan
   `ukur-offline.py` Bab 14 diganti mengikuti daftar istilah. Kutipan
   keluarannya ditulis ulang dengan angka pengukuran yang sama, seperti pada

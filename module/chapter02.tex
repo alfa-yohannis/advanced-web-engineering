@@ -1,18 +1,5 @@
 \chapter{Browser, HTTP, dan Network Internals}
 
-\ifajar
-\section*{Tujuan Pembelajaran}
-\begin{itemize}
-  \item Menjelaskan urutan peristiwa yang terjadi sejak sebuah alamat diketik
-        sampai halaman tampil di layar, beserta biaya waktu tiap tahapnya.
-  \item Membedakan HyperText Transfer Protocol (HTTP) versi 1.1, HTTP/2, dan
-        HTTP/3 berdasarkan cara ketiganya menangani banyak permintaan
-        sekaligus.
-  \item Mengukur performa sebuah aplikasi web memakai \textit{browser DevTools}
-        dan menetapkan angka \textit{baseline} yang dapat diuji ulang.
-\end{itemize}
-\fi
-
 \section{Pendahuluan}
 
 Aplikasi web yang lambat jarang disebabkan oleh satu masalah besar. Biasanya
@@ -1069,7 +1056,3 @@ mewakili pengalaman pengguna, dan angka itu dibaca pada persentil ke-75 agar
 pengguna dengan perangkat lambat tidak tertutupi. Pesan terakhirnya paling
 penting: optimasi tanpa \textit{baseline} tidak dapat dibuktikan, sehingga
 pengukuran selalu didahulukan.
-
-\ifajar
-  \input{latihan02}
-\fi

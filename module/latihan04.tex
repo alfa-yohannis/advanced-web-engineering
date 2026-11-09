@@ -1,8 +1,17 @@
-\ifajar
-  \section{Latihan}
-\else
-  \section{Bab 4: Caching, Consistency, dan Resilience}
-\fi
+\section{Bab 4: Caching, Consistency, dan Resilience}
+
+\subsection*{Tujuan Pembelajaran}
+\begin{itemize}
+  \item Menjelaskan cara browser, Content Delivery Network (CDN), dan
+        \textit{cache} aplikasi memutuskan apakah sebuah \textit{response} boleh dipakai
+        ulang, berdasarkan header \texttt{Cache-Control}, \texttt{ETag}, dan
+        masa berlakunya.
+  \item Mengukur untung rugi pola \textit{cache-aside}, termasuk data \textit{stale} dan
+        lonjakan \textit{query} yang muncul ketika sebuah kunci kedaluwarsa.
+  \item Merancang batas waktu, \textit{retry}, dan \textit{circuit breaker} untuk
+        panggilan ke layanan lain, lalu membuktikan pengaruhnya ketika layanan
+        itu melambat.
+\end{itemize}
 
 Seluruh file yang dipakai pada latihan ini tersedia di
 \berkas{sources/chapter04/}, dihitung relatif terhadap akar repositori. Basis
@@ -19,7 +28,9 @@ beserta penjelasannya, bukan angka persisnya.
 
 Penyiapannya dilakukan sekali, seperti pada Listing \ref{lst:c4-siapkan}.
 Skrip \texttt{siapkan-data.sh} memakai ulang skema, data uji, dan indeks
-milik Bab 3.
+milik Bab 3. Listing penyiapan masuk ke direktori bab ini lebih dahulu, dan
+seluruh perintah sesudahnya dijalankan dari sana. Bila membuka terminal baru,
+masuk kembali dengan \texttt{cd sources/chapter04} dari akar repositori.
 
 \begin{lstlisting}[language=bash, caption={Menyiapkan basis data dan Redis, memakai \berkas{sources/chapter04/siapkan-data.sh}}, label={lst:c4-siapkan}]
 cd sources/chapter04
@@ -41,16 +52,11 @@ Bab ini menambahkan pustaka \texttt{redis} pada venv bersama di
 \berkas{sources/.venv}, seperti pada Listing \ref{lst:c4-venv}.
 
 \begin{lstlisting}[language=bash, caption={Menyiapkan venv untuk seluruh skrip Python}, label={lst:c4-venv}]
-cd sources
-python3 -m venv .venv
-.venv/bin/pip install "psycopg[binary,pool]" sqlalchemy redis
+test -d ../.venv || python3 -m venv ../.venv
+../.venv/bin/pip install "psycopg[binary,pool]" sqlalchemy redis
 \end{lstlisting}
 
-\ifajar
-  \subsection*{Latihan 1: Membaca Kebijakan Cache}
-\else
-  \subsection*{Prosedur 1: Membaca Kebijakan Cache}
-\fi
+\subsection*{Latihan 1: Membaca Kebijakan Cache}
 
 Latihan ini membuktikan bahwa kebijakan \textit{cache} dapat dibaca langsung
 dari header, dan bahwa validasi ulang menghemat isi tetapi tidak menghemat
@@ -79,13 +85,8 @@ bersyarat.
         terbuka dan \emph{Disable cache} tidak dicentang. Muat ulang halaman
         dua kali, lalu catat kolom \emph{Status} dan \emph{Size} untuk halaman
         dan untuk \texttt{app.3f9a2c.js}.
-\ifajar
-  \item Isi \tabisi{tab:c4-lat1-hasil}. Tabel \ref{tab:c4-lat1-contoh}
+  \item Isi Tabel \ref{tab:c4-lat1-hasil}. Tabel \ref{tab:c4-lat1-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c4-lat1-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa halaman selalu
         ditanyakan ulang, sedangkan aset aplikasi tidak pernah ditanyakan
         ulang? Kedua, berapa byte yang dihemat oleh \textit{response} 304 pada halaman
@@ -135,7 +136,6 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil Latihan 1}
@@ -154,7 +154,6 @@ curl -s -o /dev/null -w "%{http_code} %{size_download} byte\n" \
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
 Satu hal pada contoh tersebut layak diperhatikan. \texttt{ETag} aset kampus,
 yaitu \texttt{67d3dca2-965}, tersusun dari dua bilangan heksadesimal. Bilangan
@@ -165,11 +164,7 @@ versinya dari waktu ubah dan ukuran file, tidak dari isinya seperti
 \texttt{aplikasi.py}. Masa \textit{fresh} pada baris ketiga bergantung pada tanggal
 pemeriksaan, sehingga angka tiap mahasiswa akan berbeda.
 
-\ifajar
-  \subsection*{Latihan 2: Cache-Aside dan Cache yang Macet}
-\else
-  \subsection*{Prosedur 2: Cache-Aside dan Cache yang Macet}
-\fi
+\subsection*{Latihan 2: Cache-Aside dan Cache yang Macet}
 
 Latihan ini membuktikan bahwa \textit{cache-aside} memangkas waktu tunggu
 server, dan bahwa \textit{cache} yang macet justru memperlambat aplikasi.
@@ -183,13 +178,8 @@ server, dan bahwa \textit{cache} yang macet justru memperlambat aplikasi.
   \item Bekukan Redis dengan \texttt{docker compose pause cache}, ukur
         \texttt{/api/terlaris-cache} 20 kali, lalu cairkan lagi dengan
         \texttt{docker compose unpause cache}.
-\ifajar
-  \item Isi \tabisi{tab:c4-lat2-hasil}. Tabel \ref{tab:c4-lat2-contoh}
+  \item Isi Tabel \ref{tab:c4-lat2-hasil}. Tabel \ref{tab:c4-lat2-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c4-lat2-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa nilai terbesar pada
         baris \textit{cache-aside} hampir sama dengan p50 baris tanpa
         \textit{cache}? Kedua, dari mana angka sekitar 185 milidetik pada
@@ -200,7 +190,6 @@ server, dan bahwa \textit{cache} yang macet justru memperlambat aplikasi.
 \end{enumerate}
 
 \begin{lstlisting}[language=bash, caption={Mengukur waktu sampai byte pertama, tersedia di \berkas{sources/chapter04/ukur-ttfb.py}}, label={lst:c4-lat2-jalan}]
-cd sources/chapter04
 source ../.venv/bin/activate
 docker compose exec -T cache redis-cli DEL terlaris:30hari
 python ukur-ttfb.py http://localhost:8000/api/terlaris 50
@@ -234,7 +223,6 @@ python ukur-ttfb.py http://localhost:8000/api/terlaris-cache 50
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil Latihan 2, dalam milidetik}
@@ -251,7 +239,6 @@ python ukur-ttfb.py http://localhost:8000/api/terlaris-cache 50
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
 Baris ketiga pada contoh terisi tampak janggal, karena \textit{cache} yang
 seharusnya mempercepat justru membuat \textit{response} dua setengah kali lebih lambat.
@@ -260,11 +247,7 @@ SET, ditambah \textit{query} yang tetap harus dijalankan. Aplikasi tetap menjawa
 seluruh 20 permintaan karena \textit{error} Redis ditelan dan \textit{retry} bawaan
 pustakanya dimatikan.
 
-\ifajar
-  \subsection*{Latihan 3: Cache Stampede}
-\else
-  \subsection*{Prosedur 3: Cache Stampede}
-\fi
+\subsection*{Latihan 3: Cache Stampede}
 
 Latihan ini membuktikan bahwa kunci yang kedaluwarsa dapat menghantam basis
 data dengan banyak \textit{query} yang sama, lalu membandingkan dua cara meredamnya.
@@ -278,13 +261,8 @@ data dengan banyak \textit{query} yang sama, lalu membandingkan dua cara meredam
   \item Jalankan sekali lagi dengan satu permintaan saja, yaitu
         \texttt{python stampede.py 1}, lalu bandingkan baris
         \texttt{stale\_while\_revalidate} dengan hasil 50 permintaan.
-\ifajar
-  \item Isi \tabisi{tab:c4-lat3-hasil}. Tabel \ref{tab:c4-lat3-contoh}
+  \item Isi Tabel \ref{tab:c4-lat3-hasil}. Tabel \ref{tab:c4-lat3-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c4-lat3-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa p50
         \texttt{tanpa\_pengaman} jauh lebih besar daripada waktu satu \textit{query},
         padahal \textit{query}-nya sama persis? Hubungkan jawabannya dengan ukuran \textit{connection
@@ -294,7 +272,6 @@ data dengan banyak \textit{query} yang sama, lalu membandingkan dua cara meredam
 \end{enumerate}
 
 \begin{lstlisting}[language=bash, caption={Memperagakan \textit{cache stampede}, tersedia di \berkas{sources/chapter04/stampede.py}}, label={lst:c4-lat3-jalan}]
-cd sources/chapter04
 source ../.venv/bin/activate
 python stampede.py
 
@@ -324,7 +301,6 @@ python stampede.py
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil Latihan 3, waktu dalam milidetik}
@@ -341,7 +317,6 @@ python stampede.py
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
 Angka pada judul kolom menyatakan jumlah permintaan serentak. Kolom terakhir
 pada contoh terisi menjelaskan kejanggalan pada baris ketiga. Dengan satu
@@ -351,11 +326,7 @@ sedangkan Redis sendiri tetap cepat. Baris pertama paling bergantung pada
 komputer uji, karena ditentukan oleh jumlah inti prosesor yang diperebutkan
 \textit{query}.
 
-\ifajar
-  \subsection*{Latihan 4: Data Stale Setelah Perubahan}
-\else
-  \subsection*{Prosedur 4: Data Stale Setelah Perubahan}
-\fi
+\subsection*{Latihan 4: Data Stale Setelah Perubahan}
 
 Latihan ini mengukur berapa lama pengguna masih melihat harga lama setelah
 harga diubah, pada empat cara memperbarui \textit{cache}.
@@ -369,13 +340,8 @@ harga diubah, pada empat cara memperbarui \textit{cache}.
   \item Kembalikan \texttt{TTL\_DETIK} menjadi 5, ubah
         \texttt{JEDA\_HAPUS\_KEDUA\_DETIK} menjadi 1.0, jalankan ulang, lalu
         perhatikan baris terakhir.
-\ifajar
-  \item Isi \tabisi{tab:c4-lat4-hasil}. Tabel \ref{tab:c4-lat4-contoh}
+  \item Isi Tabel \ref{tab:c4-lat4-hasil}. Tabel \ref{tab:c4-lat4-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c4-lat4-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa
         \texttt{hapus\_kalah\_race} sama buruknya dengan
         \texttt{ttl\_saja}? Kedua, baris mana yang berubah ketika TTL dinaikkan
@@ -386,7 +352,6 @@ harga diubah, pada empat cara memperbarui \textit{cache}.
 \end{enumerate}
 
 \begin{lstlisting}[language=bash, caption={Mengukur lama data stale, tersedia di \berkas{sources/chapter04/invalidasi.py}}, label={lst:c4-lat4-jalan}]
-cd sources/chapter04
 source ../.venv/bin/activate
 python invalidasi.py
 
@@ -419,7 +384,6 @@ python invalidasi.py
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil Latihan 4, lama \textit{stale} dalam detik}
@@ -438,7 +402,6 @@ python invalidasi.py
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
 Pada contoh terisi, baris pertama dan ketiga sama persis, termasuk kelebihan
 0,1 detik di atas TTL yang berasal dari selang pemeriksaan. Kesamaan itu
@@ -446,11 +409,7 @@ disengaja oleh skrip, karena \textit{race condition}-nya dipaksa selalu
 terjadi. Pada sistem sungguhan, \textit{race condition} semacam itu jarang
 terjadi, tetapi pada lalu lintas yang tinggi tetap akan terjadi sesekali.
 
-\ifajar
-  \subsection*{Latihan 5: Batas Waktu, Retry, dan Circuit Breaker}
-\else
-  \subsection*{Prosedur 5: Batas Waktu, Retry, dan Circuit Breaker}
-\fi
+\subsection*{Latihan 5: Batas Waktu, Retry, dan Circuit Breaker}
 
 Latihan ini membuktikan bahwa \textit{retry} menolong ketika gangguan hanya
 sesekali, tetapi memperparah keadaan ketika layanan kewalahan, dan bahwa
@@ -468,13 +427,8 @@ sesekali, tetapi memperparah keadaan ketika layanan kewalahan, dan bahwa
         \texttt{circuit\_breaker} pada skenario seluruhnya lambat.
   \item Bekukan Redis, jalankan \texttt{redis-macet.py} seperti pada Listing
         \ref{lst:redis-macet}, lalu cairkan Redis kembali.
-\ifajar
-  \item Isi \tabisi{tab:c4-lat5-hasil}. Tabel \ref{tab:c4-lat5-contoh}
+  \item Isi Tabel \ref{tab:c4-lat5-hasil}. Tabel \ref{tab:c4-lat5-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c4-lat5-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, pada skenario seluruhnya
         lambat, mengapa \texttt{tanpa\_batas\_waktu} berhasil 100 persen tetapi
         tetap disebut cara terburuk? Kedua, berapa kali lipat beban yang
@@ -485,7 +439,6 @@ sesekali, tetapi memperparah keadaan ketika layanan kewalahan, dan bahwa
 \end{enumerate}
 
 \begin{lstlisting}[language=bash, caption={Membandingkan empat cara memanggil layanan yang lambat, tersedia di \berkas{sources/chapter04/resilience.py}}, label={lst:c4-lat5-jalan}]
-cd sources/chapter04
 source ../.venv/bin/activate
 python layanan-lambat.py        # terminal kedua, biarkan menyala
 python resilience.py            # terminal lain
@@ -519,7 +472,6 @@ python resilience.py            # terminal lain
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil Latihan 5}
@@ -542,7 +494,6 @@ python resilience.py            # terminal lain
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
 Tiga angka pada contoh terisi menyimpang dari hitungan di atas kertas, dan
 ketiganya sudah dijelaskan pada Seksi \ref{sec:resilience}. Batas waktu saja

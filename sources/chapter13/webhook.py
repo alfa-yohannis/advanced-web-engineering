@@ -54,7 +54,16 @@ class PenanganWebhook(BaseHTTPRequestHandler):
   disable_nagle_algorithm = True
 
   def do_POST(self):
-    """Melayani penerimaan pengiriman dan pengosongan catatan."""
+    """Melayani penerimaan pengiriman dan pengosongan catatan.
+
+    Isi permintaan dibaca lebih dahulu di setiap alamat, termasuk /reset
+    yang tidak memakainya. Sambungannya keep-alive, sehingga isi yang
+    dibiarkan tertinggal akan terbaca sebagai permintaan berikutnya yang
+    rusak, dan server mencetak traceback BrokenPipeError.
+    """
+    panjang = min(int(self.headers.get("Content-Length", "0")),
+                  BATAS_ISI_BYTE)
+    isi_mentah = self.rfile.read(panjang)
     if self.path == "/reset":
       PENGIRIMAN.clear()
       PERCOBAAN.clear()
@@ -63,9 +72,7 @@ class PenanganWebhook(BaseHTTPRequestHandler):
     if self.path != "/webhook":
       self.kirim_json(404, {"pesan": "alamat tidak dikenal"})
       return
-    panjang = min(int(self.headers.get("Content-Length", "0")),
-                  BATAS_ISI_BYTE)
-    isi = json.loads(self.rfile.read(panjang) or b"{}")
+    isi = json.loads(isi_mentah or b"{}")
     status = catat(isi)
     self.kirim_json(status, {"diterima": status == 200,
                              "percobaan": PERCOBAAN[isi.get("id")]})

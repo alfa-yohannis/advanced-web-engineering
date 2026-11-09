@@ -534,7 +534,7 @@ jobs:
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
 cd sources/chapter01
-python3 -m venv ../.venv
+test -d ../.venv || python3 -m venv ../.venv
 ../.venv/bin/pip install "psycopg[binary,pool]"
 # Dua perintah di atas cukup sekali, bila sources/.venv belum ada.
 python3 periksa-lingkungan.py

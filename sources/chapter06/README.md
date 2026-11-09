@@ -32,7 +32,7 @@ bab lain.
 cd sources/chapter06
 docker compose up -d
 ./siapkan-data.sh
-python3 -m venv ../.venv
+test -d ../.venv || python3 -m venv ../.venv
 ../.venv/bin/pip install "psycopg[binary]" pytest hypothesis jsonschema \
   coverage ruff
 npm install

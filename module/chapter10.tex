@@ -1,21 +1,6 @@
 \chapter{Identity, Authentication, dan Authorization}
 \label{ch:identitas}
 
-\ifajar
-\section*{Tujuan Pembelajaran}
-\begin{itemize}
-  \item Membedakan sesi yang disimpan server dari token bertanda tangan,
-        lalu menyebut akibatnya pada pencabutan dan pada keadaan yang harus
-        disimpan server.
-  \item Merancang pasangan \textit{access token} dan \textit{refresh token}
-        beserta rotasinya, lalu membuktikan pemakaian ulang penanda lama
-        tertangkap.
-  \item Menegakkan hak akses dengan Role-Based Access Control (RBAC) dan Attribute-Based Access Control (ABAC) sekaligus, lalu mengukur
-        keputusannya sebagai matriks pengguna lawan alamat, termasuk isolasi
-        antar-\textit{tenant}.
-\end{itemize}
-\fi
-
 \section{Pendahuluan}
 
 Bab 7 memasang pertahanan yang berlaku bagi semua orang: header, cookie yang
@@ -382,7 +367,3 @@ Batas \textit{tenant} diperiksa paling depan, sebelum peran dan sebelum
 kepemilikan. Permintaan lintas \textit{tenant} dijawab 404, bukan 403, karena
 \textit{response} 403 sudah menyatakan bahwa datanya ada. Dalam sistem yang melayani
 banyak penyewa, keberadaan data pun termasuk yang dijaga.
-
-\ifajar
-  \input{latihan10}
-\fi

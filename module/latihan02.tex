@@ -1,17 +1,20 @@
-\ifajar
-  \section{Latihan}
-\else
-  \section{Bab 2: Browser, HTTP, dan Network Internals}
-\fi
+\section{Bab 2: Browser, HTTP, dan Network Internals}
+
+\subsection*{Tujuan Pembelajaran}
+\begin{itemize}
+  \item Menjelaskan urutan peristiwa yang terjadi sejak sebuah alamat diketik
+        sampai halaman tampil di layar, beserta biaya waktu tiap tahapnya.
+  \item Membedakan HyperText Transfer Protocol (HTTP) versi 1.1, HTTP/2, dan
+        HTTP/3 berdasarkan cara ketiganya menangani banyak permintaan
+        sekaligus.
+  \item Mengukur performa sebuah aplikasi web memakai \textit{browser DevTools}
+        dan menetapkan angka \textit{baseline} yang dapat diuji ulang.
+\end{itemize}
 
 Seluruh skrip yang dipakai pada latihan ini tersedia di
 \berkas{sources/chapter02/}, dihitung relatif terhadap akar repositori.
 
-\ifajar
-  \subsection*{Latihan 1: Profiling dan Penetapan Baseline Performa}
-\else
-  \subsection*{Prosedur 1: Profiling dan Penetapan Baseline Performa}
-\fi
+\subsection*{Latihan 1: Profiling dan Penetapan Baseline Performa}
 
 Latihan ini memakai dua halaman situs kampus sebagai objek pengukuran, yaitu
 halaman depan \url{https://www.pradita.ac.id} dan satu halaman dalam
@@ -37,28 +40,31 @@ dapat dianggap serangan.
         \textit{long task} beserta durasinya.
   \item Jalankan Lighthouse pada mode Mobile, lalu catat LCP, INP, dan CLS.
   \item Ukur TTFB memakai \berkas{sources/chapter02/ukur-koneksi.sh}
-        seperti pada Listing \ref{lst:curl}. Ulangi 20 kali dengan jeda
-        beberapa detik, lalu hitung nilai p50 dan p95 dari hasilnya.
+        dengan jumlah ulangan 20. Skrip itu memberi jeda satu detik
+        antarpermintaan. TTFB tiap baris adalah jumlah empat kolom
+        pertamanya, dari DNS sampai TungguServer, sama dengan nilai
+        \texttt{ttfb} pada Listing \ref{lst:curl}. Hitung nilai p50 dan p95
+        dari kedua puluh nilai itu.
   \item Ulangi langkah 2 sampai 6 pada satu halaman dalam, yaitu
         \url{https://www.pradita.ac.id/praktisi-akademisi}. Halaman itu dipilih
         karena isinya lebih padat daripada halaman depan, sehingga selisih
         angkanya mudah terlihat. Seluruh kondisi pengukuran dijaga sama persis,
         yaitu profil jaringan, faktor \textit{throttling} CPU, dan mode tampilan, agar
         yang dibandingkan benar-benar halamannya, bukan pengaturannya.
-  \item Isi \tabisi{tab:baseline} dengan kedua hasil tersebut, lalu
+  \item Isi Tabel \ref{tab:baseline} dengan kedua hasil tersebut, lalu
         bandingkan. Perhatikan metrik mana yang berubah paling besar, lalu
         jelaskan penyebabnya berdasarkan bukti dari panel Network dan panel
         Performance.
-  \item Isi \tabisi{tab:baseline}, lalu tambahkan satu paragraf berisi
+  \item Isi Tabel \ref{tab:baseline}, lalu tambahkan satu paragraf berisi
         dugaan penyebab keterlambatan terbesar beserta bukti yang mendasarinya.
 \end{enumerate}
 
 \begin{lstlisting}[language=bash, caption={Uji beban dengan k6, tersedia di \berkas{sources/chapter02/skrip-beban.js}, hanya untuk sistem sendiri atau yang sudah berizin}, label={lst:k6}]
+# Sasarannya API Bab 1 di port 8050, yang dinyalakan lebih dahulu.
 k6 run --vus 20 --duration 60s skrip-beban.js
 # Catat http_req_duration untuk p(50) dan p(95).
 \end{lstlisting}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian baseline performa, diisi untuk dua halaman}
@@ -85,13 +91,8 @@ k6 run --vus 20 --duration 60s skrip-beban.js
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 2: Mengukur Biaya Pembukaan Koneksi}
-\else
-  \subsection*{Prosedur 2: Mengukur Biaya Pembukaan Koneksi}
-\fi
+\subsection*{Latihan 2: Mengukur Biaya Pembukaan Koneksi}
 
 Latihan ini membuktikan bahwa biaya pembukaan koneksi ditentukan oleh jaringan,
 bukan oleh kecepatan program di server.
@@ -104,7 +105,7 @@ bukan oleh kecepatan program di server.
   \item Skrip tersebut sudah menghitung durasi tiap tahap memakai rumus pada
         Tabel \ref{tab:lat1-rumus}, karena keluaran \texttt{curl} bersifat
         kumulatif sejak permintaan dimulai.
-  \item Ambil nilai tengah dari lima pengukuran, lalu isi \tabisi{tab:lat1-hasil} dalam milidetik. Tabel \ref{tab:lat1-contoh}
+  \item Ambil nilai tengah dari lima pengukuran, lalu isi Tabel \ref{tab:lat1-hasil} dalam milidetik. Tabel \ref{tab:lat1-contoh}
         memperlihatkan contoh hasil yang sudah terisi.
   \item Jawab tiga pertanyaan berikut. Pertama, berapa persen waktu total yang
         habis sebelum byte pertama tiba? Kedua, tahap mana yang paling besar
@@ -190,7 +191,6 @@ perjalanan menuju \textit{origin} baru terasa pada tahap TLS dan tunggu server.
 Angka pada tabel tersebut juga bergantung pada lokasi pengukur, sehingga hasil
 tiap mahasiswa akan berbeda.
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 2, dalam milidetik}
@@ -207,13 +207,8 @@ tiap mahasiswa akan berbeda.
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 3: Membandingkan HTTP/1.1 dan HTTP/2}
-\else
-  \subsection*{Prosedur 3: Membandingkan HTTP/1.1 dan HTTP/2}
-\fi
+\subsection*{Latihan 3: Membandingkan HTTP/1.1 dan HTTP/2}
 
 Latihan ini memperlihatkan pengaruh \textit{multiplexing} pada halaman dengan
 banyak aset.
@@ -296,16 +291,12 @@ menambahkan kolom \emph{Protocol} dan \emph{Connection ID}.
         menyusut menjadi baris yang cocok saja. Catat nilai kolom
         \emph{Protocol} dan \emph{Connection ID} pada baris itu, lalu ulangi
         untuk kelima aset. Karena hanya lima, penghitungannya cukup manual.
-\ifajar
-  \item Isi baris browser pada \tabisi{tab:lat2-hasil} dari catatan
+  \item Isi baris browser pada Tabel \ref{tab:lat2-hasil} dari catatan
         tersebut. Protokolnya sama untuk kelima aset. Jumlah koneksi dihitung
         dari banyaknya nilai \emph{Connection ID} yang berbeda. Konkurensi
         dilihat dari kolom \emph{Waterfall}, yaitu berapa batang yang mulai
         pada waktu berdekatan. Waktu diambil dari ringkasan \emph{Finish} di
         bagian bawah panel.
-\else
-  \item Catat hasil pengukurannya.
-\fi
   \item Perlu dicatat, pada browser konkurensi tidak dapat ditentukan sendiri.
         Browser yang memutuskan berapa permintaan berjalan bersamaan, dan
         keputusan itu dipengaruhi versi HTTP, prioritas aset, serta batas
@@ -328,13 +319,8 @@ menambahkan kolom \emph{Protocol} dan \emph{Connection ID}.
         dari \texttt{\%\{num\_connects\}} milik \texttt{curl}, sedangkan pada
         browser angka itu terlihat dari banyaknya nilai berbeda pada kolom
         \emph{Connection ID}.
-\ifajar
-  \item Isi \tabisi{tab:lat2-hasil}. Tabel \ref{tab:lat2-contoh}
+  \item Isi Tabel \ref{tab:lat2-hasil}. Tabel \ref{tab:lat2-contoh}
         memperlihatkan contoh hasilnya.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:lat2-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa skenario pertama
         memakai lima koneksi tetapi tetap paling lambat? Kedua, apa yang
         membedakan skenario ketiga dan keempat, padahal konkurensinya sama?
@@ -369,14 +355,18 @@ cd sources/chapter02
 ./banding-http.sh https://www.pradita.ac.id/ 5
 
 # Keluarannya:
-# Host aset dan versi HTTP yang dilayaninya:
-#   www.pradita.ac.id                    HTTP/2    5 aset
+# Tersimpan 5 alamat aset ke aset.txt
+# Sebaran host:
+#       5   www.pradita.ac.id
 #
-#   Skenario                            Konkurensi  Koneksi     Waktu
-#   1. HTTP/1.1 berurutan, koneksi baru      1         5     2.14 detik
-#   2. HTTP/1.1 berurutan, keep-alive        1         1     1.66 detik
-#   3. HTTP/1.1 serentak                     5         5     1.92 detik
-#   4. HTTP/2 serentak                       5         1     1.87 detik
+# Host aset dan versi HTTP yang dilayaninya:
+#   www.pradita.ac.id                             HTTP/2      5 aset
+#
+#   Skenario                           Konkurensi Koneksi     Waktu
+#   1. HTTP/1.1 berurutan, koneksi baru 1           5 koneksi     2.14 detik
+#   2. HTTP/1.1 berurutan, keep-alive  1           1 koneksi     1.66 detik
+#   3. HTTP/1.1 serentak               5           5 koneksi     1.92 detik
+#   4. HTTP/2 serentak                 5           1 koneksi     1.87 detik
 \end{lstlisting}
 
 \begin{table}[!htb]
@@ -444,7 +434,6 @@ curl -sI https://www.google.com/ | grep -i alt-svc
 \end{lstlisting}
 
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 3}
@@ -465,7 +454,6 @@ curl -sI https://www.google.com/ | grep -i alt-svc
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
 Pertanyaan berikutnya, mengapa HTTP/3 tidak ikut diukur. Ada dua alasan yang
 keduanya dapat diperiksa sendiri. Pertama, \texttt{curl} bawaan Ubuntu tidak

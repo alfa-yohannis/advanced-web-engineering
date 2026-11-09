@@ -1,20 +1,6 @@
 \chapter{Type Safety, Kontrak API, dan Desain Layanan}
 \label{ch:kontrak}
 
-\ifajar
-\section*{Tujuan Pembelajaran}
-\begin{itemize}
-  \item Memformalkan satu API (Application Programming Interface) sebagai
-        kontrak OpenAPI, lalu meng-\textit{generate} tipe kliennya dari
-        kontrak tersebut.
-  \item Membedakan validasi \textit{runtime} dari pemeriksaan
-        \textit{compile-time}, lalu menunjukkan kesalahan yang hanya
-        tertangkap masing-masing.
-  \item Memisahkan perubahan kontrak yang aman dari yang merusak klien lama,
-        lalu membuktikannya pada server yang berjalan.
-\end{itemize}
-\fi
-
 \section{Pendahuluan}
 
 API biasanya tidak dirancang, melainkan tumbuh. Satu alamat ditambahkan,
@@ -534,7 +520,3 @@ Pesan utama bab ini adalah tempat aturan disimpan. Aturan yang hidup di
 kontrak dapat di-\textit{generate}, divalidasi, dibandingkan, dan diuji.
 Aturan yang hidup di kepala penulisnya hanya dapat diingat, dan ingatan tidak
 pernah menjadi bagian dari \textit{pipeline}.
-
-\ifajar
-  \input{latihan12}
-\fi

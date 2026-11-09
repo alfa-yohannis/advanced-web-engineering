@@ -1685,7 +1685,7 @@ DSN="postgresql://admin:admin123@localhost/toko"
 docker compose exec -T db psql "$DSN" < 01-skema.sql
 docker compose exec -T db psql "$DSN" < 02-data-uji.sql
 
-# Keluarannya:
+# Keluarannya (dipotong):
 #     tabel     | count
 # --------------+--------
 #  kategori     |     20
@@ -1704,7 +1704,7 @@ docker compose exec -T db psql "$DSN" < 02-data-uji.sql
 \begin{frame}[fragile]{{\Large Venv dan Urutan Kerja}}
   \vspace{2pt}
 \begin{lstlisting}[language=bash]
-python3 -m venv ../.venv
+test -d ../.venv || python3 -m venv ../.venv
 ../.venv/bin/pip install "psycopg[binary,pool]" sqlalchemy
 \end{lstlisting}
 
@@ -2024,6 +2024,8 @@ source ../.venv/bin/activate
 python transaksi-konkuren.py 8 50
 
 # Keluarannya:
+# 8 worker, 50 pengurangan per worker, stok awal 1000
+#
 #   Cara        Diharapkan     Hasil   Hilang   Percobaan
 #   naif               600       950      350         400
 #   atomik             600       600        0         400

@@ -9,7 +9,7 @@
 | `tugas-berat.ts` | Contoh long task yang menahan main thread |
 | `preconnect.html` | Contoh preconnect dan dns-prefetch |
 | `defer-async.html` | Perbandingan script biasa, defer, dan async |
-| `skrip-beban.js` | Skrip k6, hanya untuk sistem sendiri atau yang sudah berizin |
+| `skrip-beban.js` | Skrip k6 terhadap API Bab 1 di port 8050, hanya untuk sistem sendiri atau yang sudah berizin |
 | `rekam-har.py` | Merekam aktivitas jaringan lewat Chrome tanpa antarmuka, hasilnya file HAR |
 | `ringkas-har.py` | Meringkas rekaman HAR dari panel Network, menghitung permintaan, koneksi, protokol, dan waktu |
 
@@ -22,7 +22,7 @@ Seluruh skrip dijalankan dari direktori ini.
 di `sources/.venv`. Bila belum ada, buat sekali saja dari direktori ini:
 
 ```bash
-python3 -m venv ../.venv
+test -d ../.venv || python3 -m venv ../.venv
 ../.venv/bin/pip install websockets
 ```
 

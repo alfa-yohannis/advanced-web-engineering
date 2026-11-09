@@ -1,17 +1,5 @@
 \chapter{Data Engineering untuk Aplikasi Web}
 
-\ifajar
-\section*{Tujuan Pembelajaran}
-\begin{itemize}
-  \item Merancang skema relasional beserta \textit{constraint}-nya, lalu menjelaskan akibat
-        tiap pilihan tipe data, kunci, dan tingkat abstraksi akses data.
-  \item Membaca rencana eksekusi PostgreSQL, lalu menentukan indeks yang tepat
-        beserta kasus ketika indeks justru tidak dipakai.
-  \item Membuktikan secara terukur bahwa batas transaksi, tingkat isolasi, dan
-        jumlah perjalanan ke basis data menentukan \textit{latency} dan kebenaran data.
-\end{itemize}
-\fi
-
 \section{Pendahuluan}
 
 Bab 2 berhenti pada satu angka, yaitu bagian \emph{Waiting} pada panel Network.
@@ -1429,7 +1417,3 @@ skema ditulis sebagai file migrasi berversi yang aman dijalankan sementara
 versi lama aplikasi masih berjalan. Pesan Bab 2 tetap berlaku di lapisan ini,
 hanya alatnya yang berganti: yang dibaca bukan lagi panel Network, melainkan
 rencana eksekusi.
-
-\ifajar
-  \input{latihan03}
-\fi

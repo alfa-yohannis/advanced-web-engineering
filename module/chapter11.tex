@@ -1,21 +1,6 @@
 \chapter{Arsitektur Frontend Berskala Besar}
 \label{ch:frontend}
 
-\ifajar
-\section*{Tujuan Pembelajaran}
-\begin{itemize}
-  \item Membedakan \textit{server state} dari \textit{client state} pada satu
-        halaman, lalu menyebut akibatnya pada ukuran halaman dan pada
-        perilakunya saat berpindah.
-  \item Mengukur biaya hidrasi penuh dan hidrasi selektif pada halaman yang
-        sama, lalu menunjukkan bagian mana yang tumbuh mengikuti besar
-        halaman.
-  \item Merancang \textit{application shell} beserta \textit{routing}, batas
-        \textit{error}, dan \textit{progressive enhancement}-nya, lalu
-        membuktikan isinya tetap tampil ketika skripnya tidak jalan.
-\end{itemize}
-\fi
-
 \section{Pendahuluan}
 
 Bab 8 memilih tempat HyperText Markup Language (HTML) di-\textit{render}, dan Bab 5
@@ -639,7 +624,3 @@ diletakkan paling bawah, lalu skrip ditambahkan hanya pada bagian yang
 memang butuh hidup. Dengan urutan itu, halaman 200 buku tetap menampilkan 200
 baris dan penyaringnya tetap bekerja walaupun seluruh skripnya diblokir, dan
 satu wilayah yang gagal tidak membawa serta sisa halamannya.
-
-\ifajar
-  \input{latihan11}
-\fi

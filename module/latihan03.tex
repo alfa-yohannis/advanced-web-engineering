@@ -1,8 +1,14 @@
-\ifajar
-  \section{Latihan}
-\else
-  \section{Bab 3: Data Engineering untuk Aplikasi Web}
-\fi
+\section{Bab 3: Data Engineering untuk Aplikasi Web}
+
+\subsection*{Tujuan Pembelajaran}
+\begin{itemize}
+  \item Merancang skema relasional beserta \textit{constraint}-nya, lalu menjelaskan akibat
+        tiap pilihan tipe data, kunci, dan tingkat abstraksi akses data.
+  \item Membaca rencana eksekusi PostgreSQL, lalu menentukan indeks yang tepat
+        beserta kasus ketika indeks justru tidak dipakai.
+  \item Membuktikan secara terukur bahwa batas transaksi, tingkat isolasi, dan
+        jumlah perjalanan ke basis data menentukan \textit{latency} dan kebenaran data.
+\end{itemize}
 
 Seluruh file yang dipakai pada latihan ini tersedia di
 \berkas{sources/chapter03/}, dihitung relatif terhadap akar repositori.
@@ -27,7 +33,7 @@ DSN="postgresql://admin:admin123@localhost/toko"
 docker compose exec -T db psql "$DSN" < 01-skema.sql
 docker compose exec -T db psql "$DSN" < 02-data-uji.sql
 
-# Keluarannya:
+# Keluarannya (dipotong):
 #     tabel     | count
 # --------------+--------
 #  kategori     |     20
@@ -58,15 +64,11 @@ Skrip Python memakai venv bersama di \berkas{sources/.venv}. Bila belum ada,
 buat sekali seperti pada Listing \ref{lst:c3-venv}.
 
 \begin{lstlisting}[language=bash, caption={Menyiapkan venv untuk seluruh skrip Python}, label={lst:c3-venv}]
-python3 -m venv ../.venv
+test -d ../.venv || python3 -m venv ../.venv
 ../.venv/bin/pip install "psycopg[binary,pool]" sqlalchemy
 \end{lstlisting}
 
-\ifajar
-  \subsection*{Latihan 1: Menetapkan Baseline Query}
-\else
-  \subsection*{Prosedur 1: Menetapkan Baseline Query}
-\fi
+\subsection*{Latihan 1: Menetapkan Baseline Query}
 
 Latihan ini menetapkan angka awal. Yang diukur adalah waktu eksekusi dan bentuk
 rencananya, sebelum satu indeks pun ditambahkan.
@@ -88,13 +90,8 @@ rencananya, sebelum satu indeks pun ditambahkan.
         untuk \texttt{query/q1.sql} sampai \texttt{query/q4.sql}, lalu catat p50
         dan p95. Jalankan pertama sengaja dibuang oleh skrip,
         karena menanggung pengisian \textit{cache}.
-\ifajar
-  \item Isi \tabisi{tab:c3-lat1-hasil}. Tabel \ref{tab:c3-lat1-contoh}
+  \item Isi Tabel \ref{tab:c3-lat1-hasil}. Tabel \ref{tab:c3-lat1-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c3-lat1-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, \textit{query} mana yang membuang baris
         terbanyak dibanding baris yang dikembalikannya? Kedua, \textit{query} mana yang
         punya \textit{node} Sort, dan mengapa \textit{node} itu muncul? Ketiga, mengapa p95
@@ -144,7 +141,6 @@ python ukur-query.py query/q1.sql 20
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 1, dalam milidetik}
@@ -163,13 +159,8 @@ python ukur-query.py query/q1.sql 20
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 2: Memilih Indeks dan Membaca Perubahannya}
-\else
-  \subsection*{Prosedur 2: Memilih Indeks dan Membaca Perubahannya}
-\fi
+\subsection*{Latihan 2: Memilih Indeks dan Membaca Perubahannya}
 
 Latihan ini membuktikan bahwa indeks bukan perbaikan yang berlaku umum,
 melainkan jawaban atas satu bentuk \textit{query} tertentu.
@@ -186,14 +177,9 @@ melainkan jawaban atas satu bentuk \textit{query} tertentu.
         sama persis. Rencana sesudah indeks disimpan ke \texttt{sesudah.txt},
         bukan \texttt{baseline.txt}, agar rencana sebelum indeks tidak
         tertimpa.
-\ifajar
-  \item Isi \tabisi{tab:c3-lat2-hasil}, lalu bandingkan dengan dugaan pada
+  \item Isi Tabel \ref{tab:c3-lat2-hasil}, lalu bandingkan dengan dugaan pada
         langkah pertama. Tabel \ref{tab:c3-lat2-contoh} memperlihatkan contoh yang
         sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c3-lat2-contoh}.
-\fi
   \item Jawab dua pertanyaan berikut. Pertama, mengapa Q4 tidak membaik
         walaupun kolom \texttt{status} sering dipakai sebagai penyaring? Kedua,
         mengapa Q2 hanya membaik sedikit padahal indeksnya terpakai?
@@ -243,7 +229,6 @@ bergantung pada perangkat keras dan versi PostgreSQL yang dipakai, sehingga
 hasil tiap mahasiswa akan berbeda. Yang dilaporkan adalah pola perbandingannya
 beserta penjelasannya, bukan angka persisnya.
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 2}
@@ -262,13 +247,8 @@ beserta penjelasannya, bukan angka persisnya.
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 3: Menghilangkan Masalah N+1}
-\else
-  \subsection*{Prosedur 3: Menghilangkan Masalah N+1}
-\fi
+\subsection*{Latihan 3: Menghilangkan Masalah N+1}
 
 Latihan ini memperlihatkan bahwa jumlah perjalanan ke basis data adalah metrik
 tersendiri, terpisah dari lama tiap \textit{query}-nya.
@@ -278,7 +258,7 @@ tersendiri, terpisah dari lama tiap \textit{query}-nya.
         pesanan, yaitu \texttt{python n-plus-1.py 5} dan
         \texttt{python n-plus-1.py 25}. Pelanggan tersibuk pada data uji punya
         25 pesanan, sehingga angka yang lebih besar tetap mengambil 25.
-  \item Catat jumlah \textit{query} dan waktunya untuk tiap ukuran, lalu isi \tabisi{tab:c3-lat3-hasil}. Tabel \ref{tab:c3-lat3-contoh} memperlihatkan contoh
+  \item Catat jumlah \textit{query} dan waktunya untuk tiap ukuran, lalu isi Tabel \ref{tab:c3-lat3-hasil}. Tabel \ref{tab:c3-lat3-contoh} memperlihatkan contoh
         yang sudah terisi.
   \item Perhatikan baris terakhir keluarannya, yang membuktikan kedua cara
         mengembalikan data yang sama persis. Perbaikan yang mengubah hasil bukan
@@ -321,7 +301,6 @@ python n-plus-1.py 25
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 3}
@@ -338,13 +317,8 @@ python n-plus-1.py 25
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 4: Membuktikan Lost Update}
-\else
-  \subsection*{Prosedur 4: Membuktikan Lost Update}
-\fi
+\subsection*{Latihan 4: Membuktikan Lost Update}
 
 Latihan ini membuktikan bahwa kode yang benar untuk satu pengguna dapat salah
 untuk banyak pengguna, lalu membandingkan biaya tiap pengamannya.
@@ -352,7 +326,7 @@ untuk banyak pengguna, lalu membandingkan biaya tiap pengamannya.
 \begin{enumerate}
   \item Jalankan perintah pada Listing \ref{lst:c3-lat4-jalan} dengan 8 \textit{worker}
         dan 50 pengurangan.
-  \item Catat kolom Hilang dan Percobaan untuk keempat cara, lalu isi \tabisi{tab:c3-lat4-hasil}.
+  \item Catat kolom Hilang dan Percobaan untuk keempat cara, lalu isi Tabel \ref{tab:c3-lat4-hasil}.
         Tabel \ref{tab:c3-lat4-contoh} memperlihatkan contoh yang sudah terisi.
   \item Ulangi dengan 2 \textit{worker}, yaitu
         \texttt{python transaksi-konkuren.py 2 50}, lalu dengan 16
@@ -371,6 +345,8 @@ source ../.venv/bin/activate
 python transaksi-konkuren.py 8 50
 
 # Keluarannya:
+# 8 worker, 50 pengurangan per worker, stok awal 1000
+#
 #   Cara        Diharapkan     Hasil   Hilang   Percobaan
 #   naif               600       950      350         400
 #   atomik             600       600        0         400
@@ -397,7 +373,6 @@ python transaksi-konkuren.py 8 50
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 4, tiap sel diisi hilang / percobaan}
@@ -416,7 +391,6 @@ python transaksi-konkuren.py 8 50
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
 Setelah seluruh latihan selesai, container dihentikan dengan
 \texttt{docker compose down -v}. Opsi \texttt{-v} ikut menghapus volume

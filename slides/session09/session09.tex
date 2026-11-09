@@ -727,8 +727,8 @@ python3 dashboard.py
 
 # Keluarannya:
 #   Versi                       Minta   Gagal  % gagal   Rata ms   p95 ms
-#   biru                          450       0      0.0       5.1       10
-#   hijau                          50       2      4.0      20.1       25
+#   biru                          280       0      0.0       5.1       10
+#   hijau                         120       4      3.3      20.1       25
 \end{lstlisting}
   \vspace{4pt}
   {\footnotesize Pertanyaan: mengapa p95 selalu jatuh pada angka yang sama
@@ -773,6 +773,7 @@ python3 alarm.py
 echo $?
 docker build -t awe9-layanan .
 docker run -d --name awe9-uji -e VERSI=biru -p 8065:8061 awe9-layanan
+sleep 1  # beri waktu aplikasi di dalam container untuk siap
 curl -s http://127.0.0.1:8065/sehat
 
 # Keluarannya:

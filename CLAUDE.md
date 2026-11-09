@@ -55,17 +55,28 @@ sebagai satu suara.
 
 ## 2. Struktur bab
 
-Urutan seksi tetap, tanpa perkecualian:
+Buku ini adalah buku referensi yang dapat juga digunakan sebagai buku ajar.
+Badan bab ditulis sebagai referensi. Tujuan pembelajaran dan latihan tiap bab
+ditulis di `module/latihanNN.tex`, lalu dikumpulkan di Lampiran A, Latihan dan
+Prosedur Pengukuran. Keduanya tidak dicetak di badan bab.
 
-1. `\section*{Tujuan Pembelajaran}` — tepat tiga butir, tiap butir berupa kata
-   kerja terukur (Menjelaskan, Membedakan, Mengukur, Merancang), bukan
-   "Memahami" atau "Mengetahui".
-2. `\section{Pendahuluan}` — dua sampai tiga paragraf. Paragraf terakhir
+Urutan seksi di `module/chapterNN.tex` tetap, tanpa perkecualian:
+
+1. `\section{Pendahuluan}` — dua sampai tiga paragraf. Paragraf terakhir
    menyebut referensi utama bab tersebut dengan `\cite{}`.
-3. Seksi materi, tiga sampai delapan buah.
-4. `\section{Ringkasan}` — empat sampai lima paragraf naratif, bukan daftar
+2. Seksi materi, tiga sampai delapan buah.
+3. `\section{Ringkasan}` — empat sampai lima paragraf naratif, bukan daftar
    berbutir. Paragraf terakhir menutup dengan pesan utama bab.
-5. `\section{Latihan}` — lihat bagian 6 di bawah.
+
+Urutan di `module/latihanNN.tex`:
+
+1. `\section{Bab N: Judul Bab}`.
+2. `\subsection*{Tujuan Pembelajaran}` — tepat tiga butir, tiap butir berupa
+   kata kerja terukur (Menjelaskan, Membedakan, Mengukur, Merancang), bukan
+   "Memahami" atau "Mengetahui".
+3. Paragraf pengantar: letak file sumbernya dan syarat yang berlaku untuk
+   seluruh latihan bab itu.
+4. Satu atau lebih `\subsection*{Latihan N: Judul}` — lihat bagian 6 di bawah.
 
 **Tidak ada seksi Praktikum.** Kegiatan praktikum diwujudkan sebagai Latihan.
 Syarat penilaian yang dahulu ditulis di seksi Praktikum dipindahkan ke paragraf
@@ -210,7 +221,10 @@ yang sama diulang pada berkas skripnya.
 ## 9. Struktur repositori
 
 - Naskah bab: `module/chapterNN.tex`, disatukan oleh
-  `module/advanced-web-engineering.tex`.
+  `module/advanced-web-engineering.tex` bersama `module/preamble.tex`,
+  `module/prakata.tex`, dan `module/metode.tex`.
+- Tujuan pembelajaran dan latihan: `module/latihanNN.tex`, dikumpulkan
+  `module/lampiran-latihan.tex` sebagai Lampiran A.
 - Berkas pendukung: `sources/chapterNN/`, satu direktori per bab, masing-masing
   punya `README.md` berisi tabel daftar berkas dan kegunaannya.
 - Slide: `slides/sessionNN/sessionNN.tex`, memakai tema di `slides/theme/`.

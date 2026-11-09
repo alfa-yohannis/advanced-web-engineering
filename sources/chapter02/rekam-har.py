@@ -21,10 +21,18 @@ import tempfile
 import time
 import urllib.request
 from datetime import datetime, timezone
+from pathlib import Path
 
 import websockets
 
-PORT = 9222
+# Port 0 meminta Chrome memilih sendiri port debug yang kosong. Port tetap
+# seperti 9222 sering sudah dipakai Chrome lain di komputer yang sama, dan
+# skrip lalu tersambung ke browser yang salah.
+PORT_DEBUG_PILIHAN_CHROME = 0
+# Chrome menulis port pilihannya di baris pertama file ini, di profilnya.
+NAMA_FILE_PORT_DEBUG = "DevToolsActivePort"
+JUMLAH_PERCOBAAN_DEBUG = 50
+JEDA_PERCOBAAN_DETIK = 0.2
 DIAM = 2.0  # detik tanpa permintaan baru sebelum perekaman dihentikan
 BATAS = 60.0  # batas waktu keseluruhan
 
@@ -37,20 +45,50 @@ def cari_chrome():
   sys.exit("Chrome tidak ditemukan.")
 
 
-def alamat_debug():
-  for _ in range(50):
-    try:
-      with urllib.request.urlopen(f"http://127.0.0.1:{PORT}/json") as r:
-        for target in json.load(r):
-          if target.get("type") == "page":
-            return target["webSocketDebuggerUrl"]
-    except Exception:
-      time.sleep(0.2)
-  sys.exit("Chrome tidak menjawab pada porta debug.")
+def baca_port_debug(direktori_profil):
+  """Membaca port debug yang dipilih Chrome, atau None bila belum siap.
+
+  File itu berada di profil milik skrip ini, sehingga port yang terbaca
+  pasti milik Chrome yang baru dijalankan, bukan Chrome lain yang kebetulan
+  sedang terbuka.
+  """
+  file_port = Path(direktori_profil) / NAMA_FILE_PORT_DEBUG
+  try:
+    baris_pertama = file_port.read_text(encoding="utf-8").splitlines()[0]
+  except (OSError, IndexError):
+    return None
+  return int(baris_pertama) if baris_pertama.isdigit() else None
 
 
-async def rekam(url, file_har):
-  ws_url = alamat_debug()
+def alamat_debug(direktori_profil):
+  """Menunggu Chrome siap, lalu mengembalikan alamat WebSocket tab-nya.
+
+  Selama port belum tertulis atau tab belum terdaftar, pemeriksaan diulang
+  sebentar lagi. Bila Chrome tetap tidak menjawab, skrip berhenti dengan
+  pesan, bukan menunggu selamanya.
+  """
+  for _ in range(JUMLAH_PERCOBAAN_DEBUG):
+    port_debug = baca_port_debug(direktori_profil)
+    if port_debug:
+      alamat_daftar_tab = f"http://127.0.0.1:{port_debug}/json"
+      try:
+        with urllib.request.urlopen(alamat_daftar_tab) as response:
+          for target in json.load(response):
+            if target.get("type") == "page":
+              return target["webSocketDebuggerUrl"]
+      except (OSError, ValueError):
+        pass
+    time.sleep(JEDA_PERCOBAAN_DETIK)
+  sys.exit("Chrome tidak menjawab pada port debug.")
+
+
+async def rekam(url, file_har, direktori_profil):
+  """Membuka satu alamat di Chrome milik skrip ini, lalu menulis file HAR.
+
+  Direktori profil dikirim agar alamat debug dibaca dari Chrome yang
+  dijalankan main(), bukan ditebak dari nomor port yang tetap.
+  """
+  ws_url = alamat_debug(direktori_profil)
   permintaan, respons, selesai = {}, {}, {}
   pesan_ke = 0
 
@@ -125,24 +163,33 @@ async def rekam(url, file_har):
 
 
 def main():
+  """Menjalankan Chrome tanpa antarmuka dengan profil sendiri, lalu merekam.
+
+  Profil baru membuat Chrome ini terpisah dari Chrome pengguna, termasuk
+  dari cache dan port debug-nya.
+  """
   if len(sys.argv) < 2:
     sys.exit("Pemakaian: ./rekam-har.py <alamat> [file.har]")
 
   url = sys.argv[1]
   file_har = sys.argv[2] if len(sys.argv) > 2 else "rekaman.har"
 
-  profil = tempfile.mkdtemp(prefix="chrome-rekam-")
-  chrome = subprocess.Popen(
-      [cari_chrome(), "--headless=new", "--disable-gpu", "--no-sandbox",
-       f"--remote-debugging-port={PORT}", f"--user-data-dir={profil}",
-       "--window-size=1280,900", "about:blank"],
-      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-  )
-  try:
-    asyncio.run(rekam(url, file_har))
-  finally:
-    chrome.terminate()
-    chrome.wait(timeout=10)
+  # Profil sementara dihapus begitu Chrome berhenti. Tanpa itu, tiap rekaman
+  # meninggalkan sekitar 39 MB di /tmp.
+  with tempfile.TemporaryDirectory(prefix="chrome-rekam-",
+                                   ignore_cleanup_errors=True) as profil:
+    chrome = subprocess.Popen(
+        [cari_chrome(), "--headless=new", "--disable-gpu", "--no-sandbox",
+         f"--remote-debugging-port={PORT_DEBUG_PILIHAN_CHROME}",
+         f"--user-data-dir={profil}", "--window-size=1280,900",
+         "about:blank"],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+    )
+    try:
+      asyncio.run(rekam(url, file_har, profil))
+    finally:
+      chrome.terminate()
+      chrome.wait(timeout=10)
 
 
 if __name__ == "__main__":

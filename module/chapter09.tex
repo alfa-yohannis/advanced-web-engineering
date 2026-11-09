@@ -1,21 +1,6 @@
 \chapter{Cloud Deployment, DevOps, dan Observability}
 \label{ch:deployment}
 
-\ifajar
-\section*{Tujuan Pembelajaran}
-\begin{itemize}
-  \item Mengemas satu layanan sebagai \textit{container} yang setelannya
-        datang dari \textit{environment}, lalu menjalankan dua versi dari
-        artefak yang sama persis.
-  \item Menjalankan rilis \textit{blue-green}, \textit{canary}, dan
-        \textit{rollback} lewat satu \textit{reverse proxy}, lalu mengukur
-        pembagian permintaan yang benar-benar terjadi.
-  \item Menginstrumentasi layanan dengan \textit{log}, metrik, dan
-        \textit{trace}, lalu menilainya terhadap Service Level Objective (SLO) sebagai alarm yang
-        keluar dengan status gagal.
-\end{itemize}
-\fi
-
 \section{Pendahuluan}
 
 Delapan bab sebelumnya membangun dan memperbaiki aplikasi di komputer
@@ -439,7 +424,3 @@ Pelan belum tentu melanggar, dan itulah alasan batasnya ditulis lebih dahulu.
 Versi hijau dua setengah kali lebih lambat daripada versi biru, tetapi p95
 25 milidetiknya masih di bawah batas 50 milidetik. Tanpa batas yang
 disepakati, angka seperti itu hanya menjadi bahan perdebatan.
-
-\ifajar
-  \input{latihan09}
-\fi

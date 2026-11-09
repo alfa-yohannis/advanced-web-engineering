@@ -1,8 +1,17 @@
-\ifajar
-  \section{Latihan}
-\else
-  \section{Bab 9: Cloud Deployment, DevOps, dan Observability}
-\fi
+\section{Bab 9: Cloud Deployment, DevOps, dan Observability}
+
+\subsection*{Tujuan Pembelajaran}
+\begin{itemize}
+  \item Mengemas satu layanan sebagai \textit{container} yang setelannya
+        datang dari \textit{environment}, lalu menjalankan dua versi dari
+        artefak yang sama persis.
+  \item Menjalankan rilis \textit{blue-green}, \textit{canary}, dan
+        \textit{rollback} lewat satu \textit{reverse proxy}, lalu mengukur
+        pembagian permintaan yang benar-benar terjadi.
+  \item Menginstrumentasi layanan dengan \textit{log}, metrik, dan
+        \textit{trace}, lalu menilainya terhadap Service Level Objective (SLO) sebagai alarm yang
+        keluar dengan status gagal.
+\end{itemize}
 
 Seluruh file yang dipakai pada latihan ini tersedia di
 \berkas{sources/chapter09/}, dihitung relatif terhadap akar repositori.
@@ -22,11 +31,7 @@ VERSI=hijau PORT=8062 python3 aplikasi.py > hijau.log &
 python3 proxy.py > proxy.log &
 \end{lstlisting}
 
-\ifajar
-  \subsection*{Latihan 1: Menjalankan Rilis Canary}
-\else
-  \subsection*{Prosedur 1: Menjalankan Rilis Canary}
-\fi
+\subsection*{Latihan 1: Menjalankan Rilis Canary}
 
 Latihan ini membuktikan bahwa bobot rilis menentukan berapa banyak pengunjung
 yang menanggung risiko versi baru.
@@ -35,7 +40,7 @@ yang menanggung risiko versi baru.
   \item Pastikan \texttt{bobot\_persen\_kedua} di
         \berkas{sources/chapter09/rilis.json} bernilai 10, lalu kirim 200
         permintaan seperti pada Listing \ref{lst:c9-lat1-jalan}.
-  \item Catat pembagian yang terjadi beserta jumlah kegagalannya ke \tabisi{tab:c9-lat1-hasil}. Tabel \ref{tab:c9-lat1-contoh}
+  \item Catat pembagian yang terjadi beserta jumlah kegagalannya ke Tabel \ref{tab:c9-lat1-hasil}. Tabel \ref{tab:c9-lat1-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Ubah bobotnya menjadi 50, kirim 200 permintaan lagi, lalu catat
         kembali. Perhatikan bahwa proxy tidak perlu dinyalakan ulang.
@@ -65,14 +70,13 @@ python3 ukur-rilis.py 200
     \hline
     \textbf{Bobot hijau} & \textbf{Minta} & \textbf{Biru} & \textbf{Hijau} & \textbf{Gagal} \\
     \hline
-    10 persen & 500 & 450 & 50 & 2 \\
+    10 persen & 200 & 180 & 20 & 0 \\
     \hline
-    100 persen & 100 & 0 & 100 & 4 \\
+    50 persen & 200 & 100 & 100 & 4 \\
     \hline
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 1}
@@ -91,13 +95,8 @@ python3 ukur-rilis.py 200
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 2: Membaca Dashboard Operasional}
-\else
-  \subsection*{Prosedur 2: Membaca Dashboard Operasional}
-\fi
+\subsection*{Latihan 2: Membaca Dashboard Operasional}
 
 Latihan ini membuktikan bahwa perbedaan dua versi terbaca dari metrik, tanpa
 perlu membaca kodenya.
@@ -105,7 +104,7 @@ perlu membaca kodenya.
 \begin{enumerate}
   \item Lihat teks metrik mentah salah satu versi, lalu kenali ketiga jenis
         metriknya, seperti pada Listing \ref{lst:c9-lat2-jalan}.
-  \item Jalankan \textit{dashboard} operasionalnya, lalu catat angka kedua versi ke \tabisi{tab:c9-lat2-hasil}. Tabel \ref{tab:c9-lat2-contoh}
+  \item Jalankan \textit{dashboard} operasionalnya, lalu catat angka kedua versi ke Tabel \ref{tab:c9-lat2-hasil}. Tabel \ref{tab:c9-lat2-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Kirim 200 permintaan lagi, lalu jalankan \textit{dashboard}-nya sekali lagi dan
         perhatikan angka mana yang bertambah dan angka mana yang tetap.
@@ -120,8 +119,8 @@ python3 dashboard.py
 
 # Keluarannya:
 #   Versi                       Minta   Gagal  % gagal   Rata ms   p95 ms
-#   biru                          450       0      0.0       5.1       10
-#   hijau                          50       2      4.0      20.1       25
+#   biru                          280       0      0.0       5.1       10
+#   hijau                         120       4      3.3      20.1       25
 \end{lstlisting}
 
 \begin{table}[!htb]
@@ -132,14 +131,13 @@ python3 dashboard.py
     \hline
     \textbf{Versi} & \textbf{Minta} & \textbf{Gagal} & \textbf{Rata ms} & \textbf{p95 ms} \\
     \hline
-    biru & 450 & 0 & 5,1 & 10 \\
+    biru & 280 & 0 & 5,1 & 10 \\
     \hline
-    hijau & 50 & 2 & 20,1 & 25 \\
+    hijau & 120 & 4 & 20,1 & 25 \\
     \hline
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 2}
@@ -158,13 +156,8 @@ python3 dashboard.py
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 3: Menelusuri Satu Permintaan}
-\else
-  \subsection*{Prosedur 3: Menelusuri Satu Permintaan}
-\fi
+\subsection*{Latihan 3: Menelusuri Satu Permintaan}
 
 Latihan ini membuktikan bahwa \textit{trace id} menjawab pertanyaan yang
 tidak dapat dijawab metrik maupun \textit{log} sendirian.
@@ -173,7 +166,7 @@ tidak dapat dijawab metrik maupun \textit{log} sendirian.
   \item Ambil satu \textit{trace id} dari header \texttt{X-Trace-Id} sebuah
         \textit{response}, seperti pada Listing \ref{lst:c9-lat3-jalan}.
   \item Cari penanda itu di kedua file log, lalu catat status dan lamanya di
-        tiap proses ke \tabisi{tab:c9-lat3-hasil}. Tabel
+        tiap proses ke Tabel \ref{tab:c9-lat3-hasil}. Tabel
         \ref{tab:c9-lat3-contoh} memperlihatkan contoh yang sudah terisi.
   \item Ulangi untuk satu permintaan yang gagal, lalu catat di proses mana
         kegagalannya berasal.
@@ -207,7 +200,6 @@ grep -h "300a032b60413b55e53009cc0660f240" proxy.log hijau.log
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil penelusuran Latihan 3}
@@ -226,13 +218,8 @@ grep -h "300a032b60413b55e53009cc0660f240" proxy.log hijau.log
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 4: Menegakkan SLO dan Menjalankan Container}
-\else
-  \subsection*{Prosedur 4: Menegakkan SLO dan Menjalankan Container}
-\fi
+\subsection*{Latihan 4: Menegakkan SLO dan Menjalankan Container}
 
 Latihan ini menutup bab dengan dua hal yang saling melengkapi: batas yang
 dinilai mesin, dan artefak yang dapat dijalankan di mana saja.
@@ -244,11 +231,13 @@ dinilai mesin, dan artefak yang dapat dijalankan di mana saja.
         \berkas{sources/chapter09/slo.json} menjadi 95, jalankan ulang
         alarmnya, lalu catat perubahannya.
   \item Bangun \textit{image} dan jalankan containernya, lalu catat ukuran
-        \textit{image} serta lama sampai siap melayani ke \tabisi{tab:c9-lat4-hasil}. Tabel \ref{tab:c9-lat4-contoh}
+        \textit{image} serta lama sampai siap melayani ke Tabel \ref{tab:c9-lat4-hasil}. Tabel \ref{tab:c9-lat4-contoh}
         memperlihatkan contoh yang sudah terisi.
   \item Hapus baris \texttt{ENV HOST=0.0.0.0} dari
-        \berkas{sources/chapter09/Dockerfile}, bangun ulang, lalu catat apa
-        yang terjadi. Kembalikan sesudahnya.
+        \berkas{sources/chapter09/Dockerfile}, bangun ulang, lalu jalankan
+        containernya lagi. Container lama dihapus lebih dahulu dengan
+        \texttt{docker rm -f awe9-uji}, karena nama dan port-nya masih
+        terpakai. Catat apa yang terjadi, lalu kembalikan Dockerfile-nya.
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa menurunkan SLO bukan
         cara memperbaiki layanan? Kedua, mengapa \textit{build} kedua jauh
         lebih singkat? Ketiga, mengapa container tanpa
@@ -260,6 +249,7 @@ python3 alarm.py
 echo $?
 docker build -t awe9-layanan .
 docker run -d --name awe9-uji -e VERSI=biru -p 8065:8061 awe9-layanan
+sleep 1  # beri waktu aplikasi di dalam container untuk siap
 curl -s http://127.0.0.1:8065/sehat
 
 # Keluarannya:
@@ -287,7 +277,6 @@ curl -s http://127.0.0.1:8065/sehat
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 4}
@@ -310,7 +299,6 @@ curl -s http://127.0.0.1:8065/sehat
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
 Setelah seluruh latihan selesai, ketiga proses dihentikan dengan
 \texttt{kill}, dan containernya dihapus dengan

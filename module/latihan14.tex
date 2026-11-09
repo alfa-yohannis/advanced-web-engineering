@@ -1,8 +1,17 @@
-\ifajar
-  \section{Latihan}
-\else
-  \section{Bab 14: Skalabilitas, Sistem Web Terdistribusi, dan Emerging Web}
-\fi
+\section{Bab 14: Skalabilitas, Sistem Web Terdistribusi, dan Emerging Web}
+
+\subsection*{Tujuan Pembelajaran}
+\begin{itemize}
+  \item Mengukur penskalaan horizontal sampai satu komponen bersama menjadi
+        \textit{bottleneck}, lalu menunjukkan pergeseran
+        \textit{bottleneck}-nya dari angka hasil pengukuran.
+  \item Merancang rencana kapasitas untuk beban 100 kali lipat yang mencakup
+        batas layanan, replikasi, partisi, dan biaya.
+  \item Membandingkan manfaat dan biaya tiga teknologi yang sedang tumbuh,
+        yaitu mode \textit{offline} Progressive Web App (PWA), \textit{cold
+        start} pada \textit{serverless}, dan fitur berbantuan Large Language
+        Model (LLM), berdasarkan hasil pengukuran.
+\end{itemize}
 
 Seluruh file yang dipakai pada latihan ini tersedia di
 \berkas{sources/chapter14/}, dihitung relatif terhadap akar repositori.
@@ -31,11 +40,7 @@ google-chrome --version
 # Google Chrome 157.0.8103.38
 \end{lstlisting}
 
-\ifajar
-  \subsection*{Latihan 1: Penskalaan Horizontal dan Bottleneck yang Pindah}
-\else
-  \subsection*{Prosedur 1: Penskalaan Horizontal dan Bottleneck yang Pindah}
-\fi
+\subsection*{Latihan 1: Penskalaan Horizontal dan Bottleneck yang Pindah}
 
 Latihan ini membuktikan bahwa menambah replika berhenti menolong ketika
 komponen bersamanya penuh, lalu memperlihatkan \textit{bottleneck} pindah
@@ -48,13 +53,8 @@ ketika komponen itu dibesarkan.
         lalu bandingkan hasilnya dengan jumlah \textit{worker}, yaitu 32.
   \item Jalankan ulang dengan \texttt{JUMLAH\_KONEKSI=16} di depan
         perintahnya, lalu catat keempat barisnya.
-\ifajar
-  \item Isi \tabisi{tab:c14-lat1-hasil}. Tabel \ref{tab:c14-lat1-contoh}
+  \item Isi Tabel \ref{tab:c14-lat1-hasil}. Tabel \ref{tab:c14-lat1-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c14-lat1-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa empat dan delapan
         replika berhenti pada angka yang hampir sama dengan empat koneksi?
         Kedua, mengapa p50 empat dan delapan replika sama persis, padahal
@@ -99,7 +99,6 @@ JUMLAH_KONEKSI=16 python3 ukur-skala.py
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 1}
@@ -118,13 +117,8 @@ JUMLAH_KONEKSI=16 python3 ukur-skala.py
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
-\ifajar
-  \subsection*{Latihan 2: Partisi Data dan Kunci yang Pindah}
-\else
-  \subsection*{Prosedur 2: Partisi Data dan Kunci yang Pindah}
-\fi
+\subsection*{Latihan 2: Partisi Data dan Kunci yang Pindah}
 
 Latihan ini membuktikan bahwa cara membagi data menentukan berapa banyak data
 yang harus disalin ketika \textit{node} ditambah, dan bahwa angka yang kecil belum
@@ -136,13 +130,8 @@ tentu baik.
   \item Ubah \texttt{JUMLAH\_NODE\_AKHIR} di \berkas{partisi.py} menjadi 8,
         jalankan ulang, lalu catat kolom kunci pindahnya.
   \item Kembalikan \texttt{JUMLAH\_NODE\_AKHIR} menjadi 5.
-\ifajar
-  \item Isi \tabisi{tab:c14-lat2-hasil}. Tabel \ref{tab:c14-lat2-contoh}
+  \item Isi Tabel \ref{tab:c14-lat2-hasil}. Tabel \ref{tab:c14-lat2-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c14-lat2-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa modulo dari empat ke
         delapan \textit{node} hanya memindahkan 50,0\% kunci, jauh lebih sedikit
         daripada dari empat ke lima? Kedua, mengapa satu titik per \textit{node} yang
@@ -185,7 +174,6 @@ python3 partisi.py
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil perhitungan Latihan 2}
@@ -202,17 +190,12 @@ python3 partisi.py
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
 Angka pada latihan ini dihitung, bukan diukur dengan jam, sehingga akan sama
 persis pada komputer mana pun. Yang dilaporkan tetap pola perbandingannya,
 karena angka itulah yang menjadi dasar memilih cara bagi.
 
-\ifajar
-  \subsection*{Latihan 3: Rencana Kapasitas untuk Beban 100 Kali Lipat}
-\else
-  \subsection*{Prosedur 3: Rencana Kapasitas untuk Beban 100 Kali Lipat}
-\fi
+\subsection*{Latihan 3: Rencana Kapasitas untuk Beban 100 Kali Lipat}
 
 Latihan ini menyusun rencana penskalaan dari angka hasil pengukuran sendiri,
 lalu memperlihatkan komponen mana yang paling mahal dan mana yang pertama kali
@@ -229,13 +212,8 @@ melewati batas.
         catat totalnya, lalu kembalikan menjadi 0,9.
   \item Ubah \texttt{kelipatan\_beban} menjadi 200, jalankan ulang, catat
         pemeriksaan koneksi yang gagal, lalu kembalikan menjadi 100.
-\ifajar
-  \item Isi \tabisi{tab:c14-lat3-hasil}. Tabel \ref{tab:c14-lat3-contoh}
+  \item Isi Tabel \ref{tab:c14-lat3-hasil}. Tabel \ref{tab:c14-lat3-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c14-lat3-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa pesanan membutuhkan
         lima \textit{shard} sedangkan katalog cukup satu, padahal beban
         katalog empat kali lebih besar? Kedua, berapa \textit{node} basis data dan
@@ -279,7 +257,6 @@ python3 rencana-kapasitas.py
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil perhitungan Latihan 3}
@@ -296,18 +273,13 @@ python3 rencana-kapasitas.py
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
 Biaya pada rencana ini hanyalah asumsi contoh yang tertulis di
 \berkas{rencana.json}. Yang dinilai adalah susunan dan alasannya: layanan
 mana yang membutuhkan \textit{shard}, berapa yang dihemat \textit{cache}, dan
 batas mana yang terlewati lebih dahulu.
 
-\ifajar
-  \subsection*{Latihan 4: Mode Offline Progressive Web App}
-\else
-  \subsection*{Prosedur 4: Mode Offline Progressive Web App}
-\fi
+\subsection*{Latihan 4: Mode Offline Progressive Web App}
 
 Latihan ini membuktikan bahwa halaman yang dilindungi \textit{service worker}
 tetap tampil ketika servernya \textit{down}, dan bahwa perlindungan itu hanya berlaku
@@ -324,13 +296,8 @@ bagi pengguna yang pernah datang.
         \textit{cache} \texttt{katalog-v1}.
   \item Matikan \berkas{aplikasi.py}, muat ulang halamannya, lalu catat jam
         pembuatan data yang tertulis di atas daftar buku.
-\ifajar
-  \item Isi \tabisi{tab:c14-lat4-hasil}. Tabel \ref{tab:c14-lat4-contoh}
+  \item Isi Tabel \ref{tab:c14-lat4-hasil}. Tabel \ref{tab:c14-lat4-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c14-lat4-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa kunjungan pertama
         justru yang paling banyak mengirim permintaan? Kedua, kunjungan
         ketiga dan keempat sama-sama tanpa server, apa yang membuat hasilnya
@@ -369,7 +336,6 @@ python3 ukur-offline.py
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengamatan Latihan 4}
@@ -388,7 +354,6 @@ python3 ukur-offline.py
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
 Jumlah permintaan pada kunjungan kedua bergantung pada versi Chrome. Chrome
 157 yang dipakai pada bab ini mengirim satu permintaan navigasi bersamaan
@@ -396,11 +361,7 @@ dengan menyalakan \textit{service worker}, sehingga hasilnya dua, bukan satu.
 Browser lain atau versi lain dapat mencatat angka berbeda, sedangkan pola
 kunjungan ketiga dan keempat akan sama.
 
-\ifajar
-  \subsection*{Latihan 5: Cold Start Fungsi Serverless}
-\else
-  \subsection*{Prosedur 5: Cold Start Fungsi Serverless}
-\fi
+\subsection*{Latihan 5: Cold Start Fungsi Serverless}
 
 Latihan ini membuktikan bahwa \textit{cold start} ditentukan oleh apa yang
 dimuat sebelum fungsinya dipanggil, bukan oleh fungsinya sendiri.
@@ -412,13 +373,8 @@ dimuat sebelum fungsinya dipanggil, bukan oleh fungsinya sendiri.
         \texttt{"difflib"} ke \texttt{DAFTAR\_DEPENDENSI} di
         \berkas{fungsi.py}, jalankan ulang, lalu catat baris ketiganya.
   \item Kembalikan \texttt{DAFTAR\_DEPENDENSI} seperti semula.
-\ifajar
-  \item Isi \tabisi{tab:c14-lat5-hasil}. Tabel \ref{tab:c14-lat5-contoh}
+  \item Isi Tabel \ref{tab:c14-lat5-hasil}. Tabel \ref{tab:c14-lat5-contoh}
         memperlihatkan contoh yang sudah terisi.
-\else
-  \item Bandingkan hasil pengukuran sendiri dengan Tabel
-        \ref{tab:c14-lat5-contoh}.
-\fi
   \item Jawab tiga pertanyaan berikut. Pertama, mengapa \textit{cold start}
         lebih dari seribu kali panggilan \textit{warm}, padahal fungsinya
         sama? Kedua, bagian mana dari \textit{cold start} layanan
@@ -459,7 +415,6 @@ python3 ukur-cold-start.py
   \end{tabularx}
 \end{table}
 
-\ifajar
 \begin{table}[!htb]
   \centering
   \caption{Lembar isian hasil pengukuran Latihan 5}
@@ -478,7 +433,6 @@ python3 ukur-cold-start.py
     \hline
   \end{tabularx}
 \end{table}
-\fi
 
 Baris terakhir contoh memuat kejanggalan. Tiga dependensi tambahan menaikkan
 p50 menjadi 111,941 milidetik, tetapi kolom kali lipatnya justru turun dari

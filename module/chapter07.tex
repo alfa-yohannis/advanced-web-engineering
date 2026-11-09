@@ -1,22 +1,6 @@
 \chapter{Keamanan Aplikasi Web}
 \label{ch:keamanan}
 
-\ifajar
-\section*{Tujuan Pembelajaran}
-\begin{itemize}
-  \item Menyusun model ancaman satu aplikasi web, yaitu menyebut batas
-        kepercayaannya, data yang bernilai di dalamnya, dan jalan masuk yang
-        tersedia bagi penyerang.
-  \item Memasang pertahanan bawaan pada sisi server, yaitu header keamanan,
-        atribut cookie, daftar origin, \textit{query} berparameter, dan
-        \textit{escaping} keluaran, lalu membuktikan terpasangnya dari
-        \textit{response} yang dikirim aplikasi.
-  \item Mengukur keamanan sebagai angka, yaitu jumlah syarat yang terpenuhi
-        dan jumlah kerentanan dependensi, lalu menegakkannya sebagai
-        \textit{gate} yang memblokir \textit{merge}.
-\end{itemize}
-\fi
-
 \section{Pendahuluan}
 
 Lima bab sebelumnya mengejar cepat dan benar. Bab ini menambahkan satu
@@ -329,7 +313,7 @@ Karena itu daftar dependensi diperlakukan sebagai bagian dari permukaan
 serangan, dan diperiksa berkala terhadap pengumuman kerentanan
 \cite{pypa-advisory}.
 
-Tabel \ref{tab:dependensi} memuat hasil pemeriksaan pada repositori modul ini.
+Tabel \ref{tab:dependensi} memuat hasil pemeriksaan pada repositori buku ini.
 
 \begin{table}[!htb]
   \centering
@@ -475,7 +459,3 @@ syarat, lalu keluar dengan status 0. Pemeriksaan yang sama terhadap server
 tanpa penyetelan meloloskan satu syarat dari sembilan dan keluar dengan
 status 1. Selisih itulah bukti bahwa yang dinilai memang pertahanannya, bukan
 niat baik penulisnya.
-
-\ifajar
-  \input{latihan07}
-\fi
